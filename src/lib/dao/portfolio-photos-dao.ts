@@ -8,7 +8,7 @@ import { mergeDefined } from '../utils/merge-defined.ts';
 
 type Db = DrizzleD1Database<typeof schema>;
 
-/** Minimal portfolio photo DAO — full ingest flows land in a follow-up PR. */
+/** Portfolio photo DAO — insert/get/update for ingest + catalog. */
 export class PortfolioPhotosDAO {
 	constructor(private readonly db: Db) {}
 

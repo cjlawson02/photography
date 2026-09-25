@@ -2,8 +2,9 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
 /**
- * Admin shell placeholder — Cloudflare Access must cover `/admin*`.
- * Feature UI lands in Phase 2. Mutations live under `/admin/api/*`.
+ * Admin shell — Cloudflare Access must cover `/admin*`.
+ * Phase 1: minimal ingest smoke form (not polished UI; that is Phase 2).
+ * Review uploads require an existing ReviewCollections `collectionId`.
  */
 ---
 
@@ -14,14 +15,124 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 			Lawson Photography
 		</h1>
 		<p class="mt-3" style="color: var(--color-fg-muted); max-width: var(--measure)">
-			Phase 0 foundation. Access-gated shell only — no feature UI yet.
+			Ingest smoke (Phase 1). Presigned PUT → R2 → completion callback. Full admin UI is Phase 2.
 		</p>
+
+		<form id="ingest-form" class="mt-8 space-y-4">
+			<label class="block text-sm" style="color: var(--color-fg)">
+				Bucket
+				<select
+					id="bucket"
+					name="bucket"
+					class="mt-1 block w-full border px-3 py-2"
+					style="border-color: var(--color-border); background: var(--color-bg); color: var(--color-fg)"
+				>
+					<option value="portfolio">portfolio (PORTFOLIO)</option>
+					<option value="review">review (REVIEW)</option>
+				</select>
+			</label>
+			<label
+				id="collection-field"
+				class="block text-sm"
+				style="color: var(--color-fg); display: none"
+			>
+				Review collectionId (cuid2)
+				<input
+					type="text"
+					name="collectionId"
+					placeholder="Existing ReviewCollections.id"
+					class="mt-1 block w-full border px-3 py-2 text-sm"
+					style="border-color: var(--color-border); background: var(--color-bg); color: var(--color-fg)"
+					autocomplete="off"
+				/>
+			</label>
+			<label class="block text-sm" style="color: var(--color-fg)">
+				Photo
+				<input
+					type="file"
+					name="file"
+					accept="image/*"
+					required
+					class="mt-1 block w-full text-sm"
+					style="color: var(--color-fg)"
+				/>
+			</label>
+			<button
+				type="submit"
+				class="px-4 py-2 text-sm"
+				style="background: var(--color-accent); color: var(--color-bg)"
+			>
+				Upload
+			</button>
+		</form>
+
+		<pre
+			id="ingest-status"
+			class="mt-6 overflow-x-auto p-3 text-xs"
+			style="background: color-mix(in oklab, var(--color-fg) 6%, transparent); color: var(--color-fg-muted)"
+			aria-live="polite"
+		>Ready. Review needs an existing collectionId (D1 ReviewCollections row).</pre>
+
 		<p class="mt-6 text-sm" style="color: var(--color-fg-muted)">
-			Smoke:
+			API:
+			<code>/admin/api/ingest/presign</code>,
+			<code>/complete</code>,
+			<code>/reprocess</code>
+			· smoke
 			<a style="color: var(--color-accent); text-decoration: underline" href="/admin/api/health"
 				>/admin/api/health</a
 			>
-			(requires Access JWT)
 		</p>
 	</main>
 </BaseLayout>
+
+<script>
+	import { uploadPhoto } from '../../lib/ingest/browser-upload.ts';
+
+	const form = document.getElementById('ingest-form');
+	const statusEl = document.getElementById('ingest-status');
+	const bucketSelect = document.getElementById('bucket');
+	const collectionField = document.getElementById('collection-field');
+
+	function syncCollectionVisibility() {
+		if (!(bucketSelect instanceof HTMLSelectElement) || !collectionField) return;
+		collectionField.style.display = bucketSelect.value === 'review' ? 'block' : 'none';
+	}
+
+	bucketSelect?.addEventListener('change', syncCollectionVisibility);
+	syncCollectionVisibility();
+
+	form?.addEventListener('submit', async (event) => {
+		event.preventDefault();
+		if (!(form instanceof HTMLFormElement) || !statusEl) return;
+
+		const data = new FormData(form);
+		const file = data.get('file');
+		const bucket = data.get('bucket');
+		const collectionId = String(data.get('collectionId') ?? '').trim();
+
+		if (!(file instanceof File) || file.size === 0) {
+			statusEl.textContent = 'Choose an image file.';
+			return;
+		}
+		if (bucket !== 'portfolio' && bucket !== 'review') {
+			statusEl.textContent = 'Invalid bucket.';
+			return;
+		}
+		if (bucket === 'review' && !collectionId) {
+			statusEl.textContent = 'collectionId is required for review uploads.';
+			return;
+		}
+
+		statusEl.textContent = 'Uploading…';
+		try {
+			const result =
+				bucket === 'review'
+					? await uploadPhoto({ file, bucket, collectionId })
+					: await uploadPhoto({ file, bucket });
+			statusEl.textContent = JSON.stringify(result, null, 2);
+		} catch (error) {
+			statusEl.textContent = error instanceof Error ? error.message : String(error);
+		}
+	});
+</script>

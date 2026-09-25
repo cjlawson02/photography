@@ -2,10 +2,15 @@
 # Never commit real values. Production: `npx wrangler secret put <NAME>`.
 
 # Cloudflare Access (admin JWT verification)
+# Blocked until hostname + Access app exist — do not invent AUD/hostname.
 CF_ACCESS_TEAM_DOMAIN=https://YOUR_TEAM.cloudflareaccess.com
 CF_ACCESS_AUD=
 
 # R2 S3 API credentials for browser presigned PUT (not provided by R2 bindings alone)
+# Create an R2 API token with Object Read & Write on photography-portfolio + photography-review.
 R2_ACCOUNT_ID=
 R2_ACCESS_KEY_ID=
 R2_SECRET_ACCESS_KEY=
+
+# Also required (not secrets): R2 CORS on both buckets allowing admin origin + PUT —
+# deferred until production hostname is chosen (see project context / HLD).
