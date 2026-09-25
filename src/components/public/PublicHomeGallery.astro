@@ -1,0 +1,110 @@
+---
+import { PORTFOLIO_CATEGORY_LABELS } from '../../lib/portfolio/categories.ts';
+import type { PublicPortfolioPhoto } from '../../lib/services/portfolio-service.ts';
+
+interface Props {
+	photos: PublicPortfolioPhoto[];
+}
+
+const { photos } = Astro.props;
+---
+
+<section class="mx-auto px-4 py-10" style="max-width: 1200px" aria-label="Gallery" data-home-gallery>
+	<p class="mb-6 text-center text-sm uppercase tracking-widest" style="color: var(--color-fg-muted)">
+		Gallery
+	</p>
+
+	<div
+		class="mb-6 flex flex-wrap justify-center gap-2"
+		role="list"
+		data-category-filter
+	>
+		{
+			PORTFOLIO_CATEGORY_LABELS.map((label) => (
+				<button
+					type="button"
+					role="listitem"
+					class="border px-4 py-1.5 text-sm uppercase tracking-wide transition-colors"
+					style={
+						label === 'All'
+							? 'border-color: var(--color-accent); color: var(--color-fg); background: transparent'
+							: 'border-color: var(--color-border); color: var(--color-fg-muted); background: transparent'
+					}
+					data-category={label}
+					aria-pressed={label === 'All' ? 'true' : 'false'}
+				>
+					{label}
+				</button>
+			))
+		}
+	</div>
+
+	{
+		photos.length === 0 ? (
+			<p class="text-center text-sm" style="color: var(--color-fg-muted)">
+				No published photos yet. Upload via{' '}
+				<a href="/admin/ingest" style="color: var(--color-accent); text-decoration: underline">
+					admin upload
+				</a>
+				, then publish on{' '}
+				<a href="/admin/portfolio" style="color: var(--color-accent); text-decoration: underline">
+					portfolio
+				</a>
+				.
+			</p>
+		) : (
+			<ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4" data-gallery-grid>
+				{photos.map((photo) => (
+					<li
+						data-gallery-item
+						data-category={photo.category ?? ''}
+						class="overflow-hidden border"
+						style="border-color: var(--color-border); background: var(--color-bg-elevated)"
+					>
+						<a href={photo.galleryUrl} class="block">
+							<img
+								src={photo.thumbUrl}
+								alt=""
+								width={400}
+								height={300}
+								loading="lazy"
+								decoding="async"
+								class="aspect-[4/3] h-full w-full object-cover"
+							/>
+						</a>
+					</li>
+				))}
+			</ul>
+		)
+	}
+</section>
+
+<script>
+	const root = document.querySelector('[data-home-gallery]');
+	const filterRoot = root?.querySelector('[data-category-filter]');
+	const items = root?.querySelectorAll('[data-gallery-item]');
+
+	function setActiveChip(active: string) {
+		filterRoot?.querySelectorAll('button[data-category]').forEach((button) => {
+			if (!(button instanceof HTMLButtonElement)) return;
+			const label = button.dataset.category ?? '';
+			const isActive = label === active;
+			button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+			button.style.borderColor = isActive ? 'var(--color-accent)' : 'var(--color-border)';
+			button.style.color = isActive ? 'var(--color-fg)' : 'var(--color-fg-muted)';
+		});
+	}
+
+	filterRoot?.addEventListener('click', (event) => {
+		const target = event.target;
+		if (!(target instanceof HTMLButtonElement) || !target.dataset.category) return;
+		const filter = target.dataset.category;
+		setActiveChip(filter);
+		items?.forEach((item) => {
+			if (!(item instanceof HTMLElement)) return;
+			const category = item.dataset.category ?? '';
+			const show = filter === 'All' || (filter !== '' && category === filter);
+			item.hidden = !show;
+		});
+	});
+</script>

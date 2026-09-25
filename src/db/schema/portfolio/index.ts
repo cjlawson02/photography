@@ -7,3 +7,4 @@
  * Do not import or join review-domain tables from here.
  */
 export { PortfolioPhotos } from './photos.ts';
+export { PORTFOLIO_CATEGORIES, type PortfolioCategory } from './categories.ts';

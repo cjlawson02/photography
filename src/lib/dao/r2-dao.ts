@@ -100,6 +100,11 @@ export class R2DAO {
 		return this.bucket(purpose).put(key, value, options);
 	}
 
+	/** Worker binding delete — best-effort cleanup when removing catalog rows. */
+	async deleteObject(purpose: PurposeBucket, key: string): Promise<void> {
+		await this.bucket(purpose).delete(key);
+	}
+
 	/**
 	 * Mint a browser-facing presigned PUT (virtual-hosted style + signQuery).
 	 * Requires R2 S3 API secrets (always present on instances from AppEnv).
