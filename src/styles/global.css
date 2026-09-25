@@ -1,19 +1,27 @@
 @import "tailwindcss";
 
 /*
-  Design tokens — stub values only.
-  Brand / visual polish is _TBD_ (see docs/HLD.md Open Questions).
+  Design tokens — derived from reference/wordpress/ (Photograph parent theme,
+  live Customizer accent, custom.css). Not imported in production build.
+  See reference/README.md and docs/HLD.md (UX DNA).
 */
 :root {
-	--color-bg: #0f1115;
-	--color-bg-elevated: #1a1d24;
-	--color-fg: #f2f0eb;
-	--color-fg-muted: #a8a29a;
-	--color-accent: #c4a574;
-	--color-border: #2a2e38;
+	/* custom.css .site-content-contain */
+	--color-bg: #3b3b3b;
+	/* custom.css .site-info */
+	--color-bg-elevated: #2b2b2b;
+	/* custom.css + filter buttons; parent default body #484848 overridden on live */
+	--color-fg: #ffffff;
+	--color-fg-muted: #c8c8c8;
+	/* Theme Customizer / photograph-child inline (live homepage) */
+	--color-accent: #81d742;
+	--color-border: #4a4a4a;
 
-	--font-sans: "IBM Plex Sans", "Segoe UI", sans-serif;
-	--font-display: "IBM Plex Serif", Georgia, serif;
+	/* photograph/style.css — body & headings */
+	--font-sans: "Roboto Condensed", "Helvetica Neue", helvetica, arial, sans-serif;
+	--font-display: "Rajdhani", sans-serif;
+	/* custom.css .sbi_header_text h3 — Instagram feed only; not global sans */
+	--font-feed: "Roboto", helvetica, arial, sans-serif;
 
 	--space-1: 0.25rem;
 	--space-2: 0.5rem;

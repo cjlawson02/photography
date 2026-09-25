@@ -16,9 +16,17 @@ const { title = 'Lawson Photography' } = Astro.props;
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="viewport" content="width=device-width" />
 		<meta name="generator" content={Astro.generator} />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Roboto+Condensed:ital,wght@0,400;0,700;1,400&display=swap"
+			rel="stylesheet"
+		/>
 		<title>{title}</title>
 	</head>
-	<body>
-		<slot />
+	<body class="min-h-dvh">
+		<div class="flex min-h-dvh flex-col" style="background: var(--color-bg); color: var(--color-fg)">
+			<slot />
+		</div>
 	</body>
 </html>
