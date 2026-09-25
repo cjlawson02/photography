@@ -1,11 +1,25 @@
 /**
- * Review (Picu-style) domain schema module.
+ * Review (Picu-style) domain schema.
  *
- * Owns proofing collections / selections that point at the REVIEW R2 bucket.
- * Exact columns are `_TBD_` — see docs/HLD.md (Data & Content).
+ * Owns proofing assets that point at the REVIEW R2 bucket.
+ * Collections / selections land in Phase 4 — Phase 1 only needs photo rows
+ * so ingest can target REVIEW with the same pattern as portfolio.
  *
  * Separate table set from portfolio — no shared photos table across domains.
  */
+import { sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
-// Tables land here once column decisions are locked in HLD.
-export {};
+import type { PhotoStatus } from '../../../lib/ingest/types.ts';
+
+export const reviewPhotos = sqliteTable('review_photos', {
+	id: text('id').primaryKey(),
+	status: text('status').$type<PhotoStatus>().notNull(),
+	contentType: text('content_type'),
+	originalKey: text('original_key').notNull(),
+	error: text('error'),
+	createdAt: text('created_at').notNull(),
+	updatedAt: text('updated_at').notNull(),
+});
+
+export type ReviewPhoto = typeof reviewPhotos.$inferSelect;
+export type NewReviewPhoto = typeof reviewPhotos.$inferInsert;

@@ -20,10 +20,11 @@ npm run build            # astro build (Workers SSR bundle + static assets in di
 npm run dev              # astro dev (workerd via @astrojs/cloudflare)
 ```
 
-D1 migrations live in `src/db/migrations/` (flat SQL). That directory is empty until real schema lands (columns `_TBD_` in [HLD](docs/HLD.md)). When SQL files exist:
+D1 migrations live in `src/db/migrations/` (flat SQL). Phase 1 adds minimal ingest tables; exact product columns remain `_TBD_` in [HLD](docs/HLD.md).
 
 ```bash
 npm run db:migrate:local # wrangler d1 migrations apply photography --local
+npm test                 # node:test unit checks for ingest key helpers
 ```
 
 Validate the Workers bundle without uploading (after `npm run build`):
@@ -36,6 +37,7 @@ Deploy (after Cloudflare account resources exist — D1 id, R2 buckets, secrets)
 
 ```bash
 npx wrangler deploy
+npx wrangler d1 migrations apply photography --remote
 ```
 
 ## Code style guidelines
@@ -44,23 +46,25 @@ _TBD — only rules that differ from language/tool defaults._
 
 ## Testing instructions
 
-Phase 0 smoke:
+Smoke:
 
-- `GET /health` — public binding presence JSON
+- `GET /health` — public binding presence JSON (`phase: 1`)
 - `GET /admin/api/health` — requires Access JWT (`Cf-Access-Jwt-Assertion`); returns 403 without it
+- `POST /admin/api/ingest/presign` | `/complete` | `/reprocess` — Access JWT required; need R2 S3 secrets + CORS for a real browser PUT
+- Admin `/admin` — minimal ingest smoke form (Phase 2 owns polished UI)
 
-Full feature tests `_TBD_`.
+Unit: `npm test` (ingest key/bucket helpers). End-to-end upload against live R2/Images `_TBD_` until Access + CORS + secrets are set.
 
 ## Security considerations
 
 - Never commit `.dev.vars`, Access AUD, or R2 S3 API keys. Use `.dev.vars.example` as the inventory template.
 - Copy `.dev.vars.example` → `.dev.vars` for local; production via `npx wrangler secret put <NAME>`.
 - Required secrets / config (values owned by Chris — do not invent):
-  - `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD` (still unset in `wrangler.jsonc`)
+  - `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD` (still unset in `wrangler.jsonc`; blocked until hostname/Access app exist — see project context)
   - `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` (presigned PUT; not covered by R2 bindings alone)
   - D1 + R2 resource names are wired in `wrangler.jsonc` (`photography`, `photography-portfolio`, `photography-review`)
-  - Configure R2 CORS on both buckets: admin origin + `PUT` (see [HLD Architecture](docs/HLD.md#architecture))
-  - Cloudflare Access application covering `/admin*`
+  - Configure R2 CORS on both buckets: admin origin + `PUT` (deferred until hostname chosen — see [HLD Architecture](docs/HLD.md#architecture))
+  - Cloudflare Access application covering `/admin*` (deferred until hostname chosen)
 - Admin mutations live only under `/admin/api/*` and must call `verifyAccessJwt` ([HLD Admin auth](docs/HLD.md#admin-auth)).
 
 ## Commit and PR guidelines

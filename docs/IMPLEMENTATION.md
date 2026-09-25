@@ -62,12 +62,12 @@ Original upload via browser presigned PUT, compress-once via Images Free, Worker
 
 **Tasks**
 
-- [ ] Admin-only endpoints under `/admin/*` to mint presigned PUT URLs into `PORTFOLIO` or `REVIEW` (JWT verified)
-- [ ] Browser upload client: PUT to R2, then completion callback to Worker (v1 default per HLD)
-- [ ] Ingest completion handler: Images Free compress-once → Worker puts variant bytes beside original under key prefixes
-- [ ] D1 writes for portfolio domain metadata (ids, keys, variants, pending/ready/failed) — exact columns `_TBD_` in HLD
-- [ ] Reprocess path from original for failed photos (no full status state machine in v1)
-- [ ] Failure/retry behavior for incomplete PUT or compress failures (details `_TBD_`)
+- [x] Admin-only endpoints under `/admin/*` to mint presigned PUT URLs into `PORTFOLIO` or `REVIEW` (JWT verified)
+- [x] Browser upload client: PUT to R2, then completion callback to Worker (v1 default per HLD)
+- [x] Ingest completion handler: Images Free compress-once → Worker puts variant bytes beside original under key prefixes
+- [x] D1 writes for portfolio domain metadata (ids, keys, variants, pending/ready/failed) — exact columns `_TBD_` in HLD *(provisional minimal tables; review photos same pattern)*
+- [x] Reprocess path from original for failed photos (no full status state machine in v1)
+- [ ] Failure/retry behavior for incomplete PUT or compress failures (details `_TBD_`) — *minimal: mark `failed` + reprocess*
 
 ### Phase 2 — Admin
 

@@ -15,12 +15,14 @@
     "typecheck": "wrangler types && astro check",
     "generate-types": "wrangler types",
     "db:migrate:local": "wrangler d1 migrations apply photography --local",
+    "test": "node --experimental-strip-types --test src/lib/ingest/keys.test.ts",
     "cf-typegen": "wrangler types"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.3.3",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.3.5",
+    "aws4fetch": "^1.0.20",
     "drizzle-orm": "^0.44.5",
     "jose": "^6.0.11",
     "tailwindcss": "^4.3.3",

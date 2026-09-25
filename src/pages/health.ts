@@ -13,7 +13,7 @@ export const GET: APIRoute = async () => {
 	return Response.json({
 		ok: true,
 		service: 'lawson-photography',
-		phase: 0,
+		phase: 1,
 		bindings,
 	});
 };
