@@ -1,10 +1,15 @@
 ---
-import GalleryGridPlaceholder from '../components/public/GalleryGridPlaceholder.astro';
+import { env } from 'cloudflare:workers';
+
 import HeroPlaceholder from '../components/public/HeroPlaceholder.astro';
+import PublicHomeGallery from '../components/public/PublicHomeGallery.astro';
 import PublicLayout from '../layouts/PublicLayout.astro';
+import { listPublishedPortfolioPhotos } from '../lib/services/portfolio-service.ts';
+
+const photos = await listPublishedPortfolioPhotos(env.DB);
 ---
 
 <PublicLayout title="Lawson Photography">
 	<HeroPlaceholder />
-	<GalleryGridPlaceholder />
+	<PublicHomeGallery photos={photos} />
 </PublicLayout>

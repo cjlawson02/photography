@@ -21,4 +21,12 @@ export const PortfolioPhotos = sqliteTable('PortfolioPhotos', {
 		.$onUpdate(() => sql`(strftime('%s', 'now') * 1000)`),
 	status: text('status').$type<PhotoStatus>().notNull(),
 	mimeType: text('mimeType'),
+	/** Visible on public site when true and ingest `status` is `ready`. */
+	published: integer('published', { mode: 'boolean' }).notNull().default(false),
+	/** Filter chip label — one of the live-site categories; null = uncategorized. */
+	category: text('category'),
+	/** Lower sorts first on public grid; null sorts after explicit values. */
+	sortOrder: integer('sortOrder', { mode: 'number' }),
+	/** Future hero carousel — nullable intent; defaults false for new rows. */
+	hero: integer('hero', { mode: 'boolean' }).notNull().default(false),
 });

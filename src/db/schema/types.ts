@@ -5,6 +5,7 @@ import { z } from 'zod/v4';
 import { PortfolioPhotos } from './portfolio/photos.ts';
 import { ReviewCollections } from './review/collections.ts';
 import { ReviewPhotos } from './review/photos.ts';
+import { PORTFOLIO_CATEGORIES } from './portfolio/categories.ts';
 import { photoStatuses } from './photo-status.ts';
 import { selectionStatuses } from './review/selection-status.ts';
 
@@ -18,6 +19,8 @@ export const optionalTrimmedString = z.string().trim().min(1).optional();
 export const photoStatusSchema = z.enum(photoStatuses);
 
 export const selectionStatusSchema = z.enum(selectionStatuses);
+
+export const portfolioCategorySchema = z.enum(PORTFOLIO_CATEGORIES);
 
 /** URL slug for `/review/{slug}` — non-empty trimmed string. */
 export const slugSchema = requiredTrimmedString;
@@ -36,16 +39,28 @@ const updateOmitImmutable = {
 export const portfolioPhotoSelectSchema = createSelectSchema(PortfolioPhotos, {
 	status: photoStatusSchema,
 	mimeType: z.string().nullable(),
+	published: z.boolean(),
+	category: portfolioCategorySchema.nullable(),
+	sortOrder: z.number().int().nullable(),
+	hero: z.boolean(),
 });
 
 export const portfolioPhotoInsertSchema = createInsertSchema(PortfolioPhotos, {
 	status: photoStatusSchema,
 	mimeType: optionalTrimmedString.nullable().optional(),
+	published: z.boolean().optional(),
+	category: portfolioCategorySchema.nullable().optional(),
+	sortOrder: z.number().int().nullable().optional(),
+	hero: z.boolean().optional(),
 }).omit(immutableTimestamps);
 
 export const portfolioPhotoUpdateSchema = createUpdateSchema(PortfolioPhotos, {
 	status: photoStatusSchema.optional(),
 	mimeType: optionalTrimmedString.nullable().optional(),
+	published: z.boolean().optional(),
+	category: portfolioCategorySchema.nullable().optional(),
+	sortOrder: z.number().int().nullable().optional(),
+	hero: z.boolean().optional(),
 }).omit(updateOmitImmutable);
 
 export const reviewCollectionSelectSchema = createSelectSchema(ReviewCollections, {

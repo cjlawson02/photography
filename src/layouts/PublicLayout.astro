@@ -1,6 +1,5 @@
 ---
 import BaseLayout from './BaseLayout.astro';
-import CategoryFilter from '../components/public/CategoryFilter.astro';
 import SiteHeader from '../components/public/SiteHeader.astro';
 
 interface Props {
@@ -12,7 +11,6 @@ const { title } = Astro.props;
 
 <BaseLayout title={title}>
 	<SiteHeader />
-	<CategoryFilter />
 	<slot />
 	<footer
 		class="mt-auto px-4 py-6 text-center text-sm"
