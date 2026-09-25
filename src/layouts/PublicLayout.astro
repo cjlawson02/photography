@@ -1,0 +1,23 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import CategoryFilter from '../components/public/CategoryFilter.astro';
+import SiteHeader from '../components/public/SiteHeader.astro';
+
+interface Props {
+	title?: string;
+}
+
+const { title } = Astro.props;
+---
+
+<BaseLayout title={title}>
+	<SiteHeader />
+	<CategoryFilter />
+	<slot />
+	<footer
+		class="mt-auto px-4 py-6 text-center text-sm"
+		style="background: var(--color-bg-elevated); color: var(--color-fg-muted)"
+	>
+		&copy; {new Date().getFullYear()} Lawson Photography
+	</footer>
+</BaseLayout>

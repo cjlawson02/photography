@@ -1,0 +1,26 @@
+---
+/** Masonry-style grid placeholder — empty state until portfolio listing reads D1. */
+const placeholderCount = 8;
+---
+
+<section class="mx-auto px-4 py-10" style="max-width: 1200px" aria-label="Gallery">
+	<p class="mb-6 text-center text-sm uppercase tracking-widest" style="color: var(--color-fg-muted)">
+		Gallery
+	</p>
+	<div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+		{
+			Array.from({ length: placeholderCount }, (_, i) => (
+				<div
+					class="aspect-[4/3] border"
+					style="border-color: var(--color-border); background: var(--color-bg-elevated)"
+					aria-hidden="true"
+					data-placeholder-index={i}
+				/>
+			))
+		}
+	</div>
+	<p class="mt-8 text-center text-sm" style="color: var(--color-fg-muted)">
+		No published photos yet. Upload via{' '}
+		<a href="/admin" style="color: var(--color-accent); text-decoration: underline">admin</a>.
+	</p>
+</section>

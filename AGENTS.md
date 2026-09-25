@@ -29,6 +29,8 @@ Migrations: `drizzle-kit generate` → SQL in `src/db/migrations/` → wrangler 
 npm run db:generate      # drizzle-kit generate (no Cloudflare credentials)
 npm run db:migrate:local # wrangler d1 migrations apply photography --local
 # Remote (after review): npx wrangler d1 migrations apply photography --remote
+npm run r2:cors:apply    # apply infra/r2-cors/*.json to both buckets (wrangler login)
+npm run r2:cors:list     # verify bucket CORS policies
 ```
 
 Optional drizzle-kit d1-http introspect/push (not required for generate→apply) needs env vars — do not commit tokens:
@@ -77,11 +79,11 @@ Phase 1 ingest (JWT + Zod body → `IngestService`):
 - Never commit `.dev.vars`, Access AUD, or R2 S3 API keys. Use `.dev.vars.example` as the inventory template.
 - Copy `.dev.vars.example` → `.dev.vars` for local; production via `npx wrangler secret put <NAME>`.
 - Required secrets / config (values owned by Chris — do not invent):
-  - `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD` (still unset in `wrangler.jsonc`; blocked until hostname/Access app exist — see project context)
+  - `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD` (production host `photography.chrislawson.dev` — see [docs/DEPLOY.md](docs/DEPLOY.md))
   - `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` (presigned PUT; not covered by R2 bindings alone)
   - D1 + R2 resource names are wired in `wrangler.jsonc` (`photography`, `photography-portfolio`, `photography-review`)
-  - Configure R2 CORS on both buckets: admin origin + `PUT` (deferred until hostname chosen — see [HLD Architecture](docs/HLD.md#architecture))
-  - Cloudflare Access application covering `/admin*` (deferred until hostname chosen)
+ - Configure R2 CORS on both buckets: `npm run r2:cors:apply` ([docs/DEPLOY.md](docs/DEPLOY.md))
+ - Cloudflare Access application on `photography.chrislawson.dev` path `/admin*` ([docs/DEPLOY.md](docs/DEPLOY.md))
 - Admin mutations live only under `/admin/api/*` and must call `verifyAccessJwt` ([HLD Admin auth](docs/HLD.md#admin-auth)).
 
 ## Commit and PR guidelines
