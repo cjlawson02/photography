@@ -1,27 +1,16 @@
 import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
 
-import { AppEnv } from '../lib/env.ts';
+import { bindingHealth } from '../lib/env.ts';
 
-/** Public health/smoke endpoint — Phase 0 + data-layer wiring. */
+/** Public health/smoke — bindings only (no R2 S3 secrets / AppEnv ingest parse). */
 export const GET: APIRoute = async () => {
-	const app = AppEnv.from(env);
-
-	const bindings = {
-		db: Boolean(env.DB),
-		portfolio: Boolean(env.PORTFOLIO),
-		review: Boolean(env.REVIEW),
-		images: Boolean(env.IMAGES),
-	};
+	const snapshot = bindingHealth(env);
 
 	return Response.json({
 		ok: true,
 		service: 'lawson-photography',
 		phase: 0,
-		bindings,
-		daos: {
-			d1: Boolean(app.d1),
-			images: Boolean(app.images),
-		},
+		...snapshot,
 	});
 };

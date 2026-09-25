@@ -5,6 +5,7 @@ import {
 	optionalTrimmedString,
 	requiredTrimmedString,
 } from '../../db/schema/types.ts';
+import { formatZodIssues } from '../http/app-error.ts';
 
 export const purposeBucketSchema = z.enum(['portfolio', 'review']);
 
@@ -45,5 +46,5 @@ export function isPurposeBucket(value: unknown): value is PurposeBucket {
 
 /** Format Zod issues into a single plain error string for HTTP responses. */
 export function formatZodError(error: z.ZodError): string {
-	return error.issues.map((issue) => issue.message).join('; ') || 'Invalid request body';
+	return formatZodIssues(error);
 }

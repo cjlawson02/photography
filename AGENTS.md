@@ -58,12 +58,14 @@ _TBD — only rules that differ from language/tool defaults._
 
 Phase 0 smoke:
 
-- `GET /health` — public binding + DAO presence JSON
-- `GET /admin/api/health` — requires Access JWT (`Cf-Access-Jwt-Assertion`); returns 403 without it
+- `GET /health` — public binding + DAO presence JSON (does **not** require R2 S3 secrets)
+- `GET /admin/api/health` — requires Access JWT (`Cf-Access-Jwt-Assertion`); returns 403 without it; also bindings-only (no R2_*)
 
-Unit: `npm test` (ingest key/bucket/presign-schema helpers). End-to-end upload against live R2/Images `_TBD_` until Access + CORS + secrets are set.
+Unit: `npm test` (Cloudflare env zod, AppError HTTP mapping, ingest keys/presign schema). End-to-end upload against live R2/Images `_TBD_` until Access + CORS + secrets are set.
 
-Phase 1 ingest (JWT + Zod body):
+Ingest (`AppEnv.from` / `getCloudflareEnv`) **fail-fast** if `R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` are missing (503). Copy `.dev.vars.example` → `.dev.vars` and fill R2_* for `/admin` ingest preview.
+
+Phase 1 ingest (JWT + Zod body → `IngestService`):
 
 - `POST /admin/api/ingest/presign` — pending row + presigned PUT (`portfolio` | `review`; review requires `collectionId`)
 - `POST /admin/api/ingest/complete` — Images compress-once → variant puts → ready/failed

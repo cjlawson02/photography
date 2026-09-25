@@ -1,6 +1,6 @@
 /**
  * Images Free binding wrapper — compress-once transforms at ingest.
- * Variant widths/puts live in `src/lib/ingest/process.ts`.
+ * Variant widths/puts live in `IngestService` (`src/lib/services/ingest-service.ts`).
  */
 export class ImagesDAO {
 	private static instance: ImagesDAO | undefined;

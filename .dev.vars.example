@@ -7,6 +7,7 @@ CF_ACCESS_TEAM_DOMAIN=https://YOUR_TEAM.cloudflareaccess.com
 CF_ACCESS_AUD=
 
 # R2 S3 API credentials for browser presigned PUT (not provided by R2 bindings alone)
+# Required for AppEnv / ingest routes (fail-fast 503 if empty). /health does not need these.
 # Create an R2 API token with Object Read & Write on photography-portfolio + photography-review.
 R2_ACCOUNT_ID=
 R2_ACCESS_KEY_ID=

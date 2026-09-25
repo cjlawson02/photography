@@ -39,6 +39,7 @@ gantt
 
 | Date | Update |
 | --- | --- |
+| 2026-09-25 | Ingest: Cloudflare env zod, AppError HTTP codes, IngestService (no tRPC) |
 | 2026-09-25 | Phase 1 ingest redo on FamilyNotes-style DAOs (presign/complete/reprocess; review `collectionId`) |
 | 2026-09-25 | Data layer aligned to FamilyNotes-style DAOs/schema ([PR #6](https://github.com/cjlawson02/photography/pull/6)) |
 | 2026-09-25 | Phase 0 merged; Phase 1 ingest superseded pending data-layer redo |

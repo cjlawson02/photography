@@ -13,7 +13,6 @@ export {
 	purposeBucketSchema,
 	reprocessBodySchema,
 } from './schemas.ts';
-export { IngestProcessError, processPhotoIngest } from './process.ts';
 export {
 	requestComplete,
 	requestPresign,
