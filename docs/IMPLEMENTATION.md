@@ -4,24 +4,24 @@ Lean build plan for the Lawson Photography rebuild. Architecture, bindings, and 
 
 ## Scope
 
-Ship an Astro hybrid SSR site on Workers with D1 + Drizzle, two private R2 buckets (`PORTFOLIO`, `REVIEW`), Images Free compress-once at ingest, browser presigned PUT upload, Cloudflare Access–gated admin, a public portfolio, and phase-1 client review by link secrecy. No tRPC; no hosted Images storage.
+Sequence the rebuild described in [HLD.md](HLD.md): foundation → ingest → admin → public portfolio → phase-1 client review → cutover.
 
 Out of scope for this plan: LOE numbers, scaffolding/code, and product copy/IA details still marked `_TBD_` in HLD.
 
-## Locked constraints (do not revisit here)
+## Do not reopen — see HLD
 
-These are fixed for v1 planning. Prefer [HLD.md](HLD.md) if a future conflict appears.
+Stack and product decisions are owned by [HLD.md](HLD.md). Do not mirror them here.
 
-| Area | Constraint |
-| --- | --- |
-| Runtime | Astro hybrid SSR on Workers via `wrangler.jsonc` (not Pages) |
-| Data | D1 + Drizzle; FamilyNotes-style flat migrations; portfolio vs review as **separate table domains** |
-| Objects | Private R2 buckets `PORTFOLIO` and `REVIEW`; original/variants via **key prefixes**, not extra buckets |
-| Ingest | Images Free compress-once; Worker writes variant bytes |
-| Upload | Browser **presigned PUT** (R2 S3 API secrets + CORS); v1 completion = browser callback after PUT |
-| Admin | Cloudflare Access on `/admin*`; **all admin mutations under `/admin/*`**; mandatory Access JWT verify |
-| Review (phase 1) | Link secrecy only (no password); `noindex` + robots; Worker `/media/review/...`; shorter TTL or purge on delete; leave room for a future password gate |
-| UI | Tailwind + CSS tokens |
+Point at the closest stable HLD headings (bodies still `_TBD_`; finer § anchors wait on HLD structure):
+
+- [Architecture](HLD.md#architecture)
+- [Key Components](HLD.md#key-components)
+- [Data & Content](HLD.md#data--content)
+
+**Plan-only sequencing rules** (not architecture):
+
+- Every admin mutation stays under `/admin/*` and verifies the Access JWT (shapes Phase 0–2 task boundaries).
+- Phase-4 review stays link-secrecy only; a password gate is deferred (shapes Phase 4 scope, not HLD restatement).
 
 ## Phases
 
@@ -139,7 +139,7 @@ Move traffic/content from the current site to the new Workers deployment. Exact 
 
 Need Chris / HLD before scaffolding:
 
-1. **HLD completion** — Architecture, components, and data model in [HLD.md](HLD.md) are still `_TBD_`. Confirm the locked constraints above belong in HLD as the canonical decisions.
+1. **HLD completion** — [Architecture](HLD.md#architecture), [Key Components](HLD.md#key-components), and [Data & Content](HLD.md#data--content) are still `_TBD_`. Fill those before scaffolding; finer IMPLEMENTATION pointers depend on named HLD subsections.
 2. **Public IA & portfolio model** — Which pages/sections ship in v1? Album vs single-image vs mixed?
 3. **Public media delivery** — Exact Worker path/caching for portfolio images (review path is `/media/review/...`).
 4. **Ingest variant set** — Which widths/formats after Images Free compress-once?
