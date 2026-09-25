@@ -6,13 +6,15 @@
  * Set secrets via `.dev.vars` locally or `npx wrangler secret put <NAME>` in prod:
  *   R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY
  */
-interface Env {
-	R2_ACCOUNT_ID?: string;
-	R2_ACCESS_KEY_ID?: string;
-	R2_SECRET_ACCESS_KEY?: string;
-}
+declare global {
+	namespace Cloudflare {
+		interface Env {
+			R2_ACCOUNT_ID?: string;
+			R2_ACCESS_KEY_ID?: string;
+			R2_SECRET_ACCESS_KEY?: string;
+		}
+	}
 
-declare namespace Cloudflare {
 	interface Env {
 		R2_ACCOUNT_ID?: string;
 		R2_ACCESS_KEY_ID?: string;
