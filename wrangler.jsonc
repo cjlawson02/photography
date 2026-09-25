@@ -11,6 +11,13 @@
 	"observability": {
 		"enabled": true
 	},
+	// Custom domain — DNS auto-provisioned when chrislawson.dev is on the same account (see docs/DEPLOY.md).
+	"routes": [
+		{
+			"pattern": "photography.chrislawson.dev",
+			"custom_domain": true
+		}
+	],
 	// Non-secret Access config placeholders — set real values in dashboard / .dev.vars (do not invent).
 	"vars": {
 		"CF_ACCESS_TEAM_DOMAIN": "",

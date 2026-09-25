@@ -1,8 +1,10 @@
 # Local Worker secrets / vars — copy to `.dev.vars` and fill in.
 # Never commit real values. Production: `npx wrangler secret put <NAME>`.
 
-# Cloudflare Access (admin JWT verification)
-# Blocked until hostname + Access app exist — do not invent AUD/hostname.
+# Production host: https://photography.chrislawson.dev (admin at /admin*)
+
+# Cloudflare Access (admin JWT verification on /admin/api/*)
+# Zero Trust → Access → application on photography.chrislawson.dev path /admin*
 CF_ACCESS_TEAM_DOMAIN=https://YOUR_TEAM.cloudflareaccess.com
 CF_ACCESS_AUD=
 
@@ -13,5 +15,4 @@ R2_ACCOUNT_ID=
 R2_ACCESS_KEY_ID=
 R2_SECRET_ACCESS_KEY=
 
-# Also required (not secrets): R2 CORS on both buckets allowing admin origin + PUT —
-# deferred until production hostname is chosen (see project context / HLD).
+# R2 CORS: npm run r2:cors:apply (infra/r2-cors/) — origins include photography.chrislawson.dev + localhost:4321
