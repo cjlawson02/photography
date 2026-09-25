@@ -15,9 +15,14 @@ Requires Node `>=22.12.0` (Astro 7). Prefer a current Node 22 LTS if the environ
 ```bash
 npm install
 npm run generate-types   # wrangler types → worker-configuration.d.ts (needs valid wrangler.jsonc)
-npm run typecheck        # astro check
+npm run typecheck        # wrangler types && astro check
 npm run build            # astro build (Workers SSR bundle + static assets in dist/)
 npm run dev              # astro dev (workerd via @astrojs/cloudflare)
+```
+
+D1 migrations live in `src/db/migrations/` (flat SQL). That directory is empty until real schema lands (columns `_TBD_` in [HLD](docs/HLD.md)). When SQL files exist:
+
+```bash
 npm run db:migrate:local # wrangler d1 migrations apply lawson-photography --local
 ```
 
