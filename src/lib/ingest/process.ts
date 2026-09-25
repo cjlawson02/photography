@@ -1,5 +1,5 @@
 import { r2Binding } from './buckets.ts';
-import { VARIANT_SPECS, variantKey } from './keys.ts';
+import { originalKey, VARIANT_SPECS, variantKey } from './keys.ts';
 import { getPhoto, updatePhotoStatus } from './photos.ts';
 import type { PurposeBucket } from './types.ts';
 import type { Db } from '../../db/client.ts';
@@ -16,7 +16,7 @@ type ProcessEnv = {
 
 /**
  * Compress-once via Images Free, put variant bytes beside the original, mark ready/failed.
- * Failure behavior is intentionally minimal (HLD `_TBD_` details): mark failed + return error.
+ * Failures are logged (not stored in D1); status may become `failed` without an error string.
  */
 export async function processPhotoIngest(
 	db: Db,
@@ -29,14 +29,14 @@ export async function processPhotoIngest(
 		throw new IngestProcessError(`Photo not found: ${id}`);
 	}
 
+	const key = originalKey(id);
 	const r2 = r2Binding(env, bucket);
-	const object = await r2.get(photo.originalKey);
+	const object = await r2.get(key);
 	if (!object) {
-		await updatePhotoStatus(db, bucket, id, {
-			status: 'failed',
-			error: 'Original missing in R2 (incomplete PUT?)',
-		});
-		throw new IngestProcessError('Original missing in R2 (incomplete PUT?)');
+		const message = `Original missing in R2 for ${bucket}/${id} (incomplete PUT?)`;
+		console.error('[ingest]', message);
+		await updatePhotoStatus(db, bucket, id, 'failed');
+		throw new IngestProcessError(message);
 	}
 
 	try {
@@ -44,22 +44,23 @@ export async function processPhotoIngest(
 		const written: string[] = [];
 
 		for (const spec of VARIANT_SPECS) {
-			const key = variantKey(id, spec.suffix);
+			const variant = variantKey(id, spec.suffix);
 			const result = await env.IMAGES.input(new Blob([source]).stream())
 				.transform({ width: spec.width, fit: 'scale-down' })
 				.output({ format: 'image/webp', quality: 80 });
 
-			await r2.put(key, result.image(), {
+			await r2.put(variant, result.image(), {
 				httpMetadata: { contentType: spec.contentType },
 			});
-			written.push(key);
+			written.push(variant);
 		}
 
-		await updatePhotoStatus(db, bucket, id, { status: 'ready', error: null });
+		await updatePhotoStatus(db, bucket, id, 'ready');
 		return { id, status: 'ready', variants: written };
 	} catch (error) {
 		const message = error instanceof Error ? error.message : 'Ingest failed';
-		await updatePhotoStatus(db, bucket, id, { status: 'failed', error: message });
+		console.error('[ingest]', `Compress/put failed for ${bucket}/${id}:`, error);
+		await updatePhotoStatus(db, bucket, id, 'failed');
 		throw new IngestProcessError(message);
 	}
 }

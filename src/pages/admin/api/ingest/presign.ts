@@ -57,7 +57,7 @@ export const POST: APIRoute = async ({ request }) => {
 		});
 
 		const db = createDb(env.DB);
-		await insertPendingPhoto(db, body.bucket, { id, originalKey: key, contentType });
+		await insertPendingPhoto(db, body.bucket, { id, contentType });
 
 		return jsonOk({
 			id,
@@ -69,6 +69,7 @@ export const POST: APIRoute = async ({ request }) => {
 			completeUrl: '/admin/api/ingest/complete',
 		});
 	} catch (error) {
+		console.error('[ingest] presign failed:', error);
 		if (error instanceof R2PresignConfigError) {
 			return jsonError(error.message, 503);
 		}

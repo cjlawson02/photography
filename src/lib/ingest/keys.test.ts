@@ -3,7 +3,6 @@ import { describe, it } from 'node:test';
 
 import {
 	isAllowlistedVariantSuffix,
-	ORIGINAL_SUFFIX,
 	originalKey,
 	VARIANT_SPECS,
 	variantKey,
@@ -11,9 +10,11 @@ import {
 import { isPurposeBucket, R2_BUCKET_NAMES } from './buckets.ts';
 
 describe('ingest keys', () => {
-	it('builds original and variant keys under id prefix', () => {
-		assert.equal(originalKey('abc'), `abc/${ORIGINAL_SUFFIX}`);
-		assert.equal(variantKey('abc', 'gallery.webp'), 'abc/gallery.webp');
+	it('derives all object keys from photo id only', () => {
+		const id = 'photo-uuid';
+		assert.equal(originalKey(id), `${id}/original`);
+		assert.equal(variantKey(id, 'gallery.webp'), `${id}/gallery.webp`);
+		assert.equal(variantKey(id, 'thumb.webp'), `${id}/thumb.webp`);
 	});
 
 	it('allowlists provisional variant suffixes only', () => {

@@ -1,5 +1,6 @@
 /**
  * R2 key prefixes inside each purpose bucket (HLD).
+ * Keys are always derived from D1 photo `id` — never stored as a separate column.
  * Variant set is provisional until HLD locks widths/formats.
  */
 

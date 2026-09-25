@@ -3,7 +3,8 @@
  *
  * Owns public-site catalog metadata that points at the PORTFOLIO R2 bucket.
  * Exact product columns remain `_TBD_` in docs/HLD.md — this is the minimal
- * ingest-ready subset (id, status, keys, timestamps) so Phase 1 can run.
+ * ingest-ready subset (id, status, content type, timestamps) so Phase 1 can run.
+ * R2 keys are derived from `id` via ingest key helpers (not stored here).
  *
  * Do not import or join review-domain tables from here.
  */
@@ -15,8 +16,6 @@ export const portfolioPhotos = sqliteTable('portfolio_photos', {
 	id: text('id').primaryKey(),
 	status: text('status').$type<PhotoStatus>().notNull(),
 	contentType: text('content_type'),
-	originalKey: text('original_key').notNull(),
-	error: text('error'),
 	createdAt: text('created_at').notNull(),
 	updatedAt: text('updated_at').notNull(),
 });

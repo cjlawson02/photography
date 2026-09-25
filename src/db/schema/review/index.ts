@@ -4,6 +4,7 @@
  * Owns proofing assets that point at the REVIEW R2 bucket.
  * Collections / selections land in Phase 4 — Phase 1 only needs photo rows
  * so ingest can target REVIEW with the same pattern as portfolio.
+ * R2 keys are derived from `id` via ingest key helpers (not stored here).
  *
  * Separate table set from portfolio — no shared photos table across domains.
  */
@@ -15,8 +16,6 @@ export const reviewPhotos = sqliteTable('review_photos', {
 	id: text('id').primaryKey(),
 	status: text('status').$type<PhotoStatus>().notNull(),
 	contentType: text('content_type'),
-	originalKey: text('original_key').notNull(),
-	error: text('error'),
 	createdAt: text('created_at').notNull(),
 	updatedAt: text('updated_at').notNull(),
 });

@@ -20,7 +20,7 @@ npm run build            # astro build (Workers SSR bundle + static assets in di
 npm run dev              # astro dev (workerd via @astrojs/cloudflare)
 ```
 
-D1 migrations live in `src/db/migrations/` (flat SQL). Phase 1 adds minimal ingest tables; exact product columns remain `_TBD_` in [HLD](docs/HLD.md).
+D1 migrations live in `src/db/migrations/` (flat SQL). Phase 1 minimal photo tables: `id`, `status`, `content_type`, timestamps — R2 keys derived from `id` (not stored); ingest failures logged, not persisted as text. Exact product columns remain `_TBD_` in [HLD](docs/HLD.md).
 
 ```bash
 npm run db:migrate:local # wrangler d1 migrations apply photography --local

@@ -13,8 +13,6 @@ function mapRow(row: {
 	id: string;
 	status: PhotoStatus;
 	contentType: string | null;
-	originalKey: string;
-	error: string | null;
 	createdAt: string;
 	updatedAt: string;
 }): PhotoRow {
@@ -22,8 +20,6 @@ function mapRow(row: {
 		id: row.id,
 		status: row.status,
 		contentType: row.contentType,
-		originalKey: row.originalKey,
-		error: row.error,
 		createdAt: row.createdAt,
 		updatedAt: row.updatedAt,
 	};
@@ -32,7 +28,7 @@ function mapRow(row: {
 export async function insertPendingPhoto(
 	db: Db,
 	bucket: PurposeBucket,
-	input: { id: string; originalKey: string; contentType: string },
+	input: { id: string; contentType: string },
 ): Promise<PhotoRow> {
 	const now = new Date().toISOString();
 	const table = tableFor(bucket);
@@ -40,8 +36,6 @@ export async function insertPendingPhoto(
 		id: input.id,
 		status: 'pending' as const,
 		contentType: input.contentType,
-		originalKey: input.originalKey,
-		error: null,
 		createdAt: now,
 		updatedAt: now,
 	};
@@ -64,14 +58,13 @@ export async function updatePhotoStatus(
 	db: Db,
 	bucket: PurposeBucket,
 	id: string,
-	update: { status: PhotoStatus; error?: string | null },
+	status: PhotoStatus,
 ): Promise<void> {
 	const table = tableFor(bucket);
 	await db
 		.update(table)
 		.set({
-			status: update.status,
-			error: update.error === undefined ? undefined : update.error,
+			status,
 			updatedAt: new Date().toISOString(),
 		})
 		.where(eq(table.id, id));
