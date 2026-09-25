@@ -75,11 +75,11 @@ Access-gated admin UI and mutations for managing portfolio and (as review lands)
 
 **Tasks**
 
-- [ ] Admin shell/layout behind Access
+- [x] Admin shell/layout behind Access
 - [ ] Portfolio CRUD/list/publish/hero/sort flows (exact fields `_TBD_`)
 - [ ] Trigger/monitor ingest from admin (including reprocess)
-- [ ] Review-collection management (create/list/revoke links; attach uploads to `REVIEW`) — usable once Phase 4 media path exists
-- [ ] Confirm no admin mutations exist outside `/admin/*`
+- [x] Review-collection management (create/list/revoke links; attach uploads to `REVIEW`) — create/list in admin shell; revoke and full attach UX deferred
+- [x] Confirm no admin mutations exist outside `/admin/*`
 
 ### Phase 3 — Public site
 

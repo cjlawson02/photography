@@ -1,0 +1,149 @@
+---
+/** Phase 1 ingest smoke — embedded in admin shell (Phase 2). */
+---
+
+<form id="ingest-form" class="space-y-4">
+	<label class="block text-sm" style="color: var(--color-fg)">
+		Bucket
+		<select
+			id="bucket"
+			name="bucket"
+			class="mt-1 block w-full border px-3 py-2"
+			style="border-color: var(--color-border); background: var(--color-bg); color: var(--color-fg)"
+		>
+			<option value="portfolio">portfolio (PORTFOLIO)</option>
+			<option value="review">review (REVIEW)</option>
+		</select>
+	</label>
+	<label
+		id="collection-field"
+		class="block text-sm"
+		style="color: var(--color-fg); display: none"
+	>
+		Review collection
+		<select
+			id="collectionId"
+			name="collectionId"
+			class="mt-1 block w-full border px-3 py-2 text-sm"
+			style="border-color: var(--color-border); background: var(--color-bg); color: var(--color-fg)"
+		>
+			<option value="">Loading collections…</option>
+		</select>
+		<p class="mt-1 text-xs" style="color: var(--color-fg-muted)">
+			<a href="/admin/review" style="color: var(--color-accent)">Create a collection</a> if none appear.
+		</p>
+	</label>
+	<label class="block text-sm" style="color: var(--color-fg)">
+		Photo
+		<input
+			type="file"
+			name="file"
+			accept="image/*"
+			required
+			class="mt-1 block w-full text-sm"
+			style="color: var(--color-fg)"
+		/>
+	</label>
+	<button
+		type="submit"
+		class="px-4 py-2 text-sm"
+		style="background: var(--color-accent); color: var(--color-bg)"
+	>
+		Upload
+	</button>
+</form>
+
+<pre
+	id="ingest-status"
+	class="mt-6 overflow-x-auto p-3 text-xs"
+	style="background: color-mix(in oklab, var(--color-fg) 6%, transparent); color: var(--color-fg-muted)"
+	aria-live="polite"
+>Ready.</pre>
+
+<script>
+	import { uploadPhoto } from '../../lib/ingest/browser-upload.ts';
+
+	const form = document.getElementById('ingest-form');
+	const statusEl = document.getElementById('ingest-status');
+	const bucketSelect = document.getElementById('bucket');
+	const collectionField = document.getElementById('collection-field');
+	const collectionSelect = document.getElementById('collectionId');
+
+	type CollectionRow = { id: string; slug: string; title: string | null };
+
+	let collectionsLoaded = false;
+
+	async function loadCollections() {
+		if (!(collectionSelect instanceof HTMLSelectElement)) return;
+		try {
+			const res = await fetch('/admin/api/review/collections');
+			const json = (await res.json()) as {
+				ok?: boolean;
+				collections?: CollectionRow[];
+				error?: string;
+			};
+			if (!res.ok || !json.ok || !json.collections) {
+				collectionSelect.innerHTML = '<option value="">Could not load collections</option>';
+				return;
+			}
+			if (json.collections.length === 0) {
+				collectionSelect.innerHTML = '<option value="">No collections yet</option>';
+				return;
+			}
+			collectionSelect.innerHTML = json.collections
+				.map((row) => {
+					const label = row.title ? `${row.title} (${row.slug})` : row.slug;
+					return `<option value="${row.id}">${label}</option>`;
+				})
+				.join('');
+			collectionsLoaded = true;
+		} catch {
+			collectionSelect.innerHTML = '<option value="">Could not load collections</option>';
+		}
+	}
+
+	function syncCollectionVisibility() {
+		if (!(bucketSelect instanceof HTMLSelectElement) || !collectionField) return;
+		const show = bucketSelect.value === 'review';
+		collectionField.style.display = show ? 'block' : 'none';
+		if (show && !collectionsLoaded) void loadCollections();
+	}
+
+	bucketSelect?.addEventListener('change', syncCollectionVisibility);
+	syncCollectionVisibility();
+	void loadCollections();
+
+	form?.addEventListener('submit', async (event) => {
+		event.preventDefault();
+		if (!(form instanceof HTMLFormElement) || !statusEl) return;
+
+		const data = new FormData(form);
+		const file = data.get('file');
+		const bucket = data.get('bucket');
+		const collectionId = String(data.get('collectionId') ?? '').trim();
+
+		if (!(file instanceof File) || file.size === 0) {
+			statusEl.textContent = 'Choose an image file.';
+			return;
+		}
+		if (bucket !== 'portfolio' && bucket !== 'review') {
+			statusEl.textContent = 'Invalid bucket.';
+			return;
+		}
+		if (bucket === 'review' && !collectionId) {
+			statusEl.textContent = 'Pick a review collection (or create one under Review).';
+			return;
+		}
+
+		statusEl.textContent = 'Uploading…';
+		try {
+			const result =
+				bucket === 'review'
+					? await uploadPhoto({ file, bucket, collectionId })
+					: await uploadPhoto({ file, bucket });
+			statusEl.textContent = JSON.stringify(result, null, 2);
+		} catch (error) {
+			statusEl.textContent = error instanceof Error ? error.message : String(error);
+		}
+	});
+</script>

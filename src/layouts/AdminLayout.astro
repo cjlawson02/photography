@@ -1,0 +1,73 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+export type AdminNavId = 'dashboard' | 'portfolio' | 'review' | 'ingest';
+
+interface Props {
+	title?: string;
+	current?: AdminNavId;
+}
+
+const { title = 'Admin — Lawson Photography', current = 'dashboard' } = Astro.props;
+
+const nav: { id: AdminNavId; href: string; label: string }[] = [
+	{ id: 'dashboard', href: '/admin', label: 'Dashboard' },
+	{ id: 'portfolio', href: '/admin/portfolio', label: 'Portfolio' },
+	{ id: 'review', href: '/admin/review', label: 'Review' },
+	{ id: 'ingest', href: '/admin/ingest', label: 'Upload' },
+];
+
+function navLinkStyle(active: boolean): string {
+	return active
+		? 'color: var(--color-fg); border-color: var(--color-accent)'
+		: 'color: var(--color-fg-muted); border-color: transparent';
+}
+---
+
+<BaseLayout title={title}>
+	<div class="flex min-h-dvh flex-col">
+		<header
+			class="border-b px-4 py-4"
+			style="border-color: var(--color-border); background: var(--color-bg-elevated)"
+		>
+			<div class="mx-auto flex flex-wrap items-baseline justify-between gap-3" style="max-width: 72rem">
+				<div>
+					<p class="text-xs tracking-wide uppercase" style="color: var(--color-fg-muted)">Admin</p>
+					<p class="text-lg" style="font-family: var(--font-display); color: var(--color-fg)">
+						Lawson Photography
+					</p>
+				</div>
+				<p class="text-xs" style="color: var(--color-fg-muted)">Cloudflare Access · `/admin*`</p>
+			</div>
+		</header>
+
+		<div class="mx-auto flex w-full flex-1 flex-col gap-0 md:flex-row" style="max-width: 72rem">
+			<nav
+				class="border-b px-2 py-3 md:w-44 md:shrink-0 md:border-b-0 md:border-r md:py-6"
+				style="border-color: var(--color-border)"
+				aria-label="Admin sections"
+			>
+				<ul class="flex flex-row flex-wrap gap-1 md:flex-col">
+					{
+						nav.map((item) => (
+							<li>
+								<a
+									href={item.href}
+									class="block border-l-2 px-3 py-2 text-sm no-underline transition-colors hover:opacity-90"
+									style={navLinkStyle(item.id === current)}
+									aria-current={item.id === current ? 'page' : undefined}
+								>
+									{item.label}
+								</a>
+							</li>
+						))
+					}
+				</ul>
+			</nav>
+
+			<main class="flex-1 px-4 py-8 md:px-8">
+				<slot />
+			</main>
+		</div>
+	</div>
+</BaseLayout>

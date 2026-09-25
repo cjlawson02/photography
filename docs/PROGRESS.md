@@ -9,7 +9,8 @@
 | Implementation plan | Done | Phases 0–5 in [IMPLEMENTATION.md](IMPLEMENTATION.md) ([PR #1](https://github.com/cjlawson02/photography/pull/1)); aligned to filled HLD |
 | Level of effort | Done | Rough phase/task sizes in [LOE.md](LOE.md) |
 | Phase 0 — Foundation | Done | Astro Workers scaffold ([PR #3](https://github.com/cjlawson02/photography/pull/3)); data layer ([PR #6](https://github.com/cjlawson02/photography/pull/6)) |
-| Phase 1 — Ingest | In progress | Presign + complete + compress-once on DAO stack; Access/CORS blocked on hostname |
+| Phase 1 — Ingest | Done | Presign + complete + reprocess ([PR #7](https://github.com/cjlawson02/photography/pull/7)); Access/CORS blocked on hostname |
+| Phase 2 — Admin | In progress | Admin shell + review collection create/list (first slice) |
 
 Canonical plan: [IMPLEMENTATION.md](IMPLEMENTATION.md). Estimates: [LOE.md](LOE.md). Architecture: [HLD.md](HLD.md).
 
@@ -39,7 +40,8 @@ gantt
 
 | Date | Update |
 | --- | --- |
-| 2026-09-25 | Ingest: Cloudflare env zod, AppError HTTP codes, IngestService (no tRPC) |
+| 2026-09-25 | Phase 2 admin shell: layout, review collection create/list API, ingest moved under `/admin/ingest` |
+| 2026-09-25 | Phase 1 ingest merged ([PR #7](https://github.com/cjlawson02/photography/pull/7)) |
 | 2026-09-25 | Phase 1 ingest redo on FamilyNotes-style DAOs (presign/complete/reprocess; review `collectionId`) |
 | 2026-09-25 | Data layer aligned to FamilyNotes-style DAOs/schema ([PR #6](https://github.com/cjlawson02/photography/pull/6)) |
 | 2026-09-25 | Phase 0 merged; Phase 1 ingest superseded pending data-layer redo |

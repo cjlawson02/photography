@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
 import * as schema from '../../db/schema/index.ts';
@@ -43,6 +43,14 @@ export class ReviewCollectionsDAO {
 			.where(eq(ReviewCollections.slug, slug))
 			.limit(1);
 		return rows[0] ?? null;
+	}
+
+	async listRecent(limit = 100) {
+		return this.db
+			.select()
+			.from(ReviewCollections)
+			.orderBy(desc(ReviewCollections.createdAt))
+			.limit(limit);
 	}
 
 	async update(
