@@ -2,6 +2,7 @@ import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
 import * as schema from '../../db/schema/index.ts';
 import { PortfolioPhotosDAO } from './portfolio-photos-dao.ts';
+import { ReviewCollectionsDAO } from './review-collections-dao.ts';
 import { ReviewPhotosDAO } from './review-photos-dao.ts';
 
 type Db = DrizzleD1Database<typeof schema>;
@@ -14,10 +15,12 @@ export class D1DAO {
 	private static instance: D1DAO | undefined;
 
 	readonly portfolioPhotos: PortfolioPhotosDAO;
+	readonly reviewCollections: ReviewCollectionsDAO;
 	readonly reviewPhotos: ReviewPhotosDAO;
 
 	private constructor(db: Db) {
 		this.portfolioPhotos = new PortfolioPhotosDAO(db);
+		this.reviewCollections = new ReviewCollectionsDAO(db);
 		this.reviewPhotos = new ReviewPhotosDAO(db);
 	}
 

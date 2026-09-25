@@ -3,8 +3,10 @@ import { createInsertSchema, createSelectSchema, createUpdateSchema } from 'driz
 import { z } from 'zod/v4';
 
 import { PortfolioPhotos } from './portfolio/photos.ts';
+import { ReviewCollections } from './review/collections.ts';
 import { ReviewPhotos } from './review/photos.ts';
 import { photoStatuses } from './photo-status.ts';
+import { selectionStatuses } from './review/selection-status.ts';
 
 /** cuid2 primary key shape (matches `@paralleldrive/cuid2`). */
 export const idSchema = z.string().refine((value) => isCuid(value), 'Expected cuid2 id');
@@ -15,13 +17,18 @@ export const optionalTrimmedString = z.string().trim().min(1).optional();
 
 export const photoStatusSchema = z.enum(photoStatuses);
 
-const photoInsertBase = {
+export const selectionStatusSchema = z.enum(selectionStatuses);
+
+/** URL slug for `/review/{slug}` — non-empty trimmed string. */
+export const slugSchema = requiredTrimmedString;
+
+const immutableTimestamps = {
 	id: true as const,
 	createdAt: true as const,
 	updatedAt: true as const,
 };
 
-const photoUpdateOmit = {
+const updateOmitImmutable = {
 	id: true as const,
 	createdAt: true as const,
 };
@@ -34,31 +41,59 @@ export const portfolioPhotoSelectSchema = createSelectSchema(PortfolioPhotos, {
 export const portfolioPhotoInsertSchema = createInsertSchema(PortfolioPhotos, {
 	status: photoStatusSchema,
 	mimeType: optionalTrimmedString.nullable().optional(),
-}).omit(photoInsertBase);
+}).omit(immutableTimestamps);
 
 export const portfolioPhotoUpdateSchema = createUpdateSchema(PortfolioPhotos, {
 	status: photoStatusSchema.optional(),
 	mimeType: optionalTrimmedString.nullable().optional(),
-}).omit(photoUpdateOmit);
+}).omit(updateOmitImmutable);
+
+export const reviewCollectionSelectSchema = createSelectSchema(ReviewCollections, {
+	slug: slugSchema,
+	title: z.string().nullable(),
+	expiresAt: z.number().int().nullable(),
+});
+
+export const reviewCollectionInsertSchema = createInsertSchema(ReviewCollections, {
+	slug: slugSchema,
+	title: optionalTrimmedString.nullable().optional(),
+	expiresAt: z.number().int().nullable().optional(),
+}).omit(immutableTimestamps);
+
+export const reviewCollectionUpdateSchema = createUpdateSchema(ReviewCollections, {
+	slug: slugSchema.optional(),
+	title: optionalTrimmedString.nullable().optional(),
+	expiresAt: z.number().int().nullable().optional(),
+}).omit(updateOmitImmutable);
 
 export const reviewPhotoSelectSchema = createSelectSchema(ReviewPhotos, {
+	collectionId: idSchema,
 	status: photoStatusSchema,
 	mimeType: z.string().nullable(),
+	selectionStatus: selectionStatusSchema,
 });
 
 export const reviewPhotoInsertSchema = createInsertSchema(ReviewPhotos, {
+	collectionId: idSchema,
 	status: photoStatusSchema,
 	mimeType: optionalTrimmedString.nullable().optional(),
-}).omit(photoInsertBase);
+	selectionStatus: selectionStatusSchema.optional(),
+}).omit(immutableTimestamps);
 
 export const reviewPhotoUpdateSchema = createUpdateSchema(ReviewPhotos, {
+	collectionId: idSchema.optional(),
 	status: photoStatusSchema.optional(),
 	mimeType: optionalTrimmedString.nullable().optional(),
-}).omit(photoUpdateOmit);
+	selectionStatus: selectionStatusSchema.optional(),
+}).omit(updateOmitImmutable);
 
 export type PortfolioPhotoSelect = z.infer<typeof portfolioPhotoSelectSchema>;
 export type PortfolioPhotoInsert = z.infer<typeof portfolioPhotoInsertSchema>;
 export type PortfolioPhotoUpdate = z.infer<typeof portfolioPhotoUpdateSchema>;
+
+export type ReviewCollectionSelect = z.infer<typeof reviewCollectionSelectSchema>;
+export type ReviewCollectionInsert = z.infer<typeof reviewCollectionInsertSchema>;
+export type ReviewCollectionUpdate = z.infer<typeof reviewCollectionUpdateSchema>;
 
 export type ReviewPhotoSelect = z.infer<typeof reviewPhotoSelectSchema>;
 export type ReviewPhotoInsert = z.infer<typeof reviewPhotoInsertSchema>;

@@ -1,5 +1,6 @@
 export { D1DAO } from './d1-dao.ts';
 export { PortfolioPhotosDAO } from './portfolio-photos-dao.ts';
+export { ReviewCollectionsDAO } from './review-collections-dao.ts';
 export { ReviewPhotosDAO } from './review-photos-dao.ts';
 export {
 	R2DAO,
