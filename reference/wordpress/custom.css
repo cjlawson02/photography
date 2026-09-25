@@ -1,0 +1,24 @@
+.custom-logo {
+	padding: 10px;
+}
+
+.nav-menu {
+	text-align: right;
+	padding-right: 50px
+}
+
+.grecaptcha-badge { opacity:0; }
+
+.site-content-contain { background-color: #3b3b3b; }
+
+.site-info { background-color: #2b2b2b }
+
+.filter-button button { color: white; }
+
+.sbi_header_text h3 {
+	color: white;
+	font-family: Roboto;
+	font-weight: 400;
+}
+
+.site-content h2, h3, p { color: white; }
