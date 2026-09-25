@@ -47,14 +47,14 @@ Stand up the Workers + Astro hybrid app, wrangler bindings, D1 schema skeleton (
 
 **Tasks**
 
-- [ ] Astro hybrid SSR project + `wrangler.jsonc` Workers deploy path
-- [ ] D1 database + Drizzle; flat migration layout under `src/db`; empty portfolio vs review schema modules (no shared photos table)
-- [ ] Bind private R2 buckets `PORTFOLIO` and `REVIEW`
-- [ ] Configure R2 S3 API credentials/secrets and CORS for browser PUT (needed by Phase 1)
-- [ ] Tailwind + CSS design tokens (stub values OK; brand polish `_TBD_`)
-- [ ] Place all admin mutations under `/admin/api/*` (thin handlers; not Astro Actions — see [HLD Admin auth](HLD.md#admin-auth)) so one Access prefix covers UI + mutations
-- [ ] Cloudflare Access on `/admin*`; shared Access JWT verification helper for all `/admin/*` handlers
-- [ ] Env/secrets inventory for local + prod (`_TBD_` list — document as decided)
+- [x] Astro hybrid SSR project + `wrangler.jsonc` Workers deploy path ([PR #3](https://github.com/cjlawson02/photography/pull/3))
+- [x] D1 database + Drizzle; flat migration layout under `src/db`; portfolio vs review schema modules (no shared photos table) ([PR #6](https://github.com/cjlawson02/photography/pull/6))
+- [x] Bind private R2 buckets `PORTFOLIO` and `REVIEW`
+- [x] Configure R2 S3 API credentials/secrets and CORS for browser PUT — inventory + CORS IaC in repo; production apply per [DEPLOY.md](DEPLOY.md)
+- [x] Tailwind + CSS design tokens (stub/reference values; brand polish `_TBD_` — [PR #9](https://github.com/cjlawson02/photography/pull/9))
+- [x] Place all admin mutations under `/admin/api/*` (thin handlers; not Astro Actions — see [HLD Admin auth](HLD.md#admin-auth)) so one Access prefix covers UI + mutations
+- [x] Shared Access JWT verification helper for all `/admin/*` handlers; Zero Trust app on `/admin*` — create per [DEPLOY.md](DEPLOY.md)
+- [x] Env/secrets inventory for local + prod (`.dev.vars.example`, [DEPLOY.md](DEPLOY.md), [AGENTS.md](../AGENTS.md))
 
 ### Phase 1 — Ingest
 
@@ -75,10 +75,10 @@ Access-gated admin UI and mutations for managing portfolio and (as review lands)
 
 **Tasks**
 
-- [x] Admin shell/layout behind Access
+- [x] Admin shell/layout behind Access ([PR #8](https://github.com/cjlawson02/photography/pull/8))
 - [ ] Portfolio CRUD/list/publish/hero/sort flows (exact fields `_TBD_`)
-- [ ] Trigger/monitor ingest from admin (including reprocess)
-- [x] Review-collection management (create/list/revoke links; attach uploads to `REVIEW`) — create/list in admin shell; revoke and full attach UX deferred
+- [x] Trigger/monitor ingest from admin (including reprocess) — `/admin/ingest` smoke UI ([PR #8](https://github.com/cjlawson02/photography/pull/8))
+- [x] Review-collection management (create/list; attach uploads via ingest `collectionId`) — create/list API + admin UI ([PR #8](https://github.com/cjlawson02/photography/pull/8)); revoke links deferred
 - [x] Confirm no admin mutations exist outside `/admin/*`
 
 ### Phase 3 — Public site
@@ -88,10 +88,11 @@ Public portfolio pages served from Astro/Workers, reading portfolio D1 + deliver
 **Tasks**
 
 - [ ] Public routes matching live UX DNA (hero carousel, filterable galleries, lightbox); exact page inventory `_TBD_`
+- [x] Public home shell: `PublicLayout`, header/footer, placeholder hero + gallery grid, static category filter chips ([PR #10](https://github.com/cjlawson02/photography/pull/10))
 - [ ] Portfolio queries (published-only) from D1 portfolio domain
-- [ ] Worker route `/media/portfolio/{id}/{variant}` — allowlisted variant suffixes only; long `Cache-Control` / CDN cache
+- [x] Worker route `/media/portfolio/{id}/{variant}` — allowlisted variant suffixes only; long `Cache-Control` / CDN cache ([PR #10](https://github.com/cjlawson02/photography/pull/10))
 - [ ] SEO basics for public pages; ensure review URLs stay out of public indexes (see Phase 4)
-- [ ] Responsive layout using tokens from Phase 0
+- [x] Responsive layout using tokens from Phase 0 (public shell slice — [PR #10](https://github.com/cjlawson02/photography/pull/10))
 
 ### Phase 4 — Client review (phase 1)
 
