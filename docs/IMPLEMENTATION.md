@@ -87,7 +87,8 @@ Public portfolio pages served from Astro/Workers, reading portfolio D1 + deliver
 
 **Tasks**
 
-- [ ] Public routes matching live UX DNA (hero carousel, filterable galleries, lightbox); exact page inventory `_TBD_`
+- [x] Public home hero carousel (Embla + autoplay) + masonry gallery + PhotoSwipe lightbox (`gallery.webp`; published/ready D1, `/media/portfolio` variants) — [PR #13](https://github.com/cjlawson02/photography/pull/13)
+- [ ] Public routes matching live UX DNA beyond home; exact page inventory `_TBD_`
 - [x] Public home shell: `PublicLayout`, header/footer, placeholder hero + gallery grid, static category filter chips ([PR #10](https://github.com/cjlawson02/photography/pull/10))
 - [ ] Portfolio queries (published-only) from D1 portfolio domain
 - [x] Worker route `/media/portfolio/{id}/{variant}` — allowlisted variant suffixes only; long `Cache-Control` / CDN cache ([PR #10](https://github.com/cjlawson02/photography/pull/10))

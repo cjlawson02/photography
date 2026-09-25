@@ -53,25 +53,37 @@ const { photos } = Astro.props;
 				.
 			</p>
 		) : (
-			<ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4" data-gallery-grid>
+			<ul
+				class="m-0 list-none columns-2 gap-3 p-0 sm:columns-3 lg:columns-4"
+				data-gallery-grid
+			>
 				{photos.map((photo) => (
 					<li
 						data-gallery-item
 						data-category={photo.category ?? ''}
-						class="overflow-hidden border"
+						data-gallery-url={photo.galleryUrl}
+						data-gallery-width="1600"
+						data-gallery-height="1200"
+						class="mb-3 break-inside-avoid overflow-hidden border"
 						style="border-color: var(--color-border); background: var(--color-bg-elevated)"
 					>
-						<a href={photo.galleryUrl} class="block">
+						<button
+							type="button"
+							class="block w-full cursor-pointer border-0 p-0"
+							style="background: transparent"
+							data-gallery-open
+							aria-label="View larger image"
+						>
 							<img
-								src={photo.thumbUrl}
+								src={photo.galleryUrl}
 								alt=""
-								width={400}
-								height={300}
+								width={1600}
+								height={1200}
 								loading="lazy"
 								decoding="async"
-								class="aspect-[4/3] h-full w-full object-cover"
+								class="block h-auto w-full grayscale transition-[filter] duration-300 hover:grayscale-0"
 							/>
-						</a>
+						</button>
 					</li>
 				))}
 			</ul>
@@ -80,31 +92,8 @@ const { photos } = Astro.props;
 </section>
 
 <script>
-	const root = document.querySelector('[data-home-gallery]');
-	const filterRoot = root?.querySelector('[data-category-filter]');
-	const items = root?.querySelectorAll('[data-gallery-item]');
+	import { initHomeGallery } from '../../lib/client/home-gallery.ts';
 
-	function setActiveChip(active: string) {
-		filterRoot?.querySelectorAll('button[data-category]').forEach((button) => {
-			if (!(button instanceof HTMLButtonElement)) return;
-			const label = button.dataset.category ?? '';
-			const isActive = label === active;
-			button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-			button.style.borderColor = isActive ? 'var(--color-accent)' : 'var(--color-border)';
-			button.style.color = isActive ? 'var(--color-fg)' : 'var(--color-fg-muted)';
-		});
-	}
-
-	filterRoot?.addEventListener('click', (event) => {
-		const target = event.target;
-		if (!(target instanceof HTMLButtonElement) || !target.dataset.category) return;
-		const filter = target.dataset.category;
-		setActiveChip(filter);
-		items?.forEach((item) => {
-			if (!(item instanceof HTMLElement)) return;
-			const category = item.dataset.category ?? '';
-			const show = filter === 'All' || (filter !== '' && category === filter);
-			item.hidden = !show;
-		});
-	});
+	const galleryRoot = document.querySelector('[data-home-gallery]');
+	if (galleryRoot instanceof HTMLElement) initHomeGallery(galleryRoot);
 </script>
