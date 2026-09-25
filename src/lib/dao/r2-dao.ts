@@ -28,17 +28,17 @@ type R2Bindings = {
 /**
  * R2 access — Worker bindings for get/put + aws4fetch for virtual-hosted presign.
  * Virtual-hosted URL: `https://{bucket}.{accountId}.r2.cloudflarestorage.com/{key}`
+ * Production bootstrap always passes validated S3 secrets from `getCloudflareEnv`.
  */
 export class R2DAO {
 	private static instance: R2DAO | undefined;
 
 	private readonly aws: AwsClient;
 	private readonly accountId: string;
+	private readonly bindings: R2Bindings;
 
-	private constructor(
-		private readonly bindings: R2Bindings,
-		secrets: R2S3Secrets,
-	) {
+	private constructor(bindings: R2Bindings, secrets: R2S3Secrets) {
+		this.bindings = bindings;
 		this.accountId = secrets.accountId;
 		this.aws = new AwsClient({
 			accessKeyId: secrets.accessKeyId,
@@ -85,9 +85,24 @@ export class R2DAO {
 		return R2_BUCKET_NAMES[purpose];
 	}
 
+	/** Worker binding get — originals / variants inside a purpose bucket. */
+	async get(purpose: PurposeBucket, key: string): Promise<R2ObjectBody | null> {
+		return this.bucket(purpose).get(key);
+	}
+
+	/** Worker binding put — originals (server-side) or variant bytes after Images. */
+	async put(
+		purpose: PurposeBucket,
+		key: string,
+		value: ReadableStream | ArrayBuffer | ArrayBufferView | string | Blob | null,
+		options?: R2PutOptions,
+	): Promise<R2Object> {
+		return this.bucket(purpose).put(key, value, options);
+	}
+
 	/**
 	 * Mint a browser-facing presigned PUT (virtual-hosted style + signQuery).
-	 * Full ingest handlers that call this land in the follow-up PR.
+	 * Requires R2 S3 API secrets (always present on instances from AppEnv).
 	 */
 	async createPresignedPutUrl(options: {
 		bucket: PurposeBucket;

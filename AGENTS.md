@@ -58,21 +58,30 @@ _TBD — only rules that differ from language/tool defaults._
 
 Phase 0 smoke:
 
-- `GET /health` — public binding + DAO presence JSON
-- `GET /admin/api/health` — requires Access JWT (`Cf-Access-Jwt-Assertion`); returns 403 without it
+- `GET /health` — public binding + DAO presence JSON (does **not** require R2 S3 secrets)
+- `GET /admin/api/health` — requires Access JWT (`Cf-Access-Jwt-Assertion`); returns 403 without it; also bindings-only (no R2_*)
 
-Full feature tests `_TBD_`.
+Unit: `npm test` (Cloudflare env zod, AppError HTTP mapping, ingest keys/presign schema). End-to-end upload against live R2/Images `_TBD_` until Access + CORS + secrets are set.
+
+Ingest (`AppEnv.from` / `getCloudflareEnv`) **fail-fast** if `R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` are missing (503). Copy `.dev.vars.example` → `.dev.vars` and fill R2_* for `/admin` ingest preview.
+
+Phase 1 ingest (JWT + Zod body → `IngestService`):
+
+- `POST /admin/api/ingest/presign` — pending row + presigned PUT (`portfolio` | `review`; review requires `collectionId`)
+- `POST /admin/api/ingest/complete` — Images compress-once → variant puts → ready/failed
+- `POST /admin/api/ingest/reprocess` — re-run from original
+- Minimal smoke UI: `/admin`
 
 ## Security considerations
 
 - Never commit `.dev.vars`, Access AUD, or R2 S3 API keys. Use `.dev.vars.example` as the inventory template.
 - Copy `.dev.vars.example` → `.dev.vars` for local; production via `npx wrangler secret put <NAME>`.
 - Required secrets / config (values owned by Chris — do not invent):
-  - `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD` (still unset in `wrangler.jsonc`)
+  - `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD` (still unset in `wrangler.jsonc`; blocked until hostname/Access app exist — see project context)
   - `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` (presigned PUT; not covered by R2 bindings alone)
   - D1 + R2 resource names are wired in `wrangler.jsonc` (`photography`, `photography-portfolio`, `photography-review`)
-  - Configure R2 CORS on both buckets: admin origin + `PUT` (see [HLD Architecture](docs/HLD.md#architecture))
-  - Cloudflare Access application covering `/admin*`
+  - Configure R2 CORS on both buckets: admin origin + `PUT` (deferred until hostname chosen — see [HLD Architecture](docs/HLD.md#architecture))
+  - Cloudflare Access application covering `/admin*` (deferred until hostname chosen)
 - Admin mutations live only under `/admin/api/*` and must call `verifyAccessJwt` ([HLD Admin auth](docs/HLD.md#admin-auth)).
 
 ## Commit and PR guidelines

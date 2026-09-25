@@ -9,7 +9,7 @@ import { mergeDefined } from '../utils/merge-defined.ts';
 
 type Db = DrizzleD1Database<typeof schema>;
 
-/** Review photo DAO — ingest + selection fields; full ingest handlers later. */
+/** Review photo DAO — ingest + selection fields. */
 export class ReviewPhotosDAO {
 	constructor(private readonly db: Db) {}
 

@@ -1,6 +1,6 @@
 /**
  * Images Free binding wrapper — compress-once transforms at ingest.
- * Full variant pipeline (widths / put to R2) lands in the ingest redo PR.
+ * Variant widths/puts live in `IngestService` (`src/lib/services/ingest-service.ts`).
  */
 export class ImagesDAO {
 	private static instance: ImagesDAO | undefined;
