@@ -29,7 +29,10 @@
     "aws4fetch": "^1.0.20",
     "drizzle-orm": "^0.44.5",
     "drizzle-zod": "^0.8.3",
+    "embla-carousel": "^8.6.0",
+    "embla-carousel-autoplay": "^8.6.0",
     "jose": "^6.0.11",
+    "photoswipe": "^5.4.4",
     "tailwindcss": "^4.3.3",
     "wrangler": "^4.139.0",
     "zod": "^4.6.5"

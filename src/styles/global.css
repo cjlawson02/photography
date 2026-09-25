@@ -54,3 +54,16 @@ body {
 	margin: 0;
 	min-height: 100dvh;
 }
+
+/* PhotoSwipe — align chrome with site tokens */
+.pswp {
+	--pswp-bg: rgba(0, 0, 0, 0.92);
+	--pswp-icon-color: var(--color-fg);
+	--pswp-icon-color-secondary: var(--color-fg-muted);
+	--pswp-icon-stroke-color: var(--color-border);
+	--pswp-icon-stroke-width: 1px;
+}
+
+.pswp__button {
+	opacity: 0.9;
+}

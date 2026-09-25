@@ -53,13 +53,18 @@ const { photos } = Astro.props;
 				.
 			</p>
 		) : (
-			<ul class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4" data-gallery-grid>
+			<ul
+				class="m-0 list-none columns-2 gap-3 p-0 sm:columns-3 lg:columns-4"
+				data-gallery-grid
+			>
 				{photos.map((photo) => (
 					<li
 						data-gallery-item
 						data-category={photo.category ?? ''}
 						data-gallery-url={photo.galleryUrl}
-						class="overflow-hidden border"
+						data-gallery-width="1600"
+						data-gallery-height="1200"
+						class="mb-3 break-inside-avoid overflow-hidden border"
 						style="border-color: var(--color-border); background: var(--color-bg-elevated)"
 					>
 						<button
@@ -76,7 +81,7 @@ const { photos } = Astro.props;
 								height={300}
 								loading="lazy"
 								decoding="async"
-								class="aspect-[4/3] h-full w-full object-cover"
+								class="block h-auto w-full grayscale transition-[filter] duration-300 hover:grayscale-0"
 							/>
 						</button>
 					</li>
@@ -86,160 +91,8 @@ const { photos } = Astro.props;
 	}
 </section>
 
-<div
-	class="fixed inset-0 z-50 flex items-center justify-center p-4"
-	style="background: rgba(0, 0, 0, 0.92); color: var(--color-fg)"
-	data-gallery-lightbox
-	hidden
-	tabindex="-1"
-	role="dialog"
-	aria-modal="true"
-	aria-label="Image preview"
->
-	<button
-		type="button"
-		class="absolute top-4 right-4 border px-3 py-1.5 text-sm uppercase tracking-wide"
-		style="border-color: var(--color-border); color: var(--color-fg); background: var(--color-bg-elevated)"
-		data-lightbox-close
-		aria-label="Close preview"
-	>
-		Close
-	</button>
-	<button
-		type="button"
-		class="absolute top-1/2 left-2 -translate-y-1/2 border px-3 py-2 text-sm uppercase tracking-wide"
-		style="border-color: var(--color-border); color: var(--color-fg); background: var(--color-bg-elevated)"
-		data-lightbox-prev
-		aria-label="Previous image"
-	>
-		Prev
-	</button>
-	<button
-		type="button"
-		class="absolute top-1/2 right-2 -translate-y-1/2 border px-3 py-2 text-sm uppercase tracking-wide"
-		style="border-color: var(--color-border); color: var(--color-fg); background: var(--color-bg-elevated)"
-		data-lightbox-next
-		aria-label="Next image"
-	>
-		Next
-	</button>
-	<img
-		src=""
-		alt=""
-		class="max-h-[90vh] max-w-full object-contain"
-		data-lightbox-image
-		width={1600}
-		height={1200}
-	/>
-</div>
-
 <script>
-	function initHomeGallery(root: HTMLElement) {
-		const filterRoot = root.querySelector('[data-category-filter]');
-		const items = [...root.querySelectorAll('[data-gallery-item]')];
-		const lightbox = document.querySelector('[data-gallery-lightbox]');
-		const lightboxImage = lightbox?.querySelector('[data-lightbox-image]');
-		const closeBtn = lightbox?.querySelector('[data-lightbox-close]');
-		const prevBtn = lightbox?.querySelector('[data-lightbox-prev]');
-		const nextBtn = lightbox?.querySelector('[data-lightbox-next]');
-
-		let lightboxIndex = 0;
-
-		function visibleItems(): HTMLElement[] {
-			return items.filter((item) => {
-				if (!(item instanceof HTMLElement)) return false;
-				return !item.hidden;
-			}) as HTMLElement[];
-		}
-
-		function setActiveChip(active: string) {
-			filterRoot?.querySelectorAll('button[data-category]').forEach((button) => {
-				if (!(button instanceof HTMLButtonElement)) return;
-				const label = button.dataset.category ?? '';
-				const isActive = label === active;
-				button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-				button.style.borderColor = isActive ? 'var(--color-accent)' : 'var(--color-border)';
-				button.style.color = isActive ? 'var(--color-fg)' : 'var(--color-fg-muted)';
-			});
-		}
-
-		function applyFilter(filter: string) {
-			setActiveChip(filter);
-			items.forEach((item) => {
-				if (!(item instanceof HTMLElement)) return;
-				const category = item.dataset.category ?? '';
-				const show = filter === 'All' || (filter !== '' && category === filter);
-				item.hidden = !show;
-			});
-		}
-
-		function openLightbox(item: HTMLElement) {
-			if (!(lightbox instanceof HTMLElement) || !(lightboxImage instanceof HTMLImageElement)) return;
-			const visible = visibleItems();
-			lightboxIndex = visible.indexOf(item);
-			if (lightboxIndex < 0) return;
-			const url = item.dataset.galleryUrl ?? '';
-			lightboxImage.src = url;
-			lightbox.hidden = false;
-			document.body.style.overflow = 'hidden';
-			lightbox.focus();
-		}
-
-		function closeLightbox() {
-			if (!(lightbox instanceof HTMLElement) || !(lightboxImage instanceof HTMLImageElement)) return;
-			lightbox.hidden = true;
-			lightboxImage.src = '';
-			document.body.style.overflow = '';
-		}
-
-		function showLightboxAt(index: number) {
-			const visible = visibleItems();
-			if (visible.length === 0) return;
-			lightboxIndex = (index + visible.length) % visible.length;
-			const item = visible[lightboxIndex];
-			const url = item.dataset.galleryUrl ?? '';
-			if (lightboxImage instanceof HTMLImageElement) {
-				lightboxImage.src = url;
-			}
-		}
-
-		filterRoot?.addEventListener('click', (event) => {
-			const target = event.target;
-			if (!(target instanceof HTMLButtonElement) || !target.dataset.category) return;
-			applyFilter(target.dataset.category);
-		});
-
-		root.querySelectorAll('[data-gallery-open]').forEach((button) => {
-			button.addEventListener('click', () => {
-				const item = button.closest('[data-gallery-item]');
-				if (item instanceof HTMLElement) openLightbox(item);
-			});
-		});
-
-		closeBtn?.addEventListener('click', () => closeLightbox());
-		prevBtn?.addEventListener('click', () => showLightboxAt(lightboxIndex - 1));
-		nextBtn?.addEventListener('click', () => showLightboxAt(lightboxIndex + 1));
-
-		lightbox?.addEventListener('click', (event) => {
-			if (event.target === lightbox) closeLightbox();
-		});
-
-		document.addEventListener('keydown', (event) => {
-			if (!(lightbox instanceof HTMLElement) || lightbox.hidden) return;
-			if (event.key === 'Escape') {
-				event.preventDefault();
-				closeLightbox();
-			}
-			if (event.key === 'ArrowLeft') {
-				event.preventDefault();
-				showLightboxAt(lightboxIndex - 1);
-			}
-			if (event.key === 'ArrowRight') {
-				event.preventDefault();
-				showLightboxAt(lightboxIndex + 1);
-			}
-		});
-	}
+	import { initHomeGallery } from '../../lib/client/home-gallery.ts';
 
 	const galleryRoot = document.querySelector('[data-home-gallery]');
 	if (galleryRoot instanceof HTMLElement) initHomeGallery(galleryRoot);
