@@ -6,22 +6,23 @@ Lean build plan for the Lawson Photography rebuild. Architecture, bindings, and 
 
 Sequence the rebuild described in [HLD.md](HLD.md): foundation → ingest → admin → public portfolio → phase-1 client review → cutover.
 
-Out of scope for this plan: LOE numbers, scaffolding/code, and product copy/IA details still marked `_TBD_` in HLD.
+Out of scope for this plan: LOE numbers, scaffolding/code, and product details still marked `_TBD_` in HLD (exact D1 columns, variant set, public IA polish, cutover source).
 
 ## Do not reopen — see HLD
 
 Stack and product decisions are owned by [HLD.md](HLD.md). Do not mirror them here.
 
-Point at the closest stable HLD headings (bodies still `_TBD_`; finer § anchors wait on HLD structure):
+Point at HLD for locked decisions:
 
-- [Architecture](HLD.md#architecture)
-- [Key Components](HLD.md#key-components)
-- [Data & Content](HLD.md#data--content)
+- [Architecture](HLD.md#architecture) — Astro hybrid SSR on Workers, bindings, R2 S3 credentials/CORS for presigned PUT
+- [Key Components](HLD.md#key-components) — public site, admin, client review, Drizzle, Actions, Tailwind tokens
+- [Admin auth](HLD.md#admin-auth) — Access on `/admin*`; mutations under `/admin/*` + JWT verify
+- [Data & Content](HLD.md#data--content) — `PORTFOLIO`/`REVIEW` buckets, ingest sequence, D1 domain split, Worker delivery routes
 
-**Plan-only sequencing rules** (not architecture):
+**Plan-only sequencing rules** (not architecture restatement):
 
 - Every admin mutation stays under `/admin/*` and verifies the Access JWT (shapes Phase 0–2 task boundaries).
-- Phase-4 review stays link-secrecy only; a password gate is deferred (shapes Phase 4 scope, not HLD restatement).
+- Phase-4 review stays link-secrecy only; a password gate is deferred (shapes Phase 4 scope).
 
 ## Phases
 
@@ -47,46 +48,48 @@ Stand up the Workers + Astro hybrid app, wrangler bindings, D1 schema skeleton (
 **Tasks**
 
 - [ ] Astro hybrid SSR project + `wrangler.jsonc` Workers deploy path
-- [ ] D1 database + Drizzle; flat migration layout; empty portfolio vs review table domains
+- [ ] D1 database + Drizzle; flat migration layout under `src/db`; empty portfolio vs review schema modules (no shared photos table)
 - [ ] Bind private R2 buckets `PORTFOLIO` and `REVIEW`
 - [ ] Configure R2 S3 API credentials/secrets and CORS for browser PUT (needed by Phase 1)
-- [ ] Tailwind + CSS design tokens (visual system details `_TBD_` pending HLD/brand)
+- [ ] Tailwind + CSS design tokens (stub values OK; brand polish `_TBD_`)
+- [ ] Remount / place all admin mutations under `/admin/*` (e.g. `/admin/api/*` or Actions remount) so one Access prefix covers UI + mutations
 - [ ] Cloudflare Access on `/admin*`; shared Access JWT verification helper for all `/admin/*` handlers
-- [ ] Env/secrets inventory documented once decided (`_TBD_` in HLD)
+- [ ] Env/secrets inventory for local + prod (`_TBD_` list — document as decided)
 
 ### Phase 1 — Ingest
 
-Original upload via browser presigned PUT, compress-once via Images Free, Worker persists variant bytes under key prefixes, and D1 rows record portfolio (and later review) assets.
+Original upload via browser presigned PUT, compress-once via Images Free, Worker persists variant bytes under key prefixes, and D1 rows record assets for the target purpose bucket.
 
 **Tasks**
 
-- [ ] Admin-only endpoints under `/admin/*` to mint presigned PUT URLs (JWT verified)
-- [ ] Browser upload client: PUT to R2, then callback to complete ingest
-- [ ] Ingest completion handler: Images Free compress-once → Worker puts variant bytes to the correct bucket/prefix
-- [ ] D1 writes for portfolio domain metadata (ids, keys, variants, status) — exact columns `_TBD_` in HLD
-- [ ] Failure/retry behavior for incomplete PUT or compress failures (`_TBD_`)
+- [ ] Admin-only endpoints under `/admin/*` to mint presigned PUT URLs into `PORTFOLIO` or `REVIEW` (JWT verified)
+- [ ] Browser upload client: PUT to R2, then completion callback to Worker (v1 default per HLD)
+- [ ] Ingest completion handler: Images Free compress-once → Worker puts variant bytes beside original under key prefixes
+- [ ] D1 writes for portfolio domain metadata (ids, keys, variants, pending/ready/failed) — exact columns `_TBD_` in HLD
+- [ ] Reprocess path from original for failed photos (no full status state machine in v1)
+- [ ] Failure/retry behavior for incomplete PUT or compress failures (details `_TBD_`)
 
 ### Phase 2 — Admin
 
-Access-gated admin UI and mutations for managing portfolio and (as review lands) review galleries. Every mutating route stays under `/admin/*` with JWT verify.
+Access-gated admin UI and mutations for managing portfolio and (as review lands) review collections. Every mutating route stays under `/admin/*` with JWT verify.
 
 **Tasks**
 
 - [ ] Admin shell/layout behind Access
-- [ ] Portfolio CRUD/list/publish flows (fields and workflows `_TBD_`)
-- [ ] Trigger/monitor ingest from admin
-- [ ] Review-session management hooks (create/list/revoke) — usable once Phase 4 media path exists
+- [ ] Portfolio CRUD/list/publish/hero/sort flows (exact fields `_TBD_`)
+- [ ] Trigger/monitor ingest from admin (including reprocess)
+- [ ] Review-collection management (create/list/revoke links; attach uploads to `REVIEW`) — usable once Phase 4 media path exists
 - [ ] Confirm no admin mutations exist outside `/admin/*`
 
 ### Phase 3 — Public site
 
-Public portfolio pages served from Astro/Workers, reading portfolio D1 + delivering images from `PORTFOLIO` (private bucket; delivery mechanism per HLD).
+Public portfolio pages served from Astro/Workers, reading portfolio D1 + delivering images from private `PORTFOLIO` via Worker media routes (see [HLD delivery](HLD.md#delivery-url-strategy)).
 
 **Tasks**
 
-- [ ] Public routes/IA (`_TBD_` page inventory in HLD)
+- [ ] Public routes matching live UX DNA (hero carousel, filterable galleries, lightbox); exact page inventory `_TBD_`
 - [ ] Portfolio queries (published-only) from D1 portfolio domain
-- [ ] Image delivery for public portfolio (Worker media path or equivalent — `_TBD_` in HLD; must not use hosted Images storage)
+- [ ] Worker route `/media/portfolio/{id}/{variant}` — allowlisted variant suffixes only; long `Cache-Control` / CDN cache
 - [ ] SEO basics for public pages; ensure review URLs stay out of public indexes (see Phase 4)
 - [ ] Responsive layout using tokens from Phase 0
 
@@ -96,12 +99,12 @@ Shareable review links protected by secrecy only. Media via Worker `/media/revie
 
 **Tasks**
 
-- [ ] Review table domain: sessions/assets/expiry (schema details `_TBD_` in HLD)
+- [ ] Review Drizzle module/tables: collections, review photos, selections/approvals (exact columns `_TBD_` in HLD)
 - [ ] Create/revoke review links from admin (`/admin/*`)
-- [ ] Public review page(s) reachable only via secret link
-- [ ] Worker route `/media/review/...` serving from `REVIEW` bucket
-- [ ] `noindex` meta + robots rules for review surfaces
-- [ ] Shorter TTL and/or purge objects + rows on delete
+- [ ] Public review page(s) at `/review/{slug}` — link secrecy only; select/approve UX wired to review-domain mutations
+- [ ] Worker route `/media/review/{id}/{variant}` serving from `REVIEW` bucket (allowlisted variants)
+- [ ] `noindex` meta + `robots.txt` Disallow for review surfaces
+- [ ] On review object delete: purge CDN for affected `/media/review/...` keys and/or shorter TTL than portfolio
 - [ ] Document extension point for a future password gate (no implementation in v1)
 
 ### Phase 5 — Cutover
@@ -119,7 +122,7 @@ Move traffic/content from the current site to the new Workers deployment. Exact 
 
 | Depends on | For |
 | --- | --- |
-| [HLD.md](HLD.md) filled beyond stubs | Schema columns, public IA, media delivery shape, brand/tokens, cutover source |
+| Remaining HLD `_TBD_`s (columns, variant set, IA polish, cutover) | Tighten later phases — **not** required to start Phase 0 scaffold |
 | R2 S3 API secrets + CORS | Browser presigned PUT |
 | Cloudflare Access application for `/admin*` | Admin shell and all mutations |
 | Images Free (compress) entitlement | Ingest pipeline |
@@ -129,22 +132,25 @@ Move traffic/content from the current site to the new Workers deployment. Exact 
 
 | Risk | Mitigation direction |
 | --- | --- |
-| HLD still stubbed — plan may need re-chunking | Keep tasks coarse; refine after HLD approval |
 | Presigned PUT CORS / credential misconfig | Prove upload smoke in Phase 0/1 before admin UI polish |
-| Accidental public exposure of review media | Private `REVIEW` bucket; Worker gate; `noindex`; purge/TTL |
-| Admin mutation reachable without Access JWT | Enforce verify on every `/admin/*` mutation; deny by default |
-| Scope creep into passworded review or extra buckets | Explicitly deferred; phase-1 link secrecy only |
+| Accidental public exposure of review media | Private `REVIEW` bucket; Worker-only delivery; `noindex`; purge/TTL |
+| Admin mutation reachable without Access JWT | Mount under `/admin/*`; verify JWT on every mutation; deny by default |
+| Scope creep into passworded review, hosted Images storage, or extra buckets | Explicitly deferred in HLD; phase-1 link secrecy only |
+| Column/IA `_TBD_` churn after scaffold | Keep Phase 0 schema as empty domain modules; refine columns before Phase 1–3 polish |
 
 ## Open questions
 
-Need Chris / HLD before scaffolding:
+Answered in HLD (do not reopen here): stack host (Workers), bucket split, Worker delivery routes (`/media/portfolio/...`, `/media/review/...`), Access+JWT admin model, ingest v1 completion callback, Images Free compress-once, no tRPC / no hosted Images storage, phase-1 link-secrecy review.
 
-1. **HLD completion** — [Architecture](HLD.md#architecture), [Key Components](HLD.md#key-components), and [Data & Content](HLD.md#data--content) are still `_TBD_`. Fill those before scaffolding; finer IMPLEMENTATION pointers depend on named HLD subsections.
+Still need Chris / HLD before *tightening* later phases (scaffold can proceed with stubs):
+
+1. **Exact D1 columns** within portfolio vs review domains — `_TBD_` in HLD
 2. **Public IA & portfolio model** — Which pages/sections ship in v1? Album vs single-image vs mixed?
-3. **Public media delivery** — Exact Worker path/caching for portfolio images (review path is `/media/review/...`).
-4. **Ingest variant set** — Which widths/formats after Images Free compress-once?
-5. **Review TTL default** — Duration, and purge-on-delete vs expiry-only.
+3. **Ingest variant set** — Which widths/formats after Images Free compress-once?
+4. **Post-upload trigger alternatives** — R2 event notification or admin “process” action vs v1 browser callback (`_TBD_` alternatives only)
+5. **Review TTL default** — Duration; purge-on-delete vs expiry-only (HLD requires purge and/or shorter TTL hygiene)
 6. **Legacy cutover source** — Where do existing assets/content live today?
-7. **Brand / visual direction** — Token values and type choices (needed for Phase 0 UI polish; can stub tokens first).
+7. **Brand / visual direction** — Token values and type choices (Phase 0 can stub tokens first)
+8. **Second D1 database** — Only if isolation requirements change (HLD default: one D1, table boundary only)
 
-Items above should be resolved in HLD (or explicitly deferred), not invented in this file.
+Resolve in HLD (or explicitly defer); do not invent answers in this file.
