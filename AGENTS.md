@@ -20,11 +20,23 @@ npm run build            # astro build (Workers SSR bundle + static assets in di
 npm run dev              # astro dev (workerd via @astrojs/cloudflare)
 ```
 
-D1 migrations live in `src/db/migrations/` (flat SQL). That directory is empty until real schema lands (columns `_TBD_` in [HLD](docs/HLD.md)). When SQL files exist:
+### D1 / Drizzle
+
+Schema: FamilyNotes-style PascalCase tables + camelCase columns under `src/db/schema/`.
+Migrations: `drizzle-kit generate` → SQL in `src/db/migrations/` → wrangler apply.
 
 ```bash
+npm run db:generate      # drizzle-kit generate (no Cloudflare credentials)
 npm run db:migrate:local # wrangler d1 migrations apply photography --local
+# Remote (after review): npx wrangler d1 migrations apply photography --remote
 ```
+
+Optional drizzle-kit d1-http introspect/push (not required for generate→apply) needs env vars — do not commit tokens:
+
+- `CLOUDFLARE_ACCOUNT_ID`
+- `CLOUDFLARE_D1_TOKEN` (API token with D1 edit)
+
+Known D1: name `photography`, id `4f01bd2c-355d-4501-914d-7cb9cf68a70c` (see `wrangler.jsonc`).
 
 Validate the Workers bundle without uploading (after `npm run build`):
 
@@ -46,7 +58,7 @@ _TBD — only rules that differ from language/tool defaults._
 
 Phase 0 smoke:
 
-- `GET /health` — public binding presence JSON
+- `GET /health` — public binding + DAO presence JSON
 - `GET /admin/api/health` — requires Access JWT (`Cf-Access-Jwt-Assertion`); returns 403 without it
 
 Full feature tests `_TBD_`.
