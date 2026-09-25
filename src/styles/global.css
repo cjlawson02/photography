@@ -1,0 +1,48 @@
+@import "tailwindcss";
+
+/*
+  Design tokens — stub values only.
+  Brand / visual polish is _TBD_ (see docs/HLD.md Open Questions).
+*/
+:root {
+	--color-bg: #0f1115;
+	--color-bg-elevated: #1a1d24;
+	--color-fg: #f2f0eb;
+	--color-fg-muted: #a8a29a;
+	--color-accent: #c4a574;
+	--color-border: #2a2e38;
+
+	--font-sans: "IBM Plex Sans", "Segoe UI", sans-serif;
+	--font-display: "IBM Plex Serif", Georgia, serif;
+
+	--space-1: 0.25rem;
+	--space-2: 0.5rem;
+	--space-3: 1rem;
+	--space-4: 1.5rem;
+	--space-5: 2.5rem;
+
+	--measure: 65ch;
+	--radius: 0;
+}
+
+@theme inline {
+	--color-bg: var(--color-bg);
+	--color-bg-elevated: var(--color-bg-elevated);
+	--color-fg: var(--color-fg);
+	--color-fg-muted: var(--color-fg-muted);
+	--color-accent: var(--color-accent);
+	--color-border: var(--color-border);
+	--font-sans: var(--font-sans);
+	--font-display: var(--font-display);
+}
+
+html {
+	background: var(--color-bg);
+	color: var(--color-fg);
+	font-family: var(--font-sans);
+}
+
+body {
+	margin: 0;
+	min-height: 100dvh;
+}

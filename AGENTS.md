@@ -10,7 +10,28 @@ Photography website for Chris Lawson. Details live in docs; start from the point
 
 ## Build and test commands
 
-_TBD — add exact, copy-pasteable commands only after they exist in the repo._
+Requires Node `>=22.12.0` (Astro 7). Prefer a current Node 22 LTS if the environment’s default is older.
+
+```bash
+npm install
+npm run generate-types   # wrangler types → worker-configuration.d.ts (needs valid wrangler.jsonc)
+npm run typecheck        # astro check
+npm run build            # astro build (Workers SSR bundle + static assets in dist/)
+npm run dev              # astro dev (workerd via @astrojs/cloudflare)
+npm run db:migrate:local # wrangler d1 migrations apply lawson-photography --local
+```
+
+Validate the Workers bundle without uploading (after `npm run build`):
+
+```bash
+npx wrangler deploy --dry-run
+```
+
+Deploy (after Cloudflare account resources exist — D1 id, R2 buckets, secrets):
+
+```bash
+npx wrangler deploy
+```
 
 ## Code style guidelines
 
@@ -18,11 +39,25 @@ _TBD — only rules that differ from language/tool defaults._
 
 ## Testing instructions
 
-_TBD_
+Phase 0 smoke:
+
+- `GET /health` — public binding presence JSON
+- `GET /admin/api/health` — requires Access JWT (`Cf-Access-Jwt-Assertion`); returns 403 without it
+
+Full feature tests `_TBD_`.
 
 ## Security considerations
 
-_TBD — secrets handling, files never to commit or modify._
+- Never commit `.dev.vars`, Access AUD, or R2 S3 API keys. Use `.dev.vars.example` as the inventory template.
+- Copy `.dev.vars.example` → `.dev.vars` for local; production via `npx wrangler secret put <NAME>`.
+- Required secrets / config (values owned by Chris — do not invent):
+  - `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD`
+  - `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` (presigned PUT; not covered by R2 bindings alone)
+  - Replace D1 `database_id` in `wrangler.jsonc` after `npx wrangler d1 create lawson-photography`
+  - Create private R2 buckets matching `lawson-portfolio` / `lawson-review` (or rename bindings’ `bucket_name`)
+  - Configure R2 CORS on both buckets: admin origin + `PUT` (see [HLD Architecture](docs/HLD.md#architecture))
+  - Cloudflare Access application covering `/admin*`
+- Admin mutations live only under `/admin/api/*` and must call `verifyAccessJwt` ([HLD Admin auth](docs/HLD.md#admin-auth)).
 
 ## Commit and PR guidelines
 

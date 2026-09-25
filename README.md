@@ -1,15 +1,25 @@
 # Chris Lawson Photography
 
-Photography website for Chris Lawson.
+Photography website for Chris Lawson — Astro hybrid SSR on Cloudflare Workers.
 
 ## Documentation
 
 | Document | Purpose |
 | --- | --- |
-| [AGENTS.md](AGENTS.md) | Agent working guide (see [agents.md](https://agents.md/)) |
+| [AGENTS.md](AGENTS.md) | Agent working guide (commands, secrets inventory) |
 | [docs/HLD.md](docs/HLD.md) | High-level design (Mermaid) |
 | [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md) | Implementation plan (Mermaid) |
 | [docs/LOE.md](docs/LOE.md) | Estimates |
 | [docs/PROGRESS.md](docs/PROGRESS.md) | Status, Gantt schedule, & changelog |
 
-Diagrams use [Mermaid](https://mermaid.js.org/). One source of truth per topic — see AGENTS.md. Details to follow.
+Diagrams use [Mermaid](https://mermaid.js.org/). One source of truth per topic — see AGENTS.md.
+
+## Quick start
+
+```bash
+npm install
+cp .dev.vars.example .dev.vars   # fill secrets locally; never commit
+npm run dev
+```
+
+See [AGENTS.md](AGENTS.md) for build/typecheck/migrate/deploy commands and the secrets checklist.
