@@ -78,7 +78,7 @@ Access-gated admin UI and mutations for managing portfolio and (as review lands)
 - [x] Admin shell/layout behind Access ([PR #8](https://github.com/cjlawson02/photography/pull/8))
 - [ ] Portfolio CRUD/list/publish/hero/sort flows (exact fields `_TBD_`)
 - [x] Trigger/monitor ingest from admin (including reprocess) — `/admin/ingest` smoke UI ([PR #8](https://github.com/cjlawson02/photography/pull/8))
-- [x] Review-collection management (create/list; attach uploads via ingest `collectionId`) — create/list API + admin UI ([PR #8](https://github.com/cjlawson02/photography/pull/8)); revoke links deferred
+- [x] Review-collection management (create/list/revoke; attach uploads via ingest `collectionId`) — API + admin UI ([PR #8](https://github.com/cjlawson02/photography/pull/8)); revoke in Phase 4
 - [x] Confirm no admin mutations exist outside `/admin/*`
 
 ### Phase 3 — Public site
@@ -92,7 +92,7 @@ Public portfolio pages served from Astro/Workers, reading portfolio D1 + deliver
 - [x] Public home shell: `PublicLayout`, header/footer, placeholder hero + gallery grid, static category filter chips ([PR #10](https://github.com/cjlawson02/photography/pull/10))
 - [ ] Portfolio queries (published-only) from D1 portfolio domain
 - [x] Worker route `/media/portfolio/{id}/{variant}` — allowlisted variant suffixes only; long `Cache-Control` / CDN cache ([PR #10](https://github.com/cjlawson02/photography/pull/10))
-- [ ] SEO basics for public pages; ensure review URLs stay out of public indexes (see Phase 4)
+- [ ] SEO basics for public portfolio pages (review `noindex` — Phase 4)
 - [x] Responsive layout using tokens from Phase 0 (public shell slice — [PR #10](https://github.com/cjlawson02/photography/pull/10))
 
 ### Phase 4 — Client review (phase 1)
@@ -101,13 +101,13 @@ Shareable review links protected by secrecy only. Media via Worker `/media/revie
 
 **Tasks**
 
-- [ ] Review Drizzle module/tables: collections, review photos, selections/approvals (exact columns `_TBD_` in HLD)
-- [ ] Create/revoke review links from admin (`/admin/*`)
-- [ ] Public review page(s) at `/review/{slug}` — link secrecy only; select/approve UX wired to review-domain mutations
-- [ ] Worker route `/media/review/{id}/{variant}` serving from `REVIEW` bucket (allowlisted variants)
-- [ ] `noindex` meta + `robots.txt` Disallow for review surfaces
-- [ ] On review object delete: purge CDN for affected `/media/review/...` keys and/or shorter TTL than portfolio
-- [ ] Document extension point for a future password gate (no implementation in v1)
+- [x] Review Drizzle module/tables: collections, review photos, `selectionStatus` (Phase 2 / [PR #6](https://github.com/cjlawson02/photography/pull/6))
+- [x] Create/revoke review links from admin (`DELETE /admin/api/review/collections/{id}`)
+- [x] Public review page at `/review/{slug}` — link secrecy only; select/approve via `POST /review/api/selection`
+- [x] Worker route `/media/review/{id}/{variant}` serving from `REVIEW` bucket (allowlisted variants)
+- [x] `noindex` meta + `robots.txt` Disallow for review surfaces
+- [x] On review revoke: optional R2 cleanup + shorter `/media/review` cache TTL than portfolio
+- [x] Extension point for future password gate — `resolveReviewCollectionAccess` in `src/lib/review/collection-access.ts`
 
 ### Phase 5 — Cutover
 

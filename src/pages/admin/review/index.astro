@@ -9,8 +9,8 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 		Review collections
 	</h1>
 	<p class="mt-2 text-sm" style="color: var(--color-fg-muted); max-width: var(--measure)">
-		Proofing sets addressed by slug. Shareable <code>/review/&#123;slug&#125;</code> pages and client
-		selections land in Phase 4; here you can create collections and use their ids for REVIEW ingest.
+		Proofing sets addressed by slug. Share the client link below; selections save on the public review
+		page. Use collection ids for REVIEW ingest.
 	</p>
 
 	<section class="mt-8">
@@ -78,12 +78,14 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 						<th class="py-2 pr-4 font-normal">Slug</th>
 						<th class="py-2 pr-4 font-normal">Title</th>
 						<th class="py-2 pr-4 font-normal">Expires</th>
+						<th class="py-2 pr-4 font-normal">Link</th>
+						<th class="py-2 pr-4 font-normal">Actions</th>
 						<th class="py-2 font-normal">Id</th>
 					</tr>
 				</thead>
 				<tbody id="collections-body">
 					<tr>
-						<td colspan="4" class="py-4 text-xs" style="color: var(--color-fg-muted)">Loading…</td>
+						<td colspan="6" class="py-4 text-xs" style="color: var(--color-fg-muted)">Loading…</td>
 					</tr>
 				</tbody>
 			</table>
@@ -113,17 +115,24 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 		if (!tbody) return;
 		if (rows.length === 0) {
 			tbody.innerHTML =
-				'<tr><td colspan="4" class="py-4 text-xs" style="color: var(--color-fg-muted)">No collections yet.</td></tr>';
+				'<tr><td colspan="6" class="py-4 text-xs" style="color: var(--color-fg-muted)">No collections yet.</td></tr>';
 			return;
 		}
 		tbody.innerHTML = rows
 			.map(
-				(row) => `<tr style="border-bottom: 1px solid var(--color-border)">
+				(row) => {
+					const reviewPath = `/review/${encodeURIComponent(row.slug)}`;
+					return `<tr style="border-bottom: 1px solid var(--color-border)">
 			<td class="py-2 pr-4">${escapeHtml(row.slug)}</td>
 			<td class="py-2 pr-4">${escapeHtml(row.title ?? '—')}</td>
 			<td class="py-2 pr-4 text-xs">${escapeHtml(formatExpires(row.expiresAt))}</td>
+			<td class="py-2 pr-4 text-xs"><a href="${reviewPath}" style="color: var(--color-accent)">${escapeHtml(reviewPath)}</a></td>
+			<td class="py-2 pr-4 text-xs">
+				<button type="button" data-revoke-id="${escapeHtml(row.id)}" style="color: var(--color-fg-muted)">Revoke</button>
+			</td>
 			<td class="py-2 font-mono text-xs" style="color: var(--color-fg-muted)">${escapeHtml(row.id)}</td>
-		</tr>`,
+		</tr>`;
+				},
 			)
 			.join('');
 	}
@@ -146,7 +155,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 			};
 			if (!res.ok || !json.ok || !json.collections) {
 				if (tbody) {
-					tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-xs" style="color: var(--color-fg-muted)">${escapeHtml(json.error ?? 'Failed to load')}</td></tr>`;
+					tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-xs" style="color: var(--color-fg-muted)">${escapeHtml(json.error ?? 'Failed to load')}</td></tr>`;
 				}
 				return;
 			}
@@ -154,7 +163,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 		} catch {
 			if (tbody) {
 				tbody.innerHTML =
-					'<tr><td colspan="4" class="py-4 text-xs" style="color: var(--color-fg-muted)">Failed to load</td></tr>';
+					'<tr><td colspan="6" class="py-4 text-xs" style="color: var(--color-fg-muted)">Failed to load</td></tr>';
 			}
 		}
 	}
@@ -201,6 +210,31 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 			await loadCollections();
 		} catch {
 			createStatus.textContent = 'Create failed';
+		}
+	});
+
+	tbody?.addEventListener('click', async (event) => {
+		const target = event.target;
+		if (!(target instanceof HTMLButtonElement) || !target.dataset.revokeId) return;
+		const id = target.dataset.revokeId;
+		if (!confirm('Revoke this review link? Clients will lose access; R2 objects are deleted.')) {
+			return;
+		}
+		target.disabled = true;
+		try {
+			const res = await fetch(`/admin/api/review/collections/${encodeURIComponent(id)}`, {
+				method: 'DELETE',
+			});
+			const json = (await res.json()) as { ok?: boolean; error?: string };
+			if (!res.ok || !json.ok) {
+				alert(json.error ?? 'Revoke failed');
+				return;
+			}
+			await loadCollections();
+		} catch {
+			alert('Revoke failed');
+		} finally {
+			target.disabled = false;
 		}
 	});
 

@@ -25,7 +25,7 @@ export const GET: APIRoute = async ({ request }) => {
 };
 
 /**
- * Create a review collection (slug unique). Public `/review/{slug}` is Phase 4.
+ * Create a review collection (slug unique). Public page at `/review/{slug}`.
  */
 export const POST: APIRoute = async ({ request }) => {
 	const auth = await requireAdmin(request, accessEnvFrom(env));
