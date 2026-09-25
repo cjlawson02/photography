@@ -6,14 +6,14 @@
 | --- | --- | --- |
 | Documentation framework | Done | Initial scaffold |
 | Mermaid / Gantt stubs | Done | See HLD, Implementation, Progress |
-| High-level design | Not started | — |
-| Implementation plan | Not started | — |
-| Level of effort | Not started | — |
+| High-level design | Done | Cloudflare Astro Workers stack locked in [HLD.md](HLD.md) |
+| Implementation plan | Not started | Next — Cursor Project / [IMPLEMENTATION.md](IMPLEMENTATION.md) |
+| Level of effort | Not started | After implementation phases exist |
 | Site build | Not started | — |
 
 ## Schedule
 
-_TBD_ — dates and task names below are placeholders.
+_TBD_ — dates below are placeholders; refine when IMPLEMENTATION exists.
 
 ```mermaid
 gantt
@@ -23,8 +23,8 @@ gantt
 
   section Planning
   Docs framework           :done,    docs, 2026-09-24, 1d
-  HLD                      :active,  hld,  2026-09-25, 3d
-  Implementation plan      :         impl, after hld, 3d
+  HLD                      :done,    hld,  2026-09-24, 1d
+  Implementation plan      :active,  impl, after hld, 3d
   LOE refinement           :         loe,  after impl, 2d
 
   section Build
@@ -44,3 +44,4 @@ gantt
 | 2026-09-24 | Added Mermaid diagram and Gantt chart stubs |
 | 2026-09-24 | Added AGENTS.md; Gantt owned by Progress (DRY) |
 | 2026-09-24 | Aligned AGENTS.md with agents.md best practices |
+| 2026-09-24 | HLD locked: Astro Workers, PORTFOLIO+REVIEW R2, Access, Drizzle, phase-1 review |
