@@ -10,7 +10,6 @@ describe('selectHeroPhotos', () => {
 		category: null,
 		sortOrder: null,
 		hero: false,
-		thumbUrl: '/media/portfolio/a/thumb.webp',
 		galleryUrl: '/media/portfolio/a/gallery.webp',
 		...overrides,
 	});

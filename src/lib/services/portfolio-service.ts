@@ -10,7 +10,7 @@ export type PublicPortfolioPhoto = {
 	category: string | null;
 	sortOrder: number | null;
 	hero: boolean;
-	thumbUrl: string;
+	/** Public delivery: ingest `gallery.webp` (1600px wide) — largest generated variant. */
 	galleryUrl: string;
 };
 
@@ -35,7 +35,6 @@ export class PortfolioService {
 			category: row.category,
 			sortOrder: row.sortOrder,
 			hero: row.hero,
-			thumbUrl: `/media/portfolio/${row.id}/thumb.webp`,
 			galleryUrl: `/media/portfolio/${row.id}/gallery.webp`,
 		}));
 	}
@@ -92,7 +91,6 @@ export async function listPublishedPortfolioPhotos(
 		category: row.category,
 		sortOrder: row.sortOrder,
 		hero: row.hero,
-		thumbUrl: `/media/portfolio/${row.id}/thumb.webp`,
 		galleryUrl: `/media/portfolio/${row.id}/gallery.webp`,
 	}));
 }
