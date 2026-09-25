@@ -9,8 +9,14 @@
 | Implementation plan | Done | Phases 0–5 in [IMPLEMENTATION.md](IMPLEMENTATION.md) ([PR #1](https://github.com/cjlawson02/photography/pull/1)); aligned to filled HLD |
 | Level of effort | Done | Rough phase/task sizes in [LOE.md](LOE.md) |
 | Phase 0 — Foundation | Done | Astro Workers scaffold ([PR #3](https://github.com/cjlawson02/photography/pull/3)); data layer ([PR #6](https://github.com/cjlawson02/photography/pull/6)) |
-| Phase 1 — Ingest | Done | Presign + complete + reprocess ([PR #7](https://github.com/cjlawson02/photography/pull/7)); Access/CORS blocked on hostname |
-| Phase 2 — Admin | In progress | Admin shell + review collection create/list (first slice) |
+| Phase 1 — Ingest | Done | Presign + complete + reprocess ([PR #7](https://github.com/cjlawson02/photography/pull/7)) |
+| Phase 2 — Admin | In progress | Shell, review collections API/UI, ingest UI ([PR #8](https://github.com/cjlawson02/photography/pull/8)); portfolio CRUD/publish still open |
+| Phase 3 — Public site | In progress | Home shell, static filter chips, `/media/portfolio` delivery ([PR #10](https://github.com/cjlawson02/photography/pull/10)); carousel, lightbox, D1-backed galleries still open |
+| Phase 4 — Client review | Not started | Public `/review/{slug}`, `/media/review`, `noindex` — see [IMPLEMENTATION.md](IMPLEMENTATION.md) Phase 4 |
+
+Production hostname and ops checklist (Access app, R2 CORS apply, secrets): [DEPLOY.md](DEPLOY.md) — not design blockers.
+
+Phases intentionally overlap: admin review tooling lands before public review surfaces; portfolio media delivery precedes full public IA and portfolio CRUD.
 
 Canonical plan: [IMPLEMENTATION.md](IMPLEMENTATION.md). Estimates: [LOE.md](LOE.md). Architecture: [HLD.md](HLD.md).
 
@@ -32,15 +38,20 @@ gantt
 
   section Build
   Phase 0 Foundation        :done,    p0, 2026-09-25, 1d
-  Phase 1 Ingest            :active,  p1, after p0, 1d
-  Phases 2–5 (see LOE)      :         later, after p1, 1d
+  Phase 1 Ingest            :done,    p1, after p0, 1d
+  Phase 2 Admin             :active,  p2, after p1, 2d
+  Phase 3 Public site       :active,  p3, after p1, 2d
+  Phase 4 Client review     :         p4, after p2, 1d
+  Phase 5 Cutover           :         p5, after p3, 1d
 ```
 
 ## Changelog
 
 | Date | Update |
 | --- | --- |
-| 2026-09-25 | Phase 2 admin shell: layout, review collection create/list API, ingest moved under `/admin/ingest` |
+| 2026-09-25 | Progress/IMPLEMENTATION sync through [PR #10](https://github.com/cjlawson02/photography/pull/10): Phase 1 done; Phase 2/3 partial; Gantt + status table |
+| 2026-09-25 | Public shell + `/media/portfolio` + deploy hostname docs ([PR #10](https://github.com/cjlawson02/photography/pull/10)); WP reference tokens ([PR #9](https://github.com/cjlawson02/photography/pull/9)) |
+| 2026-09-25 | Phase 2 admin shell: layout, review collection create/list API, ingest under `/admin/ingest` ([PR #8](https://github.com/cjlawson02/photography/pull/8)) |
 | 2026-09-25 | Phase 1 ingest merged ([PR #7](https://github.com/cjlawson02/photography/pull/7)) |
 | 2026-09-25 | Phase 1 ingest redo on FamilyNotes-style DAOs (presign/complete/reprocess; review `collectionId`) |
 | 2026-09-25 | Data layer aligned to FamilyNotes-style DAOs/schema ([PR #6](https://github.com/cjlawson02/photography/pull/6)) |
