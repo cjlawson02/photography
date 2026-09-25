@@ -1,0 +1,17 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+
+/** Portfolio admin placeholder — CRUD/publish/hero/sort _TBD_ in HLD. */
+---
+
+<AdminLayout title="Admin — Portfolio" current="portfolio">
+	<h1 class="text-2xl" style="font-family: var(--font-display); color: var(--color-fg)">Portfolio</h1>
+	<p class="mt-2 text-sm" style="color: var(--color-fg-muted); max-width: var(--measure)">
+		Portfolio photo list, publish, hero, and sort flows are not implemented in this slice. Fields and
+		UX match the live site DNA — still _TBD_ in the HLD.
+	</p>
+	<p class="mt-6 text-sm" style="color: var(--color-fg-muted)">
+		Upload new portfolio originals via
+		<a href="/admin/ingest" style="color: var(--color-accent)">Upload</a> (PORTFOLIO bucket).
+	</p>
+</AdminLayout>

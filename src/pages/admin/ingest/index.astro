@@ -1,0 +1,25 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+import IngestSmokeForm from '../../../components/admin/IngestSmokeForm.astro';
+
+/** Ingest smoke UI — presigned PUT, completion, optional reprocess (Phase 1) in admin shell. */
+---
+
+<AdminLayout title="Admin — Upload" current="ingest">
+	<h1 class="text-2xl" style="font-family: var(--font-display); color: var(--color-fg)">Upload</h1>
+	<p class="mt-2 text-sm" style="color: var(--color-fg-muted); max-width: var(--measure)">
+		Presigned PUT → R2 → completion callback. Review uploads require a collection from
+		<a href="/admin/review" style="color: var(--color-accent)">Review</a>.
+	</p>
+
+	<div class="mt-8" style="max-width: var(--measure)">
+		<IngestSmokeForm />
+	</div>
+
+	<p class="mt-8 text-xs" style="color: var(--color-fg-muted)">
+		API:
+		<code>/admin/api/ingest/presign</code>,
+		<code>/complete</code>,
+		<code>/reprocess</code>
+	</p>
+</AdminLayout>
