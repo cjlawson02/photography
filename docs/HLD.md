@@ -1,7 +1,5 @@
 # High-Level Design
 
-Photography website for Chris Lawson.
-
 ## Overview
 
 _TBD_
@@ -18,9 +16,31 @@ _TBD_
 
 _TBD_
 
+```mermaid
+flowchart TB
+  %% TBD: replace placeholders with real components
+  Client["Client"]
+  Site["Site"]
+  Content["Content"]
+
+  Client --> Site
+  Site --> Content
+```
+
 ## Key Components
 
 _TBD_
+
+```mermaid
+flowchart LR
+  %% TBD: component relationships
+  A["Component A"]
+  B["Component B"]
+  C["Component C"]
+
+  A --> B
+  B --> C
+```
 
 ## Data & Content
 

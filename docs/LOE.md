@@ -1,10 +1,12 @@
 # Level of Effort
 
-Photography website for Chris Lawson.
-
 ## Summary
 
 _TBD_
+
+## Timeline
+
+See the Gantt in [PROGRESS.md](PROGRESS.md).
 
 ## Estimates
 
