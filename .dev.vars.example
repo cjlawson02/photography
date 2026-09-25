@@ -1,0 +1,11 @@
+# Local Worker secrets / vars — copy to `.dev.vars` and fill in.
+# Never commit real values. Production: `npx wrangler secret put <NAME>`.
+
+# Cloudflare Access (admin JWT verification)
+CF_ACCESS_TEAM_DOMAIN=https://YOUR_TEAM.cloudflareaccess.com
+CF_ACCESS_AUD=
+
+# R2 S3 API credentials for browser presigned PUT (not provided by R2 bindings alone)
+R2_ACCOUNT_ID=
+R2_ACCESS_KEY_ID=
+R2_SECRET_ACCESS_KEY=

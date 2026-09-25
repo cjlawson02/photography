@@ -1,0 +1,27 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+/**
+ * Admin shell placeholder — Cloudflare Access must cover `/admin*`.
+ * Feature UI lands in Phase 2. Mutations live under `/admin/api/*`.
+ */
+---
+
+<BaseLayout title="Admin — Lawson Photography">
+	<main class="mx-auto px-4 py-10" style="max-width: var(--measure)">
+		<p class="text-sm tracking-wide uppercase" style="color: var(--color-fg-muted)">Admin</p>
+		<h1 class="mt-2 text-3xl" style="font-family: var(--font-display); color: var(--color-fg)">
+			Lawson Photography
+		</h1>
+		<p class="mt-3" style="color: var(--color-fg-muted); max-width: var(--measure)">
+			Phase 0 foundation. Access-gated shell only — no feature UI yet.
+		</p>
+		<p class="mt-6 text-sm" style="color: var(--color-fg-muted)">
+			Smoke:
+			<a style="color: var(--color-accent); text-decoration: underline" href="/admin/api/health"
+				>/admin/api/health</a
+			>
+			(requires Access JWT)
+		</p>
+	</main>
+</BaseLayout>

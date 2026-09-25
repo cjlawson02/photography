@@ -1,0 +1,38 @@
+{
+  "name": "lawson-photography",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "check": "wrangler types && astro check",
+    "typecheck": "wrangler types && astro check",
+    "generate-types": "wrangler types",
+    "db:migrate:local": "wrangler d1 migrations apply photography --local",
+    "cf-typegen": "wrangler types"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^14.3.3",
+    "@tailwindcss/vite": "^4.3.3",
+    "astro": "^7.3.5",
+    "drizzle-orm": "^0.44.5",
+    "jose": "^6.0.11",
+    "tailwindcss": "^4.3.3",
+    "wrangler": "^4.139.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@types/node": "^26.6.2",
+    "drizzle-kit": "^0.31.4",
+    "typescript": "^5.9.2"
+  },
+  "allowScripts": {
+    "esbuild": true
+  }
+}

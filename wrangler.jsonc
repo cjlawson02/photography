@@ -1,0 +1,42 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "lawson-photography",
+	"main": "@astrojs/cloudflare/entrypoints/server",
+	"compatibility_date": "2026-09-25",
+	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+	"assets": {
+		"directory": "./dist",
+		"binding": "ASSETS"
+	},
+	"observability": {
+		"enabled": true
+	},
+	// Non-secret Access config placeholders — set real values in dashboard / .dev.vars (do not invent).
+	"vars": {
+		"CF_ACCESS_TEAM_DOMAIN": "",
+		"CF_ACCESS_AUD": ""
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "photography",
+			"database_id": "4f01bd2c-355d-4501-914d-7cb9cf68a70c",
+			"migrations_dir": "src/db/migrations"
+		}
+	],
+	// Private R2 purpose buckets (bindings match HLD).
+	"r2_buckets": [
+		{
+			"binding": "PORTFOLIO",
+			"bucket_name": "photography-portfolio"
+		},
+		{
+			"binding": "REVIEW",
+			"bucket_name": "photography-review"
+		}
+	],
+	// Images Free binding — compress-once at ingest (not hosted Images storage).
+	"images": {
+		"binding": "IMAGES"
+	}
+}

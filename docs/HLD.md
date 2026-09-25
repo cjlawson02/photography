@@ -71,18 +71,18 @@ flowchart TB
 | **Admin (`/admin`)** | Manage portfolio and review collections; Cloudflare Access; presigned PUTs into the right bucket; Images ingest after upload |
 | **Client review (`/review/{slug}`)** | Picu-style select/approve; phase 1 = link secrecy only (not access control); `noindex` + `robots.txt` Disallow; reads only `REVIEW` bucket via Worker |
 | **Drizzle** | Schema source of truth and typed queries against D1 (`drizzle-orm/d1`); flat SQL migrations under `src/db` |
-| **Astro Actions / thin handlers** | Mutations; issue presigned URLs; no separate API framework |
+| **Thin handlers under `/admin/api/*`** | Admin mutations (presigned URLs, etc.); not Astro Actions — Actions stay on `/_actions/` and cannot be remounted under `/admin*` |
 | **Tailwind + CSS tokens** | Styling; palette/layout inspired by the live Photograph theme |
 
 ## Admin auth
 
 **Cloudflare Access** protects admin surfaces at the edge (Free Zero Trust; solo use fits the free seat limit). No in-app login UI or session store.
 
-Access only blocks paths in the Access application. Astro Actions default to `/_actions/<name>` — **`/admin*` alone does not protect them.**
+Access only blocks paths in the Access application. Astro Actions default to `/_actions/<name>` and **cannot** be remounted under `/admin*` — **`/admin*` alone does not protect `/_actions/*`.**
 
 **Required**
 
-1. Mount **all** admin mutations under `/admin/*` (e.g. `/admin/api/*` or Actions remounted there) so **one** Access prefix covers UI + mutations
+1. Mount **all** admin mutations as thin handlers under `/admin/api/*` (not Astro Actions) so **one** Access prefix covers UI + mutations
 2. Access policy on `/admin*`
 3. Defense in depth: every admin mutation **must** verify the Access JWT (`Cf-Access-Jwt-Assertion`) before touching D1/R2 — even when Access already covers the path
 

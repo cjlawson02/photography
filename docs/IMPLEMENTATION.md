@@ -15,7 +15,7 @@ Stack and product decisions are owned by [HLD.md](HLD.md). Do not mirror them he
 Point at HLD for locked decisions:
 
 - [Architecture](HLD.md#architecture) — Astro hybrid SSR on Workers, bindings, R2 S3 credentials/CORS for presigned PUT
-- [Key Components](HLD.md#key-components) — public site, admin, client review, Drizzle, Actions, Tailwind tokens
+- [Key Components](HLD.md#key-components) — public site, admin, client review, Drizzle, `/admin/api/*` handlers, Tailwind tokens
 - [Admin auth](HLD.md#admin-auth) — Access on `/admin*`; mutations under `/admin/*` + JWT verify
 - [Data & Content](HLD.md#data--content) — `PORTFOLIO`/`REVIEW` buckets, ingest sequence, D1 domain split, Worker delivery routes
 
@@ -52,7 +52,7 @@ Stand up the Workers + Astro hybrid app, wrangler bindings, D1 schema skeleton (
 - [ ] Bind private R2 buckets `PORTFOLIO` and `REVIEW`
 - [ ] Configure R2 S3 API credentials/secrets and CORS for browser PUT (needed by Phase 1)
 - [ ] Tailwind + CSS design tokens (stub values OK; brand polish `_TBD_`)
-- [ ] Remount / place all admin mutations under `/admin/*` (e.g. `/admin/api/*` or Actions remount) so one Access prefix covers UI + mutations
+- [ ] Place all admin mutations under `/admin/api/*` (thin handlers; not Astro Actions — see [HLD Admin auth](HLD.md#admin-auth)) so one Access prefix covers UI + mutations
 - [ ] Cloudflare Access on `/admin*`; shared Access JWT verification helper for all `/admin/*` handlers
 - [ ] Env/secrets inventory for local + prod (`_TBD_` list — document as decided)
 
