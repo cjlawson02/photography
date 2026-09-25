@@ -14,7 +14,7 @@
     "check": "wrangler types && astro check",
     "typecheck": "wrangler types && astro check",
     "generate-types": "wrangler types",
-    "db:migrate:local": "wrangler d1 migrations apply lawson-photography --local",
+    "db:migrate:local": "wrangler d1 migrations apply photography --local",
     "cf-typegen": "wrangler types"
   },
   "dependencies": {

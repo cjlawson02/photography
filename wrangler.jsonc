@@ -11,29 +11,28 @@
 	"observability": {
 		"enabled": true
 	},
-	// Non-secret Access config placeholders — replace with real values (or override in dashboard / .dev.vars).
+	// Non-secret Access config placeholders — set real values in dashboard / .dev.vars (do not invent).
 	"vars": {
 		"CF_ACCESS_TEAM_DOMAIN": "",
 		"CF_ACCESS_AUD": ""
 	},
-	// D1 — create with `npx wrangler d1 create lawson-photography`, then replace database_id.
 	"d1_databases": [
 		{
 			"binding": "DB",
-			"database_name": "lawson-photography",
-			"database_id": "00000000-0000-0000-0000-000000000000",
+			"database_name": "photography",
+			"database_id": "4f01bd2c-355d-4501-914d-7cb9cf68a70c",
 			"migrations_dir": "src/db/migrations"
 		}
 	],
-	// Private R2 purpose buckets (bindings match HLD). Create buckets in the dashboard or via wrangler.
+	// Private R2 purpose buckets (bindings match HLD).
 	"r2_buckets": [
 		{
 			"binding": "PORTFOLIO",
-			"bucket_name": "lawson-portfolio"
+			"bucket_name": "photography-portfolio"
 		},
 		{
 			"binding": "REVIEW",
-			"bucket_name": "lawson-review"
+			"bucket_name": "photography-review"
 		}
 	],
 	// Images Free binding — compress-once at ingest (not hosted Images storage).
