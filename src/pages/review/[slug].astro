@@ -1,7 +1,7 @@
 ---
 import { env } from 'cloudflare:workers';
 
-import ReviewGallery from '../../components/public/ReviewGallery.astro';
+import ReviewGallery from '../../components/public/ReviewGallery.tsx';
 import ReviewLayout from '../../layouts/ReviewLayout.astro';
 import { resolveReviewPageState } from '../../lib/services/review-service.ts';
 
@@ -57,7 +57,11 @@ const pageTitle =
 						Select your favorites, then approve finals. Your choices save automatically.
 					</p>
 				</header>
-				<ReviewGallery slug={state.collection.slug} photos={state.collection.photos} />
+				<ReviewGallery
+					client:load
+					slug={state.collection.slug}
+					photos={state.collection.photos}
+				/>
 			</main>
 		</ReviewLayout>
 	) : null

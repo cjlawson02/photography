@@ -56,6 +56,12 @@ npx wrangler deploy
 
 _TBD — only rules that differ from language/tool defaults._
 
+### Public client UI
+
+- **React islands** (`@astrojs/react`) for public interactive UI — no vanilla `src/lib/client/*` DOM wiring or page `<script>` blocks for home/review.
+- See [docs/FRONTEND.md](docs/FRONTEND.md) for hydration conventions and library usage.
+- Admin can stay Astro + scripts until migrated.
+
 ## Testing instructions
 
 Phase 0 smoke:
@@ -112,6 +118,7 @@ _TBD_
 | Implementation plan | [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md) |
 | Estimates | [docs/LOE.md](docs/LOE.md) |
 | Status, Gantt schedule, changelog | [docs/PROGRESS.md](docs/PROGRESS.md) |
+| Public React islands | [docs/FRONTEND.md](docs/FRONTEND.md) |
 | Agent instructions | This file |
 
 Treat this file as living documentation: prune stale rules and fill `_TBD_` sections when decided.
