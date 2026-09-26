@@ -1,7 +1,8 @@
 /**
  * Baseline security headers for HTML and API responses.
  * CSP is pragmatic: bundled scripts from `'self'`, inline scripts for Astro island
- * hydration (no nonce pipeline yet), optional Cloudflare Web Analytics beacon.
+ * hydration (no nonce pipeline yet), optional Cloudflare Web Analytics beacon,
+ * and Sentry browser ingest for admin (`initAdminSentry`).
  */
 export function applySecurityHeaders(headers: Headers): void {
   headers.set('Content-Security-Policy', buildContentSecurityPolicy());
@@ -21,7 +22,8 @@ function buildContentSecurityPolicy(): string {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob:",
-    "connect-src 'self' https://cloudflareinsights.com",
+    // Sentry browser SDK (admin) — regional ingest hosts; tunnel optional later.
+    "connect-src 'self' https://cloudflareinsights.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io",
   ];
   return directives.join('; ');
 }

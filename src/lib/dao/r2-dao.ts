@@ -18,7 +18,7 @@ export class R2ConfigError extends Error {
   override name = 'R2ConfigError';
 }
 
-const DEFAULT_EXPIRES_SECONDS = 3600;
+const DEFAULT_EXPIRES_SECONDS = 900;
 
 type R2Bindings = {
   PORTFOLIO: R2Bucket;

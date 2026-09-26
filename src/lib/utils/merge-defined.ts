@@ -1,4 +1,4 @@
-const definedProps = <T extends Record<string, unknown>>(obj: T) =>
+export const definedProps = <T extends Record<string, unknown>>(obj: T) =>
   Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
 
 /** Shallow-merge `obj2` onto `obj1`, dropping keys whose value is `undefined`. */

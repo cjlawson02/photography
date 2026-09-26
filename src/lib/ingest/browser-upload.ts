@@ -6,6 +6,7 @@
 import { TRPCClientError } from '@trpc/client';
 
 import type { PurposeBucket } from '../dao/r2-dao.ts';
+import { ingestContentTypeSchema, type PresignBody } from './schemas.ts';
 import { adminTrpc } from '../trpc/client.ts';
 
 export type PresignResponse = {
@@ -68,7 +69,11 @@ function trpcMessage(error: unknown, fallback: string): string {
  * Review uploads must pass `collectionId`.
  */
 export async function uploadPhoto(options: PortfolioUpload | ReviewUpload): Promise<UploadResult> {
-  const contentType = options.file.type || 'application/octet-stream';
+  const parsedType = ingestContentTypeSchema.safeParse(options.file.type || 'image/jpeg');
+  if (!parsedType.success) {
+    throw new Error(`Unsupported file type: ${options.file.type || '(empty)'}`);
+  }
+  const contentType = parsedType.data;
   const presign = await requestPresign({
     bucket: options.bucket,
     contentType,
@@ -93,22 +98,22 @@ export async function uploadPhoto(options: PortfolioUpload | ReviewUpload): Prom
 
 export async function requestPresign(input: {
   bucket: PurposeBucket;
-  contentType: string;
+  contentType: PresignBody['contentType'];
   filename?: string;
   /** Required when `bucket` is `review`. */
   collectionId?: string;
 }): Promise<PresignResponse> {
   try {
-    const body =
+    const body: PresignBody =
       input.bucket === 'review'
         ? {
-            bucket: 'review' as const,
+            bucket: 'review',
             contentType: input.contentType,
             collectionId: requireReviewCollectionId(input.collectionId),
             ...(input.filename ? { filename: input.filename } : {}),
           }
         : {
-            bucket: 'portfolio' as const,
+            bucket: 'portfolio',
             contentType: input.contentType,
             ...(input.filename ? { filename: input.filename } : {}),
           };
