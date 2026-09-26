@@ -1,23 +1,17 @@
 import type { APIRoute } from 'astro';
-import { env } from 'cloudflare:workers';
 
-import { jsonOk, requireAdmin } from '../../../../../lib/admin/http.ts';
-import { accessEnvFrom } from '../../../../../lib/cloudflare-env.ts';
-import { AppEnv } from '../../../../../lib/env.ts';
-import { ensureAppError, toErrorResponse } from '../../../../../lib/http/app-error.ts';
-import { PortfolioService } from '../../../../../lib/services/portfolio-service.ts';
+import { jsonOk } from '../../../../../lib/admin/http.ts';
+import { createCaller } from '../../../../../lib/trpc/caller.ts';
+import { createTrpcContext } from '../../../../../lib/trpc/context.ts';
+import { trpcErrorToResponse } from '../../../../../lib/trpc/errors.ts';
 
-/** List all portfolio photos (any ingest status) for admin UI. */
+/** @deprecated Prefer `portfolio.list` tRPC — kept for smoke docs. */
 export const GET: APIRoute = async ({ request }) => {
-	const auth = await requireAdmin(request, accessEnvFrom(env));
-	if (auth instanceof Response) return auth;
-
 	try {
-		const photos = await ensureAppError(async () =>
-			PortfolioService.from(AppEnv.from(env)).listForAdmin(),
-		);
+		const caller = createCaller(createTrpcContext({ request }));
+		const photos = await caller.portfolio.list();
 		return jsonOk({ photos });
 	} catch (error) {
-		return toErrorResponse(error);
+		return trpcErrorToResponse(error);
 	}
 };

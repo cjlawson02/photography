@@ -1,12 +1,14 @@
 /**
  * Browser upload client (v1): presign → PUT to R2 → completion callback.
- * Same-origin admin UI sends Access cookie automatically on `/admin/api/*`.
+ * Admin mutations use tRPC (`/admin/api/trpc`); same-origin sends Access cookie on `/admin*`.
  */
 
+import { TRPCClientError } from '@trpc/client';
+
 import type { PurposeBucket } from '../dao/r2-dao.ts';
+import { adminTrpc } from '../trpc/client.ts';
 
 export type PresignResponse = {
-	ok: true;
 	id: string;
 	bucket: PurposeBucket;
 	key: string;
@@ -18,7 +20,6 @@ export type PresignResponse = {
 };
 
 export type CompleteResponse = {
-	ok: true;
 	id: string;
 	bucket: PurposeBucket;
 	status: 'ready';
@@ -32,14 +33,9 @@ export type UploadResult = {
 	variants: string[];
 };
 
-const DEFAULT_PRESIGN_PATH = '/admin/api/ingest/presign';
-const DEFAULT_COMPLETE_PATH = '/admin/api/ingest/complete';
-
 type PortfolioUpload = {
 	file: File;
 	bucket: 'portfolio';
-	presignPath?: string;
-	completePath?: string;
 };
 
 type ReviewUpload = {
@@ -47,9 +43,14 @@ type ReviewUpload = {
 	bucket: 'review';
 	/** Required for review — FK to ReviewCollections. */
 	collectionId: string;
-	presignPath?: string;
-	completePath?: string;
 };
+
+function trpcMessage(error: unknown, fallback: string): string {
+	if (error instanceof TRPCClientError) {
+		return error.message || fallback;
+	}
+	return error instanceof Error ? error.message : fallback;
+}
 
 /**
  * Full v1 ingest path from the browser.
@@ -63,7 +64,6 @@ export async function uploadPhoto(options: PortfolioUpload | ReviewUpload): Prom
 		contentType,
 		filename: options.file.name,
 		collectionId: options.bucket === 'review' ? options.collectionId : undefined,
-		presignPath: options.presignPath ?? DEFAULT_PRESIGN_PATH,
 	});
 
 	const put = await fetch(presign.uploadUrl, {
@@ -79,7 +79,6 @@ export async function uploadPhoto(options: PortfolioUpload | ReviewUpload): Prom
 	const complete = await requestComplete({
 		id: presign.id,
 		bucket: options.bucket,
-		completePath: options.completePath ?? DEFAULT_COMPLETE_PATH,
 	});
 
 	return {
@@ -96,76 +95,60 @@ export async function requestPresign(input: {
 	filename?: string;
 	/** Required when `bucket` is `review`. */
 	collectionId?: string;
-	presignPath?: string;
 }): Promise<PresignResponse> {
-	const body: Record<string, string> = {
-		bucket: input.bucket,
-		contentType: input.contentType,
-	};
-	if (input.filename) body.filename = input.filename;
-	if (input.bucket === 'review') {
-		if (!input.collectionId?.trim()) {
-			throw new Error('collectionId is required for review uploads');
-		}
-		body.collectionId = input.collectionId.trim();
-	}
+	try {
+		const body =
+			input.bucket === 'review'
+				? {
+						bucket: 'review' as const,
+						contentType: input.contentType,
+						collectionId: requireReviewCollectionId(input.collectionId),
+						...(input.filename ? { filename: input.filename } : {}),
+					}
+				: {
+						bucket: 'portfolio' as const,
+						contentType: input.contentType,
+						...(input.filename ? { filename: input.filename } : {}),
+					};
 
-	const response = await fetch(input.presignPath ?? DEFAULT_PRESIGN_PATH, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		credentials: 'same-origin',
-		body: JSON.stringify(body),
-	});
-
-	const parsed = (await response.json()) as PresignResponse | { ok: false; error?: string };
-	if (!response.ok || !parsed.ok) {
-		const message =
-			'error' in parsed && parsed.error ? parsed.error : `Presign failed (${response.status})`;
-		throw new Error(message);
+		return await adminTrpc.ingest.presign.mutate(body);
+	} catch (error) {
+		throw new Error(trpcMessage(error, 'Presign failed'));
 	}
-	return parsed;
 }
 
 export async function requestComplete(input: {
 	id: string;
 	bucket: PurposeBucket;
-	completePath?: string;
 }): Promise<CompleteResponse> {
-	const response = await fetch(input.completePath ?? DEFAULT_COMPLETE_PATH, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		credentials: 'same-origin',
-		body: JSON.stringify({ id: input.id, bucket: input.bucket }),
-	});
-
-	const parsed = (await response.json()) as CompleteResponse | { ok: false; error?: string };
-	if (!response.ok || !parsed.ok) {
-		const message =
-			'error' in parsed && parsed.error ? parsed.error : `Complete failed (${response.status})`;
-		throw new Error(message);
+	try {
+		return await adminTrpc.ingest.complete.mutate({
+			id: input.id,
+			bucket: input.bucket,
+		});
+	} catch (error) {
+		throw new Error(trpcMessage(error, 'Complete failed'));
 	}
-	return parsed;
 }
 
 export async function requestReprocess(input: {
 	id: string;
 	bucket: PurposeBucket;
-	reprocessPath?: string;
 }): Promise<CompleteResponse> {
-	const response = await fetch(input.reprocessPath ?? '/admin/api/ingest/reprocess', {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		credentials: 'same-origin',
-		body: JSON.stringify({ id: input.id, bucket: input.bucket }),
-	});
-
-	const parsed = (await response.json()) as CompleteResponse | { ok: false; error?: string };
-	if (!response.ok || !parsed.ok) {
-		const message =
-			'error' in parsed && parsed.error
-				? parsed.error
-				: `Reprocess failed (${response.status})`;
-		throw new Error(message);
+	try {
+		return await adminTrpc.ingest.reprocess.mutate({
+			id: input.id,
+			bucket: input.bucket,
+		});
+	} catch (error) {
+		throw new Error(trpcMessage(error, 'Reprocess failed'));
 	}
-	return parsed;
+}
+
+function requireReviewCollectionId(collectionId: string | undefined): string {
+	const trimmed = collectionId?.trim();
+	if (!trimmed) {
+		throw new Error('collectionId is required for review uploads');
+	}
+	return trimmed;
 }

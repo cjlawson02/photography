@@ -1,13 +1,12 @@
 import type { APIRoute } from 'astro';
-import { env } from 'cloudflare:workers';
 
-import { jsonOk, requireAdmin } from '../../../../../lib/admin/http.ts';
+import { jsonOk } from '../../../../../lib/admin/http.ts';
 import { reviewCollectionDeleteQuerySchema } from '../../../../../lib/admin/review-collection-schemas.ts';
-import { accessEnvFrom } from '../../../../../lib/cloudflare-env.ts';
+import { createCaller } from '../../../../../lib/trpc/caller.ts';
+import { createTrpcContext } from '../../../../../lib/trpc/context.ts';
+import { trpcErrorToResponse } from '../../../../../lib/trpc/errors.ts';
 import { idSchema } from '../../../../../db/schema/types.ts';
-import { AppEnv } from '../../../../../lib/env.ts';
-import { AppError, ensureAppError, toErrorResponse } from '../../../../../lib/http/app-error.ts';
-import { ReviewService } from '../../../../../lib/services/review-service.ts';
+import { AppError } from '../../../../../lib/http/app-error.ts';
 
 function collectionIdFromParams(params: { id?: string }): string {
 	const parsed = idSchema.safeParse(params.id);
@@ -17,21 +16,18 @@ function collectionIdFromParams(params: { id?: string }): string {
 	return parsed.data;
 }
 
-/** Revoke a review link (delete collection + photos; optional R2 cleanup). */
+/** @deprecated Prefer `review.collections.revoke` tRPC — kept for smoke docs. */
 export const DELETE: APIRoute = async ({ request, params, url }) => {
-	const auth = await requireAdmin(request, accessEnvFrom(env));
-	if (auth instanceof Response) return auth;
-
 	try {
 		const id = collectionIdFromParams(params);
 		const query = reviewCollectionDeleteQuerySchema.parse(Object.fromEntries(url.searchParams));
-		const collection = await ensureAppError(async () =>
-			ReviewService.from(AppEnv.from(env)).revokeCollection(id, {
-				cleanupR2: query.cleanupR2,
-			}),
-		);
+		const caller = createCaller(createTrpcContext({ request }));
+		const collection = await caller.review.collections.revoke({
+			id,
+			cleanupR2: query.cleanupR2,
+		});
 		return jsonOk({ collection });
 	} catch (error) {
-		return toErrorResponse(error);
+		return trpcErrorToResponse(error);
 	}
 };

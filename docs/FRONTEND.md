@@ -6,6 +6,7 @@ Interactive UI uses **React** via `@astrojs/react`. Astro pages own layout and S
 
 - Public components: `src/components/public/*.tsx`
 - Admin interactive components: `src/components/admin/*.tsx`
+- Admin client→server: **tRPC** via `src/lib/trpc/client.ts` → `/admin/api/trpc` (typed procedures; do not add new ad-hoc `fetch('/admin/api/...')` in islands).
 - Wire islands from `.astro` with `client:*` directives.
 - Shared non-React helpers (e.g. PhotoSwipe opener) live under `src/lib/gallery/`.
 - **Embla** and **PhotoSwipe** stay as imperative libraries inside React effects/handlers.

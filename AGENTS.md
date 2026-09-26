@@ -74,11 +74,10 @@ Unit: `npm test` (Cloudflare env zod, AppError HTTP mapping, ingest keys/presign
 
 Ingest (`AppEnv.from` / `getCloudflareEnv`) **fail-fast** if `R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` are missing (503). Copy `.dev.vars.example` → `.dev.vars` and fill R2_* for `/admin` ingest preview.
 
-Phase 1 ingest (JWT + Zod body → `IngestService`):
+Phase 1 ingest (JWT + Zod body → `IngestService` via tRPC):
 
-- `POST /admin/api/ingest/presign` — pending row + presigned PUT (`portfolio` | `review`; review requires `collectionId`)
-- `POST /admin/api/ingest/complete` — Images compress-once → variant puts → ready/failed
-- `POST /admin/api/ingest/reprocess` — re-run from original
+- **`/admin/api/trpc`** — admin router (`portfolio.*`, `review.collections.*`, `ingest.*`); Cloudflare Access + `verifyAccessJwt` on every procedure
+- Legacy REST (deprecated, thin-route to same router): `POST /admin/api/ingest/presign`, `complete`, `reprocess`
 - Minimal smoke UI: `/admin`
 
 ## Security considerations
@@ -91,7 +90,7 @@ Phase 1 ingest (JWT + Zod body → `IngestService`):
   - D1 + R2 resource names are wired in `wrangler.jsonc` (`photography`, `photography-portfolio`, `photography-review`)
   - Configure R2 CORS on both buckets: `npm run r2:cors:apply`
   - Cloudflare Access **Public DNS** app on `photography.chrislawson.dev` path `/admin*` (not Workers destination)
-- Admin mutations live only under `/admin/api/*` and must call `verifyAccessJwt` ([HLD Admin auth](docs/HLD.md#admin-auth)).
+- Admin mutations live under `/admin/api/trpc` (preferred) and legacy `/admin/api/*` REST wrappers; all must verify the Access JWT ([HLD Admin auth](docs/HLD.md#admin-auth)).
 
 ## Commit and PR guidelines
 
