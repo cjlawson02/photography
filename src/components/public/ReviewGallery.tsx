@@ -198,7 +198,7 @@ export default function ReviewGallery({
                   onClick={() => openLightbox(photo.id)}
                 >
                   <img
-                    src={photo.galleryUrl}
+                    src={photo.thumbUrl}
                     alt=""
                     width={width}
                     height={height}

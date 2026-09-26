@@ -16,7 +16,12 @@ export type BuildVariantMediaResponseOptions = {
   contentDispositionFilename?: (id: string) => Promise<string | null>;
 };
 
-const NOT_FOUND = () => new Response('Not Found', { status: 404 });
+/** Avoid Workers Caching heuristic 404 TTLs hiding a later publish/allow. */
+const NOT_FOUND = () =>
+  new Response('Not Found', {
+    status: 404,
+    headers: { 'Cache-Control': 'private, no-store' },
+  });
 
 /**
  * Shared GET pipeline for variant media: parse → allow → R2 get → Cache-Control /

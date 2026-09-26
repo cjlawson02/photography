@@ -25,6 +25,7 @@ describe('buildAdminReviewMediaResponse', () => {
       getReviewObject: async () => null,
     });
     expect(response.status).toBe(404);
+    expect(response.headers.get('Cache-Control')).toBe('private, no-store');
   });
 
   it('returns 404 when the photo is not admin-deliverable', async () => {

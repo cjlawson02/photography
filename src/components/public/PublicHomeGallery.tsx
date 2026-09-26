@@ -228,7 +228,7 @@ export default function PublicHomeGallery({ photos, featured = [] }: Props) {
                 onClick={() => openLightbox(photo.id)}
               >
                 <img
-                  src={photo.galleryUrl}
+                  src={photo.thumbUrl}
                   alt={photo.alt?.trim() ?? ''}
                   width={width}
                   height={height}

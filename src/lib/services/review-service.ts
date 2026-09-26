@@ -9,6 +9,7 @@ import type { SelectionStatus } from '../../db/schema/review/selection-status.ts
 import type { ReviewJobStatus } from '../../db/schema/review/job-status.ts';
 import { AppError } from '../http/app-error.ts';
 import { GALLERY_VARIANT, THUMB_VARIANT, photoIngestObjectKeys } from '../ingest/keys.ts';
+import { purgeMediaCacheForPhotoIds } from '../media/purge-media-cache.ts';
 import {
   reviewOriginalAdminUrl,
   reviewOriginalPublicUrl,
@@ -30,6 +31,7 @@ import type { PhotoStatus } from '../../db/schema/photo-status.ts';
 export type PublicReviewPhoto = {
   id: string;
   galleryUrl: string;
+  thumbUrl: string;
   selectionStatus: SelectionStatus;
   width: number | null;
   height: number | null;
@@ -543,6 +545,10 @@ export class ReviewService {
     }
 
     await this.app.d1.reviewCollections.deleteWithPhotos(id);
+    await purgeMediaCacheForPhotoIds(
+      'review',
+      photos.map((photo) => photo.id),
+    );
     return existing;
   }
 
@@ -580,6 +586,7 @@ export class ReviewService {
       throw new AppError('NOT_FOUND', `Review photo not found: ${photoId}`);
     }
 
+    await purgeMediaCacheForPhotoIds('review', [photoId]);
     return deleted;
   }
 }
@@ -624,6 +631,7 @@ export async function resolveReviewPageState(
       photos: proofRows.map((photo) => ({
         id: photo.id,
         galleryUrl: reviewVariantPublicUrl(photo.id, GALLERY_VARIANT.suffix, photo.updatedAt),
+        thumbUrl: reviewVariantPublicUrl(photo.id, THUMB_VARIANT.suffix, photo.updatedAt),
         selectionStatus: photo.selectionStatus,
         width: photo.width,
         height: photo.height,

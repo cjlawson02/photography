@@ -16,6 +16,7 @@ describe('selectHeroPhotos', () => {
     width: null,
     height: null,
     galleryUrl: '/media/portfolio/a/gallery.webp',
+    thumbUrl: '/media/portfolio/a/thumb.webp',
     ...overrides,
   });
 

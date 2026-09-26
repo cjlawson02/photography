@@ -4,6 +4,10 @@
   "main": "./sentry.server.config.ts",
   "compatibility_date": "2026-09-25",
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  // Edge-cache Worker responses per Cache-Control (media long TTL; HTML defaults in middleware).
+  "cache": {
+    "enabled": true,
+  },
   // Custom domain only — do not expose workers.dev / preview URLs without Access (FIX-26).
   "workers_dev": false,
   "preview_urls": false,

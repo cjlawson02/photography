@@ -3,8 +3,9 @@ import { createDb } from '../../db/client.ts';
 import { deletePhotoObjects } from '../dao/delete-photo-objects.ts';
 import { PortfolioPhotosDAO } from '../dao/portfolio-photos-dao.ts';
 import { AppError } from '../http/app-error.ts';
-import { GALLERY_VARIANT } from '../ingest/keys.ts';
+import { GALLERY_VARIANT, THUMB_VARIANT } from '../ingest/keys.ts';
 import { portfolioVariantPublicUrl } from '../media/variant-media-url.ts';
+import { purgeMediaCacheForPhotoIds } from '../media/purge-media-cache.ts';
 import type {
   PortfolioListInput,
   PortfolioPhotoAdminUpdateBody,
@@ -25,6 +26,8 @@ export type PublicPortfolioPhoto = {
   height: number | null;
   /** Public delivery: ingest gallery variant (largest generated width). */
   galleryUrl: string;
+  /** Mosaic / grid cells — smaller ingest thumb. */
+  thumbUrl: string;
 };
 
 /**
@@ -64,6 +67,9 @@ export class PortfolioService {
     );
     if (!updated) {
       throw new AppError('NOT_FOUND', `Portfolio photo not found: ${id}`);
+    }
+    if (patch.published === false) {
+      await purgeMediaCacheForPhotoIds('portfolio', [id]);
     }
     return updated;
   }
@@ -149,10 +155,14 @@ export class PortfolioService {
 
   /** Single UPDATE for the whole selection (atomic); unpublish also leaves the front page. */
   async bulkUpdateMetadata(ids: string[], patch: PortfolioPhotoAdminUpdateBody) {
+    const uniqueIds = [...new Set(ids)];
     const items = await this.app.d1.portfolioPhotos.updateMany(
-      [...new Set(ids)],
+      uniqueIds,
       patch.published === false ? { ...patch, frontPage: false, frontPageOrder: null } : patch,
     );
+    if (patch.published === false) {
+      await purgeMediaCacheForPhotoIds('portfolio', uniqueIds);
+    }
     return { items };
   }
 
@@ -175,6 +185,7 @@ export class PortfolioService {
       });
     }
     const deleted = await this.app.d1.portfolioPhotos.deleteMany(found);
+    await purgeMediaCacheForPhotoIds('portfolio', found);
     return { ids: deleted.map((row) => row.id) };
   }
 }
@@ -209,5 +220,6 @@ function toPublicPortfolioPhoto(
     width: row.width,
     height: row.height,
     galleryUrl: portfolioVariantPublicUrl(row.id, GALLERY_VARIANT.suffix, row.updatedAt),
+    thumbUrl: portfolioVariantPublicUrl(row.id, THUMB_VARIANT.suffix, row.updatedAt),
   };
 }
