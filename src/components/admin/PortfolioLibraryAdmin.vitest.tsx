@@ -22,7 +22,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-const complete = { alt: 'Alt', category: 'Nature' as const };
+const complete = { alt: 'Alt', tags: ['Nature' as const] };
 
 function renderLibrary(photos: AdminPortfolioPhoto[]) {
   const byId = new Map(photos.map((photo) => [photo.id, photo]));
@@ -79,7 +79,7 @@ describe('PortfolioLibraryAdmin selection', () => {
     const user = userEvent.setup();
     renderLibrary([
       makeAdminPortfolioPhoto({ title: 'Done', ...complete }),
-      makeAdminPortfolioPhoto({ title: 'Todo', alt: null, category: 'Nature' }),
+      makeAdminPortfolioPhoto({ title: 'Todo', alt: null, tags: ['Nature'] }),
     ]);
 
     await user.click(screen.getByRole('button', { name: 'Select all shown' }));
@@ -94,8 +94,8 @@ describe('PortfolioLibraryAdmin selection', () => {
 describe('PortfolioLibraryAdmin inspector', () => {
   it('shows mixed values across a selection and bulk-saves an edited field', async () => {
     const user = userEvent.setup();
-    const a = makeAdminPortfolioPhoto({ title: 'A', alt: 'Dunes', category: 'Beach' });
-    const b = makeAdminPortfolioPhoto({ title: 'B', alt: 'Harbor', category: 'Beach' });
+    const a = makeAdminPortfolioPhoto({ title: 'A', alt: 'Dunes', tags: ['Beach'] });
+    const b = makeAdminPortfolioPhoto({ title: 'B', alt: 'Harbor', tags: ['Beach'] });
     const trpc = renderLibrary([a, b]);
 
     await user.click(tile('A'));
@@ -107,7 +107,8 @@ describe('PortfolioLibraryAdmin inspector', () => {
     const alt = within(inspector).getByRole('textbox', { name: /Alt text/ });
     expect(alt).toHaveValue('');
     expect(alt).toHaveAttribute('placeholder', 'Mixed');
-    expect(within(inspector).getByRole('combobox', { name: /Category/ })).toHaveValue('Beach');
+    expect(within(inspector).getByRole('checkbox', { name: 'Beach' })).toBeChecked();
+    expect(within(inspector).getByRole('checkbox', { name: 'Nature' })).not.toBeChecked();
 
     await user.type(alt, 'Coastline');
     await user.tab();
@@ -145,7 +146,7 @@ describe('PortfolioLibraryAdmin inspector', () => {
 
   it('explains why a needs-details photo cannot join the front page', async () => {
     const user = userEvent.setup();
-    renderLibrary([makeAdminPortfolioPhoto({ title: 'A', alt: null, category: 'Nature' })]);
+    renderLibrary([makeAdminPortfolioPhoto({ title: 'A', alt: null, tags: ['Nature'] })]);
     await user.click(tile('A'));
 
     const inspector = screen.getByRole('region', { name: 'Inspector' });

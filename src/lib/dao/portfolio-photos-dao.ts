@@ -17,7 +17,8 @@ type PortfolioPhotoPatch = {
   status?: PhotoStatus;
   mimeType?: string | null;
   published?: boolean;
-  category?: PortfolioCategory | null;
+  tags?: PortfolioCategory[];
+  priority?: number;
   sortOrder?: number | null;
   hero?: boolean;
   frontPage?: boolean;
@@ -38,7 +39,8 @@ export class PortfolioPhotosDAO {
     mimeType?: string | null;
     id?: string;
     published?: boolean;
-    category?: PortfolioCategory | null;
+    tags?: PortfolioCategory[];
+    priority?: number;
     sortOrder?: number | null;
     hero?: boolean;
     frontPage?: boolean;
@@ -51,7 +53,8 @@ export class PortfolioPhotosDAO {
       status: values.status ?? ('pending' as const),
       mimeType: values.mimeType ?? null,
       published: values.published ?? false,
-      category: values.category ?? null,
+      tags: values.tags ?? [],
+      priority: values.priority ?? 3,
       sortOrder: values.sortOrder ?? null,
       hero: values.hero ?? false,
       frontPage: values.frontPage ?? false,

@@ -78,6 +78,13 @@
       "when": 1790415200000,
       "tag": "0010_backfill_front_page",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1790420000000,
+      "tag": "0011_portfolio_tags_priority",
+      "breakpoints": true
     }
   ]
 }

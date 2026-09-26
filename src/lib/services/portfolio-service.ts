@@ -15,7 +15,8 @@ import { frontPageBlockReason } from '../portfolio/front-page-eligibility.ts';
 
 export type PublicPortfolioPhoto = {
   id: string;
-  category: string | null;
+  tags: string[];
+  priority: number;
   sortOrder: number | null;
   hero: boolean;
   alt: string | null;
@@ -211,7 +212,8 @@ function toPublicPortfolioPhoto(
 ): PublicPortfolioPhoto {
   return {
     id: row.id,
-    category: row.category,
+    tags: row.tags ?? [],
+    priority: row.priority ?? 3,
     sortOrder: row.sortOrder,
     hero: row.hero,
     alt: row.alt,

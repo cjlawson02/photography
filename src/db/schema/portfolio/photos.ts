@@ -3,6 +3,7 @@ import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 import { createId } from '@paralleldrive/cuid2';
 
 import type { PhotoStatus } from '../photo-status.ts';
+import type { PortfolioCategory } from './categories.ts';
 
 /**
  * Portfolio photo rows — public-site catalog → PORTFOLIO R2.
@@ -25,8 +26,16 @@ export const PortfolioPhotos = sqliteTable(
     mimeType: text('mimeType'),
     /** Visible on public site when true and ingest `status` is `ready`. */
     published: integer('published', { mode: 'boolean' }).notNull().default(false),
-    /** Filter chip label — one of the live-site categories; null = uncategorized. */
-    category: text('category'),
+    /** Public filter chips — subset of PORTFOLIO_CATEGORIES; empty = uncategorized. */
+    tags: text('tags', { mode: 'json' })
+      .$type<PortfolioCategory[]>()
+      .notNull()
+      .default(sql`'[]'`),
+    /**
+     * Mosaic large-slot preference (1–5). Neutral default 3; higher favors full-height
+     * singles in double-height rows (see mosaic-layout.ts).
+     */
+    priority: integer('priority', { mode: 'number' }).notNull().default(3),
     /** Lower sorts first on public grid; null sorts after explicit values. */
     sortOrder: integer('sortOrder', { mode: 'number' }),
     /** Future hero carousel — nullable intent; defaults false for new rows. */

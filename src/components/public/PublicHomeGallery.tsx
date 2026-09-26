@@ -6,7 +6,7 @@ import {
   openGalleryLightbox,
 } from '../../lib/gallery/lightbox.ts';
 import { computeMosaicLayout, type MosaicOptions } from '../../lib/gallery/mosaic-layout.ts';
-import { PORTFOLIO_CATEGORY_LABELS } from '../../lib/portfolio/categories.ts';
+import { formatPortfolioTags, PORTFOLIO_CATEGORY_LABELS } from '../../lib/portfolio/categories.ts';
 import type { PublicPortfolioPhoto } from '../../lib/services/portfolio-service.ts';
 
 type Props = {
@@ -44,9 +44,7 @@ function photosForCategory(
   category: string,
 ): PublicPortfolioPhoto[] {
   if (category === FEATURED_LABEL) return featured;
-  return category === 'All'
-    ? photos
-    : photos.filter((photo) => (photo.category ?? '') === category);
+  return category === 'All' ? photos : photos.filter((photo) => photo.tags.includes(category));
 }
 
 function mosaicOptions(containerWidth: number): MosaicOptions {
@@ -100,7 +98,8 @@ export default function PublicHomeGallery({ photos, featured = [] }: Props) {
       const { width, height } = galleryDisplayDimensions(photo);
       return width / height;
     });
-    return computeMosaicLayout(ratios, mosaicOptions(sheetWidth));
+    const priorities = visiblePhotos.map((photo) => photo.priority);
+    return computeMosaicLayout(ratios, mosaicOptions(sheetWidth), priorities);
   }, [visiblePhotos, sheetWidth]);
 
   const countFor = (label: string) => photosForCategory(photos, featured, label).length;
@@ -210,7 +209,7 @@ export default function PublicHomeGallery({ photos, featured = [] }: Props) {
             const photo = visiblePhotos[item.index];
             const { width, height } = galleryDisplayDimensions(photo);
             const title = photo.title?.trim();
-            const category = photo.category?.trim();
+            const tagsLabel = formatPortfolioTags(photo.tags);
             const style = {
               '--i': item.index,
               left: pct(item.left, layout.width),
@@ -236,10 +235,10 @@ export default function PublicHomeGallery({ photos, featured = [] }: Props) {
                   decoding="async"
                   className="public-masonry-img"
                 />
-                {title || category ? (
+                {title || tagsLabel ? (
                   <span className="public-frame__label" aria-hidden="true">
                     {title ? <span className="public-frame__title">{title}</span> : null}
-                    {category ? <span className="public-frame__category">{category}</span> : null}
+                    {tagsLabel ? <span className="public-frame__category">{tagsLabel}</span> : null}
                   </span>
                 ) : null}
               </button>

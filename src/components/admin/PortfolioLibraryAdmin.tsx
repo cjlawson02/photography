@@ -260,20 +260,20 @@ function PortfolioLibraryAdminInner({ initialPortfolioPage }: PortfolioLibraryAd
                 Unpublish
               </button>
               <label className="inline-flex items-center gap-1">
-                <span className="sr-only">Set category for selection</span>
+                <span className="sr-only">Set tags for selection</span>
                 <select
                   className={`${adminClass.fieldSm} admin-field--inline`}
                   value=""
                   disabled={busy}
                   onChange={(event) => {
                     const value = event.target.value;
-                    const category = isPortfolioCategory(value) ? value : null;
+                    const tags = isPortfolioCategory(value) ? [value] : [];
                     void run(() =>
                       actions.updatePhotos(
                         selected,
-                        { category },
+                        { tags },
                         {
-                          toast: `Set category to ${category ?? 'none'} on ${plural(selected.length, 'photo')}.`,
+                          toast: `Set tags to ${tags[0] ?? 'none'} on ${plural(selected.length, 'photo')}.`,
                           undo: true,
                         },
                       ),
@@ -281,7 +281,7 @@ function PortfolioLibraryAdminInner({ initialPortfolioPage }: PortfolioLibraryAd
                   }}
                 >
                   <option value="" disabled>
-                    Set category…
+                    Set tags…
                   </option>
                   <option value="none">— None —</option>
                   {PORTFOLIO_CATEGORIES.map((category) => (

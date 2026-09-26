@@ -12,7 +12,7 @@ import type { PortfolioPhotoAdminUpdateBody } from '../../lib/admin/portfolio-sc
 import type { AdminPortfolioPhoto } from '../../lib/admin/trpc-types.ts';
 import { THUMB_VARIANT } from '../../lib/ingest/keys.ts';
 import { portfolioVariantPublicUrl } from '../../lib/media/variant-media-url.ts';
-import { PORTFOLIO_CATEGORIES, isPortfolioCategory } from '../../lib/portfolio/categories.ts';
+import { PORTFOLIO_CATEGORIES } from '../../lib/portfolio/categories.ts';
 import {
   canJoinFrontPage,
   frontPageBlockReason,
@@ -31,7 +31,7 @@ import {
 export const INSPECTOR_AUTOSAVE_MS = 700;
 
 const MIXED = 'Mixed';
-const MIXED_CATEGORY = '__mixed__';
+const PRIORITY_OPTIONS = [1, 2, 3, 4, 5] as const;
 
 type SaveState = { state: 'saving' } | { state: 'saved' } | { state: 'error'; message: string };
 
@@ -181,7 +181,7 @@ export default function PortfolioInspector({
     );
   };
 
-  const categoryValue = summary.category.mixed ? MIXED_CATEGORY : (summary.category.value ?? '');
+  const selectedTags = summary.tags.mixed ? null : summary.tags.value;
   const notOnFrontPage = photos.filter((photo) => !photo.frontPage);
   const eligible = notOnFrontPage.filter((photo) => canJoinFrontPage(photo));
   const blockedCount = notOnFrontPage.length - eligible.length;
@@ -190,6 +190,12 @@ export default function PortfolioInspector({
     single?.status === 'ready'
       ? portfolioVariantPublicUrl(single.id, THUMB_VARIANT.suffix, single.updatedAt)
       : null;
+
+  const toggleTag = (tag: (typeof PORTFOLIO_CATEGORIES)[number], checked: boolean) => {
+    const base = selectedTags ?? [];
+    const next = checked ? [...new Set([...base, tag])] : base.filter((value) => value !== tag);
+    void save('tags', { tags: next });
+  };
 
   return (
     <section aria-label="Inspector" className="flex flex-col gap-3">
@@ -239,35 +245,67 @@ export default function PortfolioInspector({
       {textField('title', 'Title')}
       {textField('caption', 'Caption', { multiline: true })}
 
+      <fieldset disabled={busy} className="min-w-0 border-0 p-0">
+        <legend className={`text-xs ${adminClass.fg}`}>
+          Categories (required for the front page)
+          {summary.tags.mixed ? ` — ${MIXED.toLowerCase()}; choosing replaces all` : ''}
+        </legend>
+        <div className="mt-1 flex flex-col gap-1" aria-describedby={`${idPrefix}-tags-status`}>
+          {PORTFOLIO_CATEGORIES.map((tag) => {
+            const checked = selectedTags?.includes(tag) ?? false;
+            return (
+              <label
+                key={tag}
+                className={`inline-flex items-center gap-2 text-xs ${adminClass.fg}`}
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={(event) => {
+                    if (summary.tags.mixed) {
+                      void save('tags', { tags: event.target.checked ? [tag] : [] });
+                      return;
+                    }
+                    toggleTag(tag, event.target.checked);
+                  }}
+                />
+                {tag}
+              </label>
+            );
+          })}
+        </div>
+        <FieldStatus id={`${idPrefix}-tags-status`} save={saveStates.tags} />
+      </fieldset>
+
       <div>
-        <label htmlFor={`${idPrefix}-category`} className={`block text-xs ${adminClass.fg}`}>
-          Category (required for the front page)
+        <label htmlFor={`${idPrefix}-priority`} className={`block text-xs ${adminClass.fg}`}>
+          Mosaic priority (1–5; higher gets larger slots)
         </label>
         <select
-          id={`${idPrefix}-category`}
+          id={`${idPrefix}-priority`}
           className={adminClass.fieldSm}
-          value={categoryValue}
+          value={summary.priority.mixed ? '' : String(summary.priority.value)}
           disabled={busy}
-          aria-describedby={`${idPrefix}-category-status`}
+          aria-describedby={`${idPrefix}-priority-status`}
           onChange={(event) => {
-            const value = event.target.value;
-            if (value === MIXED_CATEGORY) return;
-            void save('category', { category: isPortfolioCategory(value) ? value : null });
+            const value = Number(event.target.value);
+            if (!PRIORITY_OPTIONS.includes(value as (typeof PRIORITY_OPTIONS)[number])) return;
+            void save('priority', { priority: value });
           }}
         >
-          {summary.category.mixed ? (
-            <option value={MIXED_CATEGORY} disabled>
+          {summary.priority.mixed ? (
+            <option value="" disabled>
               {MIXED}
             </option>
           ) : null}
-          <option value="">— None —</option>
-          {PORTFOLIO_CATEGORIES.map((category) => (
-            <option key={category} value={category}>
-              {category}
+          {PRIORITY_OPTIONS.map((value) => (
+            <option key={value} value={value}>
+              {value}
+              {value === 3 ? ' (default)' : ''}
             </option>
           ))}
         </select>
-        <FieldStatus id={`${idPrefix}-category-status`} save={saveStates.category} />
+        <FieldStatus id={`${idPrefix}-priority-status`} save={saveStates.priority} />
       </div>
 
       <div>

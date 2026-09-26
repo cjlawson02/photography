@@ -42,6 +42,22 @@ describe('computeMosaicLayout', () => {
     expect(first.height + second.height + options.gap).toBeCloseTo(portrait.height, 5);
   });
 
+  it('omitting priorities matches all-neutral priorities', () => {
+    const ratios = [1.5, 0.67, 1.5, 1.5, 0.67];
+    const a = computeMosaicLayout(ratios, options);
+    const b = computeMosaicLayout(ratios, options, [3, 3, 3, 3, 3]);
+    expect(a.items).toEqual(b.items);
+  });
+
+  it('favors full-height singles for higher-priority stackable photos', () => {
+    // Three landscapes + portrait: one landscape is a tall single beside a stack.
+    const ratios = [1.5, 1.5, 1.5, 0.67];
+    const highFirst = computeMosaicLayout(ratios, options, [5, 3, 3, 3]);
+    const highThird = computeMosaicLayout(ratios, options, [3, 3, 5, 3]);
+    expect(highFirst.items[0].height).toBeGreaterThan(highFirst.items[1].height * 1.5);
+    expect(highThird.items[2].height).toBeGreaterThan(highThird.items[0].height * 1.5);
+  });
+
   it('returns an empty layout for no photos', () => {
     expect(computeMosaicLayout([], options)).toEqual({ width: 1200, height: 0, items: [] });
   });

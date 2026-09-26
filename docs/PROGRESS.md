@@ -14,7 +14,7 @@
 | Admin UX v2 | Done | A1–A7 + RHF/zod forms; [ADMIN-UX.md](ADMIN-UX.md); open product decisions D1/D3–D6 remain `_TBD_` there |
 | Phase 3 — Public site | Done (MVP) | Home + React islands, SEO meta on home; extra public routes + brand tokens `_TBD_` |
 | Phase 4 — Client review | Done (phase 1) | `/review/{slug}`, React gallery, selection API, admin revoke, `noindex` + robots |
-| Post-MVP hardening | In progress | T1/FIX-28 workerd pilot done; open: CSP nonces, ingest E2E, P8/P9, R1 ([IMPLEMENTATION.md](IMPLEMENTATION.md#phase-25--post-mvp-backlog)) |
+| Post-MVP hardening | In progress | T1/FIX-28 workerd pilot done; open: CSP nonces, ingest E2E, R2 ([IMPLEMENTATION.md](IMPLEMENTATION.md#phase-25--post-mvp-backlog)) |
 | Phase 5 — Cutover | Done | Traffic cutover, legacy decommission, monitoring setup, rollback/RTO-RPO ([CUTOVER.md](CUTOVER.md)); Picu/review import _TBD_ if needed |
 
 Production host live (`photography.chrislawson.dev`): Access `/admin*`, D1 remote migrations, R2 CORS, Access vars + R2 secrets — [DEPLOY.md](DEPLOY.md).
@@ -55,6 +55,7 @@ gantt
 
 | Date | Update |
 | --- | --- |
+| 2026-09-26 | P8/P9: portfolio `priority` 1–5 + mosaic bias; `category` → JSON `tags` multi-select |
 | 2026-09-26 | R1 complete: FIX-31/36–38 (UTC admin times, Origin check, sanitized 5xx/403, JWT RS256+claims) |
 | 2026-09-26 | R1 slice: FIX-32–35 + FIX-40 (stale-pending R2-fail guard, review JSON errors, select UX, lightbox dims, selection response trim) |
 | 2026-09-26 | Phase 2.5 T1/FIX-28: Vitest 4 + `@cloudflare/vitest-plugin` workerd pilot (`*.workers.vitest.ts`); Node suites unchanged |

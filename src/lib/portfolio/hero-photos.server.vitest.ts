@@ -6,7 +6,8 @@ import { selectHeroPhotos } from './hero-photos.ts';
 describe('selectHeroPhotos', () => {
   const base = (overrides: Partial<PublicPortfolioPhoto>): PublicPortfolioPhoto => ({
     id: 'a',
-    category: null,
+    tags: [],
+    priority: 3,
     sortOrder: null,
     hero: false,
     alt: null,

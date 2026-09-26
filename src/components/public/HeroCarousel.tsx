@@ -10,6 +10,7 @@ import {
 } from 'react';
 
 import { GALLERY_VARIANT } from '../../lib/ingest/keys.ts';
+import { formatPortfolioTags } from '../../lib/portfolio/categories.ts';
 import type { PublicPortfolioPhoto } from '../../lib/services/portfolio-service.ts';
 
 const AUTOPLAY_DELAY_MS = 6500;
@@ -141,7 +142,7 @@ export default function HeroCarousel({ photos }: Props) {
   const pauseLabel = autoplayEnabled ? 'Pause automatic slide show' : 'Resume automatic slide show';
   const currentTitle = current?.title?.trim();
   const currentCaption = current?.caption?.trim();
-  const currentCategory = current?.category?.trim();
+  const currentTags = current ? formatPortfolioTags(current.tags) : '';
 
   return (
     <section
@@ -182,7 +183,7 @@ export default function HeroCarousel({ photos }: Props) {
       <div className="public-hero__content">
         <div className="public-hero__copy">
           <div key={selected} className="public-hero__card">
-            {currentCategory ? <p className="public-hero__category">{currentCategory}</p> : null}
+            {currentTags ? <p className="public-hero__category">{currentTags}</p> : null}
             {currentTitle ? <p className="public-hero__title">{currentTitle}</p> : null}
             {currentCaption && currentCaption !== currentTitle ? (
               <p className="public-hero__caption">{currentCaption}</p>

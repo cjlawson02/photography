@@ -10,3 +10,8 @@ export type PortfolioCategoryFilter = (typeof PORTFOLIO_CATEGORY_LABELS)[number]
 export function isPortfolioCategory(value: string): value is PortfolioCategory {
   return (PORTFOLIO_CATEGORIES as readonly string[]).includes(value);
 }
+
+/** Public/hero label line — join tags with a middot. */
+export function formatPortfolioTags(tags: readonly string[]): string {
+  return tags.filter((tag) => tag.trim().length > 0).join(' · ');
+}

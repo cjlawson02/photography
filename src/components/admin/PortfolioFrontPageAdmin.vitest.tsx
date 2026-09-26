@@ -24,7 +24,7 @@ afterEach(() => {
 
 function setup(titles: string[], options: { failReorder?: boolean } = {}) {
   const photos = titles.map((title) =>
-    makeAdminPortfolioPhoto({ title, alt: title, category: 'Nature', frontPage: true }),
+    makeAdminPortfolioPhoto({ title, alt: title, tags: ['Nature'], frontPage: true }),
   );
   const byId = new Map(photos.map((photo) => [photo.id, photo]));
   let serverOrder = photos.map((photo) => photo.id);

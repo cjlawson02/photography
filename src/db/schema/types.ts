@@ -25,6 +25,15 @@ export const reviewJobStatusSchema = z.enum(reviewJobStatuses);
 
 export const portfolioCategorySchema = z.enum(PORTFOLIO_CATEGORIES);
 
+/** Deduped tag list for portfolio photos (P9). */
+export const portfolioTagsSchema = z
+  .array(portfolioCategorySchema)
+  .max(PORTFOLIO_CATEGORIES.length)
+  .transform((tags) => [...new Set(tags)]);
+
+/** Mosaic large-slot preference (P8). */
+export const portfolioPrioritySchema = z.number().int().min(1).max(5);
+
 /** URL slug for `/review/{slug}` — non-empty trimmed string. */
 export const slugSchema = requiredTrimmedString;
 
@@ -43,7 +52,8 @@ export const portfolioPhotoSelectSchema = createSelectSchema(PortfolioPhotos, {
   status: photoStatusSchema,
   mimeType: z.string().nullable(),
   published: z.boolean(),
-  category: portfolioCategorySchema.nullable(),
+  tags: z.array(portfolioCategorySchema),
+  priority: portfolioPrioritySchema,
   sortOrder: z.number().int().nullable(),
   hero: z.boolean(),
   frontPage: z.boolean(),
@@ -59,7 +69,8 @@ export const portfolioPhotoInsertSchema = createInsertSchema(PortfolioPhotos, {
   status: photoStatusSchema,
   mimeType: optionalTrimmedString.nullable().optional(),
   published: z.boolean().optional(),
-  category: portfolioCategorySchema.nullable().optional(),
+  tags: portfolioTagsSchema.optional(),
+  priority: portfolioPrioritySchema.optional(),
   sortOrder: z.number().int().nullable().optional(),
   hero: z.boolean().optional(),
   frontPage: z.boolean().optional(),
@@ -75,7 +86,8 @@ export const portfolioPhotoUpdateSchema = createUpdateSchema(PortfolioPhotos, {
   status: photoStatusSchema.optional(),
   mimeType: optionalTrimmedString.nullable().optional(),
   published: z.boolean().optional(),
-  category: portfolioCategorySchema.nullable().optional(),
+  tags: portfolioTagsSchema.optional(),
+  priority: portfolioPrioritySchema.optional(),
   sortOrder: z.number().int().nullable().optional(),
   hero: z.boolean().optional(),
   frontPage: z.boolean().optional(),

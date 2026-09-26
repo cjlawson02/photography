@@ -38,6 +38,12 @@ const STACKABLE_MIN_RATIO = 0.95;
 /** Nudge toward double rows so the layout reads freeform rather than strictly row-based. */
 const STACK_ROW_BONUS = 0.08;
 const LAST_ROW_GAP_WEIGHT = 2;
+/**
+ * Soft priority bias (P8): tips near-ties only. Positive (priority − 3) favors singles in
+ * double-height rows and discourages stacking high-priority photos.
+ */
+const PRIORITY_SINGLE_BONUS = 0.04;
+const PRIORITY_STACK_PENALTY = 0.03;
 
 function slotGroupings(ratios: readonly number[], start: number, end: number, maxSlots: number) {
   const out: Slot[][] = [];
@@ -79,6 +85,7 @@ function solveRowHeight(slots: Slot[], ratios: readonly number[], width: number,
 function planRow(
   slots: Slot[],
   ratios: readonly number[],
+  priorities: readonly number[],
   options: MosaicOptions,
   isLast: boolean,
 ): RowPlan | null {
@@ -106,17 +113,35 @@ function planRow(
   }
 
   const deviation = (height - target) / target;
-  const cost = deviation * deviation - (hasStack ? STACK_ROW_BONUS : 0);
+  let priorityAdj = 0;
+  if (hasStack) {
+    for (const slot of slots) {
+      if (slot.kind === 'single') {
+        const priority = priorities[slot.index] ?? 3;
+        priorityAdj -= PRIORITY_SINGLE_BONUS * (priority - 3);
+      } else {
+        for (const index of slot.indices) {
+          const priority = priorities[index] ?? 3;
+          priorityAdj += PRIORITY_STACK_PENALTY * (priority - 3);
+        }
+      }
+    }
+  }
+  const cost = deviation * deviation - (hasStack ? STACK_ROW_BONUS : 0) + priorityAdj;
   return { slots, height, cost };
 }
 
 export function computeMosaicLayout(
   ratios: readonly number[],
   options: MosaicOptions,
+  priorities?: readonly number[],
 ): MosaicLayout {
   const n = ratios.length;
   const { containerWidth, gap, maxSlots } = options;
   if (n === 0 || containerWidth <= 0) return { width: containerWidth, height: 0, items: [] };
+
+  const priorityList =
+    priorities && priorities.length === n ? priorities : Array.from({ length: n }, () => 3);
 
   const maxSpan = maxSlots * 2;
   const best: { cost: number; row: RowPlan | null; from: number }[] = Array.from(
@@ -130,7 +155,7 @@ export function computeMosaicLayout(
     for (let end = start + 1; end <= Math.min(n, start + maxSpan); end += 1) {
       const isLast = end === n;
       for (const slots of slotGroupings(ratios, start, end, maxSlots)) {
-        const row = planRow(slots, ratios, options, isLast);
+        const row = planRow(slots, ratios, priorityList, options, isLast);
         if (!row) continue;
         const total = best[start].cost + row.cost;
         if (total < best[end].cost) best[end] = { cost: total, row, from: start };

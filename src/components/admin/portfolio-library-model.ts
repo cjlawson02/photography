@@ -41,11 +41,15 @@ function matchesState(photo: AdminPortfolioPhoto, state: LibraryStateFilter): bo
   }
 }
 
+function tagsKey(tags: readonly string[]) {
+  return tags.toSorted().join('\0');
+}
+
 export function matchesLibraryFilters(photo: AdminPortfolioPhoto, filters: LibraryFilters) {
   if (!matchesState(photo, filters.state)) return false;
   if (filters.category === 'all') return true;
-  if (filters.category === 'uncategorized') return !photo.category;
-  return photo.category === filters.category;
+  if (filters.category === 'uncategorized') return photo.tags.length === 0;
+  return photo.tags.includes(filters.category);
 }
 
 export type PhotoBadge = { label: string; attention: boolean; title?: string };
@@ -81,7 +85,8 @@ export const INSPECTOR_FIELDS = [
   'alt',
   'title',
   'caption',
-  'category',
+  'tags',
+  'priority',
   'published',
   'sortOrder',
 ] as const;
@@ -99,6 +104,12 @@ function summarize<K extends InspectorField>(
   field: K,
 ): FieldSummary<AdminPortfolioPhoto[K]> {
   const first = photos[0]![field];
+  if (field === 'tags') {
+    const key = tagsKey(first as string[]);
+    return photos.every((photo) => tagsKey(photo.tags) === key)
+      ? { mixed: false, value: first }
+      : { mixed: true };
+  }
   return photos.every((photo) => photo[field] === first)
     ? { mixed: false, value: first }
     : { mixed: true };
@@ -111,7 +122,8 @@ export function summarizeSelection(photos: readonly AdminPortfolioPhoto[]): Sele
     alt: summarize(photos, 'alt'),
     title: summarize(photos, 'title'),
     caption: summarize(photos, 'caption'),
-    category: summarize(photos, 'category'),
+    tags: summarize(photos, 'tags'),
+    priority: summarize(photos, 'priority'),
     published: summarize(photos, 'published'),
     sortOrder: summarize(photos, 'sortOrder'),
   };

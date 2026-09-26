@@ -9,11 +9,11 @@ type Row = {
   status: 'pending' | 'ready' | 'failed';
   published: boolean;
   alt: string | null;
-  category: string | null;
+  tags: string[];
 };
 
 function row(id: string, overrides: Partial<Row> = {}): Row {
-  return { id, status: 'ready', published: true, alt: 'Alt', category: 'landscape', ...overrides };
+  return { id, status: 'ready', published: true, alt: 'Alt', tags: ['Nature'], ...overrides };
 }
 
 function serviceWithDao(options: { frontPage?: Row[]; others?: Row[] } = {}) {
@@ -112,7 +112,7 @@ describe('PortfolioService.addToFrontPage', () => {
   it('appends eligible photos and reports skipped ones', async () => {
     const { service, dao } = serviceWithDao({
       frontPage: [row('a')],
-      others: [row('b'), row('c', { category: null }), row('d', { published: false })],
+      others: [row('b'), row('c', { tags: [] }), row('d', { published: false })],
     });
     const result = await service.addToFrontPage(['b', 'c', 'd', 'a']);
     expect(result.added).toEqual(['b']);
