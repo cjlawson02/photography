@@ -1,32 +1,27 @@
-/** Shared inline styles for admin islands (CSS tokens from Phase 0). */
+/** Shared class names for admin islands (Darkroom tokens in `global.css`). */
 
-export const adminBorderStyle = { borderColor: 'var(--color-border)' };
-
-export const adminFieldStyle = {
-  borderColor: 'var(--color-border)',
-  background: 'var(--color-bg)',
-  color: 'var(--color-fg)',
-};
-
-export const adminTableHeadRowStyle = {
-  color: 'var(--color-fg-muted)',
-  borderBottom: '1px solid var(--color-border)',
-};
-
-export const adminTableRowStyle = { borderBottom: '1px solid var(--color-border)' };
-
-export const adminFgStyle = { color: 'var(--color-fg)' };
-
-export const adminFgMutedStyle = { color: 'var(--color-fg-muted)' };
-
-export const adminAccentStyle = { color: 'var(--color-accent)' };
-
-export const adminPrimaryButtonStyle = {
-  background: 'var(--color-accent)',
-  color: 'var(--color-bg)',
-};
-
-export const adminCodePanelStyle = {
-  background: 'color-mix(in oklab, var(--color-fg) 6%, transparent)',
-  color: 'var(--color-fg-muted)',
-};
+export const adminClass = {
+  fg: 'admin-fg',
+  fgMuted: 'admin-fg-muted',
+  accent: 'admin-accent',
+  link: 'admin-link',
+  linkMuted: 'admin-link-muted',
+  field: 'admin-field',
+  fieldSm: 'admin-field admin-field--sm',
+  btnPrimary: 'admin-btn-primary',
+  panel: 'admin-panel',
+  panelDashed: 'admin-panel admin-panel--dashed',
+  uploadSection: 'admin-panel admin-upload-section',
+  toolbar: 'admin-toolbar',
+  status: 'admin-status',
+  tableWrap: 'admin-table-wrap',
+  table: 'admin-table',
+  tableHeadRow: 'admin-table__head-row',
+  tableRow: 'admin-table__row',
+  tableTh: 'admin-table__th',
+  sectionHeading: 'admin-section-heading',
+  thumb: 'admin-thumb',
+  code: 'admin-code',
+  footnote: 'admin-footnote',
+  progress: 'admin-progress',
+} as const;

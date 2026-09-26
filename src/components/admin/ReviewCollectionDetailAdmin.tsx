@@ -20,13 +20,7 @@ import {
   formatAdminTime,
   normalizeNullableText,
 } from './admin-format.ts';
-import {
-  adminAccentStyle,
-  adminBorderStyle,
-  adminFieldStyle,
-  adminFgMutedStyle,
-  adminFgStyle,
-} from './admin-styles.ts';
+import { adminClass } from './admin-styles.ts';
 import AdminPhotoUpload from './AdminPhotoUpload.tsx';
 import AdminSectionHeading from './AdminSectionHeading.tsx';
 import AdminStatusLine from './AdminStatusLine.tsx';
@@ -60,8 +54,7 @@ function CollectionTitleInput({ value, busy, onSave }: CollectionTitleInputProps
   return (
     <input
       type="text"
-      className="block w-full max-w-md border px-3 py-2 text-sm"
-      style={adminFieldStyle}
+      className={`block w-full max-w-md text-sm ${adminClass.field}`}
       aria-label="Collection title"
       placeholder="—"
       disabled={busy}
@@ -93,8 +86,7 @@ function CollectionExpiresInput({ value, busy, onSave, onInvalid }: CollectionEx
   return (
     <input
       type="datetime-local"
-      className="block w-full max-w-md border px-3 py-2 text-sm"
-      style={adminFieldStyle}
+      className={`block w-full max-w-md text-sm ${adminClass.field}`}
       aria-label="Collection expiry"
       disabled={busy}
       {...register('expiresAtLocal', {
@@ -215,13 +207,13 @@ function ReviewCollectionDetailAdminInner({
 
       {detail ? (
         <>
-          <dl className="mt-6 grid gap-3 text-sm sm:grid-cols-2" style={adminFgStyle}>
+          <dl className={`mt-6 grid gap-3 text-sm sm:grid-cols-2 ${adminClass.fg}`}>
             <div>
-              <dt style={adminFgMutedStyle}>Slug</dt>
+              <dt className={adminClass.fgMuted}>Slug</dt>
               <dd className="mt-0.5 font-mono text-xs">{detail.collection.slug}</dd>
             </div>
             <div>
-              <dt style={adminFgMutedStyle}>Title</dt>
+              <dt className={adminClass.fgMuted}>Title</dt>
               <dd className="mt-0.5">
                 <CollectionTitleInput
                   value={detail.collection.title}
@@ -231,7 +223,7 @@ function ReviewCollectionDetailAdminInner({
               </dd>
             </div>
             <div>
-              <dt style={adminFgMutedStyle}>Expires</dt>
+              <dt className={adminClass.fgMuted}>Expires</dt>
               <dd className="mt-0.5 text-xs">
                 <CollectionExpiresInput
                   value={detail.collection.expiresAt}
@@ -239,7 +231,7 @@ function ReviewCollectionDetailAdminInner({
                   onSave={(expiresAt) => patchCollection({ expiresAt })}
                   onInvalid={(message) => setEditStatus(message)}
                 />
-                <span className="mt-1 block" style={adminFgMutedStyle}>
+                <span className={`mt-1 block ${adminClass.fgMuted}`}>
                   {detail.collection.expiresAt == null
                     ? 'No expiry — link stays active until revoked.'
                     : `Shown: ${formatAdminTime(detail.collection.expiresAt)}`}
@@ -247,10 +239,10 @@ function ReviewCollectionDetailAdminInner({
               </dd>
             </div>
             <div>
-              <dt style={adminFgMutedStyle}>Client link</dt>
+              <dt className={adminClass.fgMuted}>Client link</dt>
               <dd className="mt-0.5 text-xs">
                 {reviewPath ? (
-                  <a href={reviewPath} style={adminAccentStyle}>
+                  <a href={reviewPath} className={adminClass.link}>
                     {reviewPath}
                   </a>
                 ) : (
@@ -259,8 +251,8 @@ function ReviewCollectionDetailAdminInner({
               </dd>
             </div>
             <div className="sm:col-span-2">
-              <dt style={adminFgMutedStyle}>Collection id</dt>
-              <dd className="mt-0.5 font-mono text-xs" style={adminFgMutedStyle}>
+              <dt className={adminClass.fgMuted}>Collection id</dt>
+              <dd className={`mt-0.5 font-mono text-xs ${adminClass.fgMuted}`}>
                 {detail.collection.id}
               </dd>
             </div>
@@ -269,8 +261,7 @@ function ReviewCollectionDetailAdminInner({
 
           <section
             id="upload"
-            className="mt-8 scroll-mt-8 rounded border p-4"
-            style={adminBorderStyle}
+            className={`mt-8 scroll-mt-8 ${adminClass.uploadSection}`}
             aria-label="Upload review photo"
           >
             <AdminSectionHeading>Upload</AdminSectionHeading>
@@ -313,24 +304,16 @@ function ReviewCollectionDetailAdminInner({
                           alt=""
                           width={72}
                           height={54}
-                          className="border object-cover"
-                          style={{
-                            ...adminBorderStyle,
-                            width: '4.5rem',
-                            height: '3.375rem',
-                          }}
+                          className={adminClass.thumb}
                         />
                       </a>
                     ) : (
-                      <span className="text-xs" style={adminFgMutedStyle}>
-                        —
-                      </span>
+                      <span className={`text-xs ${adminClass.fgMuted}`}>—</span>
                     )}
                   </td>
                   <td className="py-2 pr-4 align-middle font-mono text-xs">{photo.status}</td>
                   <td
-                    className="py-2 pr-4 align-middle text-xs tabular-nums"
-                    style={adminFgMutedStyle}
+                    className={`py-2 pr-4 align-middle text-xs tabular-nums ${adminClass.fgMuted}`}
                   >
                     {formatAdminDimensions(photo.width, photo.height)}
                   </td>
@@ -340,17 +323,13 @@ function ReviewCollectionDetailAdminInner({
                   <td className="py-2 pr-4 align-middle text-xs">
                     {formatAdminTime(photo.updatedAt)}
                   </td>
-                  <td
-                    className="py-2 pr-4 align-middle font-mono text-xs"
-                    style={adminFgMutedStyle}
-                  >
+                  <td className={`py-2 pr-4 align-middle font-mono text-xs ${adminClass.fgMuted}`}>
                     {photo.id}
                   </td>
                   <td className="py-2 align-middle">
                     <button
                       type="button"
-                      className="text-xs underline"
-                      style={adminAccentStyle}
+                      className={`text-xs ${adminClass.linkMuted} ${adminClass.accent}`}
                       disabled={photoActionsBusy}
                       onClick={() => {
                         void deletePhoto(photo.id);

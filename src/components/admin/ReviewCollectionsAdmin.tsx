@@ -11,7 +11,7 @@ import type { z } from 'zod/v4';
 import type { AdminReviewCollection } from '../../lib/admin/trpc-types.ts';
 import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
 import { errorMessage, formatAdminTime } from './admin-format.ts';
-import { adminAccentStyle, adminFieldStyle, adminFgMutedStyle } from './admin-styles.ts';
+import { adminClass } from './admin-styles.ts';
 import AdminEmptyState from './AdminEmptyState.tsx';
 import AdminFieldLabel from './AdminFieldLabel.tsx';
 import AdminPrimaryButton from './AdminPrimaryButton.tsx';
@@ -132,13 +132,12 @@ function ReviewCollectionsAdminInner({ initialCollections }: ReviewCollectionsAd
             <input
               type="text"
               placeholder="smith-wedding"
-              className="mt-1 block w-full border px-3 py-2 text-sm"
-              style={adminFieldStyle}
+              className={`mt-1 block w-full text-sm ${adminClass.field}`}
               autoComplete="off"
               aria-invalid={errors.slugPrefix ? true : undefined}
               {...register('slugPrefix')}
             />
-            <span className="mt-1 block text-xs" style={adminFgMutedStyle}>
+            <span className={`mt-1 block text-xs ${adminClass.fgMuted}`}>
               The review URL slug is generated on the server; an optional prefix is added before a
               secret segment.
             </span>
@@ -146,8 +145,7 @@ function ReviewCollectionsAdminInner({ initialCollections }: ReviewCollectionsAd
           <AdminFieldLabel label="Title (optional)">
             <input
               type="text"
-              className="mt-1 block w-full border px-3 py-2 text-sm"
-              style={adminFieldStyle}
+              className={`mt-1 block w-full text-sm ${adminClass.field}`}
               aria-invalid={errors.title ? true : undefined}
               {...register('title')}
             />
@@ -155,8 +153,7 @@ function ReviewCollectionsAdminInner({ initialCollections }: ReviewCollectionsAd
           <AdminFieldLabel label="Expires (optional)">
             <input
               type="datetime-local"
-              className="mt-1 block w-full border px-3 py-2 text-sm"
-              style={adminFieldStyle}
+              className={`mt-1 block w-full text-sm ${adminClass.field}`}
               aria-invalid={errors.expiresAtLocal ? true : undefined}
               {...register('expiresAtLocal')}
             />
@@ -207,13 +204,12 @@ function ReviewCollectionsAdminInner({ initialCollections }: ReviewCollectionsAd
                     <td className="py-2 pr-4">{row.title ?? '—'}</td>
                     <td className="py-2 pr-4 text-xs">{formatAdminTime(row.expiresAt)}</td>
                     <td className="py-2 pr-4 text-xs">
-                      <a href={reviewPath} style={adminAccentStyle}>
+                      <a href={reviewPath} className={adminClass.link}>
                         {reviewPath}
                       </a>
                       <button
                         type="button"
-                        className="ml-2 underline"
-                        style={adminFgMutedStyle}
+                        className={`ml-2 ${adminClass.linkMuted}`}
                         disabled={busy}
                         onClick={() => {
                           void copyText('client link', absoluteUrl, setActionStatus);
@@ -223,15 +219,15 @@ function ReviewCollectionsAdminInner({ initialCollections }: ReviewCollectionsAd
                       </button>
                     </td>
                     <td className="py-2 pr-4 text-xs">
-                      <a href={detailPath} className="mr-3" style={adminAccentStyle}>
+                      <a href={detailPath} className={`mr-3 ${adminClass.link}`}>
                         Inspect
                       </a>
-                      <a href={`${detailPath}#upload`} className="mr-3" style={adminAccentStyle}>
+                      <a href={`${detailPath}#upload`} className={`mr-3 ${adminClass.link}`}>
                         Upload
                       </a>
                       <button
                         type="button"
-                        style={adminFgMutedStyle}
+                        className={adminClass.linkMuted}
                         disabled={busy || revokeMutation.isPending}
                         onClick={() => {
                           if (
@@ -256,12 +252,11 @@ function ReviewCollectionsAdminInner({ initialCollections }: ReviewCollectionsAd
                         Revoke
                       </button>
                     </td>
-                    <td className="py-2 font-mono text-xs" style={adminFgMutedStyle}>
+                    <td className={`py-2 font-mono text-xs ${adminClass.fgMuted}`}>
                       <span>{row.id}</span>
                       <button
                         type="button"
-                        className="ml-2 underline"
-                        style={adminFgMutedStyle}
+                        className={`ml-2 ${adminClass.linkMuted}`}
                         disabled={busy}
                         onClick={() => {
                           void copyText('collection id', row.id, setActionStatus);

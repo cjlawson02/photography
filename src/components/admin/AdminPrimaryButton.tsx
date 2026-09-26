@@ -1,13 +1,14 @@
 import type { ButtonHTMLAttributes } from 'react';
 
-import { adminPrimaryButtonStyle } from './admin-styles.ts';
+import { adminClass } from './admin-styles.ts';
 
 type AdminPrimaryButtonProps = ButtonHTMLAttributes<HTMLButtonElement>;
 
 export default function AdminPrimaryButton({
-  className = 'px-4 py-2 text-sm disabled:opacity-60',
+  className = '',
   type = 'button',
   ...rest
 }: AdminPrimaryButtonProps) {
-  return <button type={type} className={className} style={adminPrimaryButtonStyle} {...rest} />;
+  const classes = className ? `${adminClass.btnPrimary} ${className}` : adminClass.btnPrimary;
+  return <button type={type} className={classes} {...rest} />;
 }

@@ -1,18 +1,17 @@
 import type { ReactNode } from 'react';
 
-import { adminFgStyle, adminTableHeadRowStyle, adminTableRowStyle } from './admin-styles.ts';
+import { adminClass } from './admin-styles.ts';
 
 type AdminTableProps = {
   children: ReactNode;
   className?: string;
 };
 
-export function AdminTable({ children, className = 'mt-6' }: AdminTableProps) {
+export function AdminTable({ children, className = '' }: AdminTableProps) {
+  const wrapClass = className ? `${adminClass.tableWrap} ${className}` : adminClass.tableWrap;
   return (
-    <div className={`${className} overflow-x-auto`}>
-      <table className="w-full text-left text-sm" style={adminFgStyle}>
-        {children}
-      </table>
+    <div className={wrapClass}>
+      <table className={adminClass.table}>{children}</table>
     </div>
   );
 }
@@ -24,7 +23,7 @@ type AdminTableHeadProps = {
 export function AdminTableHead({ children }: AdminTableHeadProps) {
   return (
     <thead>
-      <tr style={adminTableHeadRowStyle}>{children}</tr>
+      <tr className={adminClass.tableHeadRow}>{children}</tr>
     </thead>
   );
 }
@@ -34,11 +33,9 @@ type AdminTableHeaderCellProps = {
   className?: string;
 };
 
-export function AdminTableHeaderCell({
-  children,
-  className = 'py-2 pr-4',
-}: AdminTableHeaderCellProps) {
-  return <th className={`${className} font-normal`}>{children}</th>;
+export function AdminTableHeaderCell({ children, className = '' }: AdminTableHeaderCellProps) {
+  const thClass = className ? `${adminClass.tableTh} ${className}` : adminClass.tableTh;
+  return <th className={thClass}>{children}</th>;
 }
 
 type AdminTableRowProps = {
@@ -46,5 +43,5 @@ type AdminTableRowProps = {
 };
 
 export function AdminTableRow({ children }: AdminTableRowProps) {
-  return <tr style={adminTableRowStyle}>{children}</tr>;
+  return <tr className={adminClass.tableRow}>{children}</tr>;
 }
