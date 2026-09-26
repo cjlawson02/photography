@@ -1,5 +1,7 @@
 import { AwsClient } from 'aws4fetch';
 
+import { PRESIGN_PUT_EXPIRES_SECONDS } from '../ingest/stale-pending.ts';
+
 /** Purpose buckets matching wrangler R2 bindings / bucket names. */
 export type PurposeBucket = 'portfolio' | 'review';
 
@@ -18,7 +20,7 @@ export class R2ConfigError extends Error {
   override name = 'R2ConfigError';
 }
 
-const DEFAULT_EXPIRES_SECONDS = 900;
+const DEFAULT_EXPIRES_SECONDS = PRESIGN_PUT_EXPIRES_SECONDS;
 
 type R2Bindings = {
   PORTFOLIO: R2Bucket;
