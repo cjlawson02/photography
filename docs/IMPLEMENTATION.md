@@ -170,7 +170,7 @@ Guided, low-frequency admin: client-shoot step rail (proof → picks → deliver
 - [x] **A1** Shoot job page + step rail — [ADMIN-UX § Lifecycles / Workflows 1–2](ADMIN-UX.md#lifecycles)
 - [x] **A2** Client “Submit picks” + lock / reopen + filename export for Lightroom — [Workflow 2](ADMIN-UX.md#2-receive-picks); persist `originalFilename`
 - [x] **A3** Delivery round + public download mode — [Workflow 3](ADMIN-UX.md#3-deliver-finals) (ZIP / storage shape: [open decisions](ADMIN-UX.md#open-decisions))
-- [ ] **A4** Front-page set (order, hero) + Library grid + inspector — [Workflow 5](ADMIN-UX.md#5-refresh-the-front-page); [patterns](ADMIN-UX.md#interaction-patterns)
+- [x] **A4** Front-page set (order, hero) + Library grid + inspector — [Workflow 5](ADMIN-UX.md#5-refresh-the-front-page); [patterns](ADMIN-UX.md#interaction-patterns)
 - [ ] **A5** Home (active shoot cards + attention banners) — [IA](ADMIN-UX.md#information-architecture)
 - [ ] **A6** Close-out, retention, promote-to-portfolio — [Workflow 4](ADMIN-UX.md#4-close-out); HLD promote-as-copy
 - [ ] **A7** Ingest recovery parity (retry/remove) on proofs and finals — [Workflow 6](ADMIN-UX.md#6-recover-failed--stale-ingest)

@@ -31,6 +31,10 @@ export const PortfolioPhotos = sqliteTable(
     sortOrder: integer('sortOrder', { mode: 'number' }),
     /** Future hero carousel — nullable intent; defaults false for new rows. */
     hero: integer('hero', { mode: 'boolean' }).notNull().default(false),
+    /** Curated front-page set (A4) — requires published + ready. */
+    frontPage: integer('frontPage', { mode: 'boolean' }).notNull().default(false),
+    /** Order within the front-page set; lower first. */
+    frontPageOrder: integer('frontPageOrder', { mode: 'number' }),
     /** Natural pixel width from ingest (Images `info()` on original). */
     width: integer('width', { mode: 'number' }),
     /** Natural pixel height from ingest (Images `info()` on original). */
