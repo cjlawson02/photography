@@ -16,4 +16,15 @@ describe('applySecurityHeaders', () => {
     assert.equal(headers.get('Referrer-Policy'), 'strict-origin-when-cross-origin');
     assert.equal(headers.get('X-Frame-Options'), 'DENY');
   });
+
+  it('includes Google Fonts and connect-src self in CSP', () => {
+    const headers = new Headers();
+    applySecurityHeaders(headers);
+
+    const csp = headers.get('Content-Security-Policy') ?? '';
+    assert.ok(csp.includes('https://fonts.googleapis.com'));
+    assert.ok(csp.includes('https://fonts.gstatic.com'));
+    assert.ok(csp.includes("connect-src 'self'"));
+    assert.ok(csp.includes("img-src 'self' data: blob:"));
+  });
 });
