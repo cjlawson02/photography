@@ -90,7 +90,7 @@ export const appRouter = createTRPCRouter({
         ),
       exportPickFilenames: adminProcedure
         .input(reviewCollectionIdInputSchema)
-        .query(async ({ ctx, input }) =>
+        .mutation(async ({ ctx, input }) =>
           ReviewService.from(ctx.getAppEnv()).exportPickFilenames(input.id),
         ),
       reopenPicks: adminProcedure
@@ -117,9 +117,18 @@ export const appRouter = createTRPCRouter({
       ),
     complete: rateLimitedAdminProcedure
       .input(completeBodySchema)
-      .mutation(async ({ ctx, input }) =>
-        IngestService.from(ctx.getIngestAppEnv()).completeIngest(input),
-      ),
+      .mutation(async ({ ctx, input }) => {
+        const result = await IngestService.from(ctx.getIngestAppEnv()).completeIngest(input);
+        if (input.bucket === 'review' && result.status === 'ready') {
+          const photo = await ctx.getAppEnv().d1.reviewPhotos.getById(input.id);
+          if (photo?.collectionId) {
+            await ReviewService.from(ctx.getAppEnv()).maybeAdvanceProofsUploadedAfterIngest(
+              photo.collectionId,
+            );
+          }
+        }
+        return result;
+      }),
     reprocess: rateLimitedAdminProcedure
       .input(reprocessBodySchema)
       .mutation(async ({ ctx, input }) =>

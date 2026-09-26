@@ -3,6 +3,7 @@ import { createTRPCClient, httpBatchLink } from '@trpc/client';
 import { createTRPCContext } from '@trpc/tanstack-react-query';
 import { useState, type ReactNode } from 'react';
 
+import { AdminToastProvider } from '../../components/admin/AdminToast.tsx';
 import type { AppRouter } from './router.ts';
 import { adminTrpcFetch, TRPC_URL } from './admin-fetch.ts';
 import { getAdminQueryClient } from './query-client.ts';
@@ -32,7 +33,7 @@ export function AdminTrpcProvider({ children }: AdminTrpcProviderProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
-        {children}
+        <AdminToastProvider>{children}</AdminToastProvider>
       </TRPCProvider>
     </QueryClientProvider>
   );

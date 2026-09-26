@@ -119,13 +119,16 @@ export class ReviewService {
     return updated;
   }
 
-  private async maybeAdvanceProofsUploaded(
-    collectionId: string,
-    status: ReviewJobStatus,
-    readyPhotoCount: number,
-  ) {
-    if (status !== 'setup' || readyPhotoCount === 0) {
-      return null;
+  /** After a proof ingest completes — not on admin page load. */
+  async maybeAdvanceProofsUploadedAfterIngest(collectionId: string) {
+    const collection = await this.app.d1.reviewCollections.getById(collectionId);
+    if (!collection || collection.status !== 'setup') {
+      return collection;
+    }
+    const rows = await this.app.d1.reviewPhotos.listByCollectionId(collectionId);
+    const readyCount = rows.filter((row) => row.status === 'ready').length;
+    if (readyCount === 0) {
+      return collection;
     }
     return this.app.d1.reviewCollections.update(collectionId, { status: 'proofs_uploaded' });
   }
@@ -212,11 +215,6 @@ export class ReviewService {
     }
 
     const rows = await this.app.d1.reviewPhotos.listByCollectionId(id);
-    const readyCount = rows.filter((row) => row.status === 'ready').length;
-    const advanced = await this.maybeAdvanceProofsUploaded(id, collection.status, readyCount);
-    if (advanced) {
-      collection = advanced;
-    }
 
     const photos: AdminReviewCollectionPhoto[] = rows.map((row) => {
       const ready = row.status === 'ready';
@@ -249,7 +247,11 @@ export class ReviewService {
       (photo) => photo.selectionStatus === 'selected' || photo.selectionStatus === 'approved',
     );
     const filenames = picks
-      .map((photo) => photo.originalFilename?.trim() || photo.id)
+      .map((photo) => {
+        const raw = photo.originalFilename?.trim() || photo.id;
+        const base = raw.replace(/\.[^./\\]+$/, '');
+        return base.length > 0 ? base : raw;
+      })
       .toSorted((a, b) => a.localeCompare(b));
     if (detail.collection.status === 'picks_submitted') {
       await this.transitionJobStatus(id, 'editing');

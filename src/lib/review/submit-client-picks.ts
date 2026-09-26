@@ -33,9 +33,6 @@ export async function submitClientPicks(d1: D1Database, slug: string) {
   }
 
   const pickCount = countSubmittedPicks(ready);
-  if (pickCount === 0) {
-    throw new AppError('PRECONDITION_FAILED', 'Select at least one photo before submitting');
-  }
 
   const now = Date.now();
   const updated = await collections.update(access.collection.id, {
