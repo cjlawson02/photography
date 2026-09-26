@@ -1,4 +1,4 @@
-import { parseMediaPath } from './parse-media-path.ts';
+import { parseMediaPath, type ParsedMediaPath } from './parse-media-path.ts';
 
 export type MediaObject = {
   body: ReadableStream | null;
@@ -12,6 +12,8 @@ export type BuildVariantMediaResponseOptions = {
   getObject: (r2Key: string) => Promise<MediaObject | null>;
   cacheControl: string;
   extraHeaders?: Record<string, string>;
+  parsePath?: (path: string) => ParsedMediaPath;
+  contentDispositionFilename?: (id: string) => Promise<string | null>;
 };
 
 const NOT_FOUND = () => new Response('Not Found', { status: 404 });
@@ -23,7 +25,8 @@ const NOT_FOUND = () => new Response('Not Found', { status: 404 });
 export async function buildVariantMediaResponse(
   options: BuildVariantMediaResponseOptions,
 ): Promise<Response> {
-  const parsed = parseMediaPath(options.path);
+  const parse = options.parsePath ?? ((mediaPath: string) => parseMediaPath(mediaPath));
+  const parsed = parse(options.path);
   if (!parsed.ok) {
     return NOT_FOUND();
   }
@@ -40,6 +43,12 @@ export async function buildVariantMediaResponse(
 
   const headers = new Headers();
   headers.set('Cache-Control', options.cacheControl);
+  if (parsed.isOriginal && options.contentDispositionFilename) {
+    const filename = await options.contentDispositionFilename(parsed.id);
+    if (filename) {
+      headers.set('Content-Disposition', `attachment; filename="${filename.replaceAll('"', '')}"`);
+    }
+  }
   if (options.extraHeaders) {
     for (const [name, value] of Object.entries(options.extraHeaders)) {
       headers.set(name, value);

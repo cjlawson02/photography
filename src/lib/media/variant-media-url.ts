@@ -33,6 +33,11 @@ export function reviewVariantPublicUrl(
   return variantMediaUrl({ scope: 'review', id, variant: variantFile, updatedAtMs });
 }
 
+/** Full-resolution download for delivery finals (`/media/review/{id}/original`). */
+export function reviewOriginalPublicUrl(id: string, updatedAtMs: number): string {
+  return variantMediaUrl({ scope: 'review', id, variant: 'original', updatedAtMs });
+}
+
 /** Admin delivery — ignores collection expiry (JWT-gated `/admin/api/media/review/...`). */
 export function reviewVariantAdminUrl(
   id: string,

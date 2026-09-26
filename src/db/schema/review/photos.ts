@@ -4,6 +4,7 @@ import { createId } from '@paralleldrive/cuid2';
 
 import type { PhotoStatus } from '../photo-status.ts';
 import { ReviewCollections } from './collections.ts';
+import type { ReviewPhotoRound } from './round.ts';
 import type { SelectionStatus } from './selection-status.ts';
 
 /**
@@ -37,6 +38,10 @@ export const ReviewPhotos = sqliteTable(
     height: integer('height', { mode: 'number' }),
     /** Original upload basename for Lightroom export / final matching (A2). */
     originalFilename: text('originalFilename'),
+    /** Proof round vs delivery finals on the same shoot (A3 / D2). */
+    round: text('round').$type<ReviewPhotoRound>().notNull().default('proof'),
+    /** When `round` is final, optional link to the proof row matched by filename (A3). */
+    matchedPickId: text('matchedPickId'),
   },
   (table) => [index('ReviewPhotos_collectionId_idx').on(table.collectionId)],
 );

@@ -1,6 +1,7 @@
 ---
 import { env } from 'cloudflare:workers';
 
+import ReviewDownloadGallery from '../../components/public/ReviewDownloadGallery.tsx';
 import ReviewGallery from '../../components/public/ReviewGallery.tsx';
 import ReviewLayout from '../../layouts/ReviewLayout.astro';
 import { resolveReviewPageState } from '../../lib/services/review-service.ts';
@@ -21,7 +22,9 @@ const pageTitle =
 
 const pageDescription =
 	state.kind === 'ok'
-		? `Review and select photos for ${pageTitle}. Choices save automatically.`
+		? state.collection.mode === 'download'
+			? `Download your edited photos for ${pageTitle}.`
+			: `Review and select photos for ${pageTitle}. Choices save automatically.`
 		: state.kind === 'expired'
 			? 'This client review link has expired. Contact Lawson Photography for a new link.'
 			: 'This client review link could not be found.';
@@ -57,15 +60,21 @@ const pageDescription =
 						{state.collection.title?.trim() || 'Client review'}
 					</h1>
 					<p class="mt-3 text-sm" style="color: var(--color-fg-muted)">
-						Select your favorites, then approve finals. Your choices save automatically.
+						{state.collection.mode === 'download'
+							? 'Download each full-resolution file below.'
+							: 'Select your favorites, then submit when you are done. Your choices save automatically.'}
 					</p>
 				</header>
-				<ReviewGallery
-					client:load
-					slug={state.collection.slug}
-					photos={state.collection.photos}
-					picksLocked={state.collection.picksLocked}
-				/>
+				{state.collection.mode === 'download' ? (
+					<ReviewDownloadGallery client:load photos={state.collection.downloadPhotos} />
+				) : (
+					<ReviewGallery
+						client:load
+						slug={state.collection.slug}
+						photos={state.collection.photos}
+						picksLocked={state.collection.picksLocked}
+					/>
+				)}
 			</main>
 		</ReviewLayout>
 	) : null
