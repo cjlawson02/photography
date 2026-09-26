@@ -56,5 +56,13 @@
         "period": 60,
       },
     },
+    {
+      "name": "ADMIN_TRPC_RATE_LIMITER",
+      "namespace_id": "1002",
+      "simple": {
+        "limit": 300,
+        "period": 60,
+      },
+    },
   ],
 }

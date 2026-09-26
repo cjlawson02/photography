@@ -1,4 +1,5 @@
 import { AppError } from '../http/app-error.ts';
+import { hashString } from '../util/hash-string.ts';
 
 export type ReviewSelectionRateLimiter = {
   limit(options: { key: string }): Promise<{ success: boolean }>;
@@ -16,7 +17,8 @@ export async function assertReviewSelectionRateLimit(
   if (!limiter) return;
 
   const ip = clientIp(request);
-  const { success } = await limiter.limit({ key: `selection:${ip}` });
+  const hashedIp = await hashString(ip);
+  const { success } = await limiter.limit({ key: `selection:${hashedIp}` });
   if (!success) {
     throw new AppError(
       'TOO_MANY_REQUESTS',

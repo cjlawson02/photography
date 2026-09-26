@@ -2,6 +2,7 @@ import { TRPCError } from '@trpc/server';
 
 import { AppError } from '../http/app-error.ts';
 import { appErrorToTrpc } from './errors.ts';
+import { isLimited } from './rate-limit-middleware.ts';
 import { publicProcedure, trpc } from './init.ts';
 
 const mapAppErrors = trpc.middleware(async ({ next }) => {
@@ -36,5 +37,8 @@ const requireAccessJwt = trpc.middleware(async ({ ctx, next }) => {
 
 /** Cloudflare Access JWT + AppError mapping — same rules as `/admin/api/health` and tRPC. */
 export const adminProcedure = publicProcedure.use(mapAppErrors).use(requireAccessJwt);
+
+/** Admin mutations with per-procedure rate limits (ingest first). */
+export const rateLimitedAdminProcedure = adminProcedure.use(isLimited);
 
 export { mapAppErrors as appErrorMiddleware };

@@ -8,7 +8,7 @@ import { IngestService } from '../services/ingest-service.ts';
 import { PortfolioService } from '../services/portfolio-service.ts';
 import { ReviewService } from '../services/review-service.ts';
 import { createTRPCRouter } from './init.ts';
-import { adminProcedure } from './middleware.ts';
+import { adminProcedure, rateLimitedAdminProcedure } from './middleware.ts';
 
 const portfolioUpdateInputSchema = z.object({
   id: idSchema,
@@ -61,17 +61,17 @@ export const appRouter = createTRPCRouter({
     }),
   }),
   ingest: createTRPCRouter({
-    presign: adminProcedure
+    presign: rateLimitedAdminProcedure
       .input(presignBodySchema)
       .mutation(async ({ ctx, input }) =>
         IngestService.from(ctx.getIngestAppEnv()).createPresign(input),
       ),
-    complete: adminProcedure
+    complete: rateLimitedAdminProcedure
       .input(completeBodySchema)
       .mutation(async ({ ctx, input }) =>
         IngestService.from(ctx.getIngestAppEnv()).completeIngest(input),
       ),
-    reprocess: adminProcedure
+    reprocess: rateLimitedAdminProcedure
       .input(reprocessBodySchema)
       .mutation(async ({ ctx, input }) =>
         IngestService.from(ctx.getIngestAppEnv()).reprocess(input),

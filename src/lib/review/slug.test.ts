@@ -23,7 +23,8 @@ describe('review slug', () => {
 
   it('buildReviewSlug without prefix is secret-only', () => {
     const slug = buildReviewSlug();
-    assert.doesNotMatch(slug, /-/);
+    assert.match(slug, /^[A-Za-z0-9_-]+$/);
+    assert.ok(slug.length >= 20);
   });
 
   it('isWeakReviewSlug flags short or unsafe slugs', () => {

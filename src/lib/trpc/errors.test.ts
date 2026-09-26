@@ -50,6 +50,7 @@ test('adminProcedure is FORBIDDEN without JWT before AppEnv', async () => {
     ensureAccessIdentity() {
       return Promise.reject(new Error('missing jwt'));
     },
+    getAdminTrpcRateLimiter: () => undefined,
   });
 
   await assert.rejects(
@@ -74,6 +75,7 @@ test('createCaller smoke — router resolves with stub context', () => {
       throw new Error('stub');
     },
     ensureAccessIdentity: () => Promise.reject(new Error('stub')),
+    getAdminTrpcRateLimiter: () => undefined,
   };
   const caller = createTestCaller(ctx);
   assert.equal(typeof caller.secret, 'function');
