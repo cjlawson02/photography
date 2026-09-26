@@ -17,3 +17,7 @@ R2_ACCESS_KEY_ID=
 R2_SECRET_ACCESS_KEY=
 
 # R2 CORS: npm run r2:cors:apply (infra/r2-cors/) — origins include photography.chrislawson.dev + localhost:4321
+
+# Optional Worker error monitoring (@sentry/cloudflare — no-op when empty)
+# SENTRY_DSN=
+# SENTRY_RELEASE=

@@ -1,6 +1,7 @@
 import { z } from 'zod/v4';
 
 import { R2ConfigError } from '../dao/r2-dao.ts';
+import { captureWorkerException, shouldCaptureHttpStatus } from '../observability/sentry.ts';
 
 /** AppError codes → HTTP (public routes and plain handlers). Admin islands use tRPC + mapping in `src/lib/trpc/errors.ts`. */
 export const APP_ERROR_STATUS = {
@@ -63,6 +64,11 @@ export function toErrorResponse(error: unknown): Response {
   const appError = AppError.fromUnknown(error);
   if (appError.status >= 500) {
     console.error('[http]', appError);
+    if (shouldCaptureHttpStatus(appError.status)) {
+      captureWorkerException(error instanceof AppError ? error : appError, {
+        tags: { app_error_code: appError.code },
+      });
+    }
   }
   return appError.toResponse();
 }

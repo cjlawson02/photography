@@ -138,7 +138,7 @@ Tracked after [#21](https://github.com/cjlawson02/photography/pull/21)–[#23](h
 | T4 | D1 migrations in CI | Pre-deploy apply on `main` in [ci-cd.yml](../.github/workflows/ci-cd.yml); optional gate / PR dry-run `_TBD_` |
 | T5 | Indexes | Done — migration `0002_*`; `ReviewPhotos.collectionId`, `PortfolioPhotos(published, status)` |
 | T6–T7 | Cutover + bulk migration | [CUTOVER.md](CUTOVER.md); legacy WP migration deferred |
-| O1 | Sentry | `@sentry/cloudflare` on the Worker (request errors, tRPC/AppError mapping); optional browser SDK for admin islands; release + source maps in deploy CD — align with family-notes patterns where applicable |
+| O1 | Sentry | **Partial (foundation)** — `@sentry/cloudflare` Worker entry (`sentry.server.config.ts`), `SENTRY_DSN` secret ([DEPLOY.md](DEPLOY.md)); unhandled fetch errors + tRPC/HTTP 5xx capture. _Remaining:_ browser SDK, `SENTRY_RELEASE`/source maps in deploy CD |
 
 ## Dependencies
 
