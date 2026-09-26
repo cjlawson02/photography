@@ -1,6 +1,6 @@
 ---
+import IngestSmokeForm from '../../../components/admin/IngestSmokeForm.tsx';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
-import IngestSmokeForm from '../../../components/admin/IngestSmokeForm.astro';
 
 /** Ingest smoke UI — presigned PUT, completion, optional reprocess (Phase 1) in admin shell. */
 ---
@@ -13,7 +13,7 @@ import IngestSmokeForm from '../../../components/admin/IngestSmokeForm.astro';
 	</p>
 
 	<div class="mt-8" style="max-width: var(--measure)">
-		<IngestSmokeForm />
+		<IngestSmokeForm client:load />
 	</div>
 
 	<p class="mt-8 text-xs" style="color: var(--color-fg-muted)">

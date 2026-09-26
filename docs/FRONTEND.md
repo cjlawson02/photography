@@ -9,8 +9,6 @@ Interactive UI uses **React** via `@astrojs/react`. Astro pages own layout and S
 - Wire islands from `.astro` with `client:*` directives.
 - Shared non-React helpers (e.g. PhotoSwipe opener) live under `src/lib/gallery/`.
 - **Embla** and **PhotoSwipe** stay as imperative libraries inside React effects/handlers.
-- Remaining admin pages (ingest smoke, review) still use scripts until migrated.
-
 ## Hydration choices
 
 | Surface | Directive | Rationale |
@@ -19,6 +17,8 @@ Interactive UI uses **React** via `@astrojs/react`. Astro pages own layout and S
 | Home masonry gallery | `client:visible` | Below hero; defer JS until the gallery scrolls into view. |
 | Review gallery | `client:load` | Primary task on the page; selection + lightbox need JS on arrival. |
 | Admin portfolio table | `client:load` | Access-gated; table edits need JS on arrival. |
+| Admin ingest upload | `client:load` | Primary task; presigned upload flow needs JS on arrival. |
+| Admin review collections | `client:load` | Create/list/revoke and copy links on arrival. |
 
 ## Libraries
 
