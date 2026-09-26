@@ -5,20 +5,23 @@ import { AppError } from '../http/app-error.ts';
 import { VARIANT_SPECS, variantKey } from '../ingest/keys.ts';
 import { IngestService } from './ingest-service.ts';
 
+function blobToReadableStream(blob: Blob): ReadableStream<Uint8Array> {
+  return new ReadableStream({
+    async start(controller) {
+      const buf = await blob.arrayBuffer();
+      controller.enqueue(new Uint8Array(buf));
+      controller.close();
+    },
+  });
+}
+
 /** Node <24 test runners lack `Blob.prototype.stream` (ingest uses it after arrayBuffer). */
 function ensureBlobStreamPolyfill(): void {
   if (typeof Blob.prototype.stream === 'function') {
     return;
   }
-  Blob.prototype.stream = function stream(this: Blob) {
-    const blob = this;
-    return new ReadableStream({
-      async start(controller) {
-        const buf = await blob.arrayBuffer();
-        controller.enqueue(new Uint8Array(buf));
-        controller.close();
-      },
-    });
+  Blob.prototype.stream = function stream(): ReadableStream<Uint8Array> {
+    return blobToReadableStream(this);
   };
 }
 
