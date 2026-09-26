@@ -29,6 +29,7 @@ export class PortfolioPhotosDAO {
     frontPageOrder?: number | null;
     width?: number | null;
     height?: number | null;
+    sourceReviewPhotoId?: string | null;
   }) {
     const row = {
       status: values.status ?? ('pending' as const),
@@ -41,6 +42,7 @@ export class PortfolioPhotosDAO {
       frontPageOrder: values.frontPageOrder ?? null,
       width: values.width ?? null,
       height: values.height ?? null,
+      sourceReviewPhotoId: values.sourceReviewPhotoId ?? null,
       ...(values.id ? { id: values.id } : {}),
     };
     const inserted = await this.db.insert(PortfolioPhotos).values(row).returning();
@@ -52,6 +54,15 @@ export class PortfolioPhotosDAO {
       .select()
       .from(PortfolioPhotos)
       .where(eq(PortfolioPhotos.id, id))
+      .limit(1);
+    return rows[0] ?? null;
+  }
+
+  async getBySourceReviewPhotoId(sourceReviewPhotoId: string) {
+    const rows = await this.db
+      .select()
+      .from(PortfolioPhotos)
+      .where(eq(PortfolioPhotos.sourceReviewPhotoId, sourceReviewPhotoId))
       .limit(1);
     return rows[0] ?? null;
   }

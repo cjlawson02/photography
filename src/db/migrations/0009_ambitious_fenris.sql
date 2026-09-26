@@ -1,0 +1,1 @@
+ALTER TABLE `PortfolioPhotos` ADD `sourceReviewPhotoId` text;

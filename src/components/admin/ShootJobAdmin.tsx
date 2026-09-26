@@ -172,7 +172,6 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
   const queryClient = useQueryClient();
   const { pushToast } = useAdminToast();
   const [editStatus, setEditStatus] = useState<string | null>(null);
-  const [busyPhotoId, setBusyPhotoId] = useState<string | null>(null);
   const [initialDataUpdatedAt] = useState(() => Date.now());
   const detailQuery = useQuery({
     ...trpc.review.collections.detail.queryOptions({ id: collectionId }),
@@ -204,6 +203,30 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
         pushToast('Job step updated.');
         await queryClient.invalidateQueries(trpc.review.collections.detail.queryFilter());
         await queryClient.invalidateQueries(trpc.review.collections.list.queryFilter());
+      },
+      onError: (error) => {
+        setEditStatus(errorMessage(error));
+      },
+    }),
+  );
+
+  const promoteFinalMutation = useMutation(
+    trpc.review.collections.promoteFinal.mutationOptions({
+      onSuccess: async () => {
+        setEditStatus('Promoted to portfolio — fill details in Library.');
+        await queryClient.invalidateQueries(trpc.review.collections.detail.queryFilter());
+      },
+      onError: (error) => {
+        setEditStatus(errorMessage(error));
+      },
+    }),
+  );
+
+  const purgeRoundsMutation = useMutation(
+    trpc.review.collections.purgeRounds.mutationOptions({
+      onSuccess: async () => {
+        setEditStatus('Storage purged for selected rounds.');
+        await queryClient.invalidateQueries(trpc.review.collections.detail.queryFilter());
       },
       onError: (error) => {
         setEditStatus(errorMessage(error));
@@ -250,19 +273,6 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
     }),
   );
 
-  const deletePhotoMutation = useMutation(
-    trpc.review.collections.deletePhoto.mutationOptions({
-      onSuccess: async () => {
-        setEditStatus(null);
-        pushToast('Photo deleted.');
-        await queryClient.invalidateQueries(trpc.review.collections.detail.queryFilter());
-      },
-      onError: (error) => {
-        setEditStatus(errorMessage(error));
-      },
-    }),
-  );
-
   const patchCollection = async (data: ReviewCollectionAdminUpdateBody) => {
     setEditStatus('Saving…');
     try {
@@ -272,28 +282,15 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
     }
   };
 
-  const deletePhoto = async (photoId: string) => {
-    if (!confirm(`Delete review photo ${photoId}? Storage objects will be removed.`)) return;
-    setBusyPhotoId(photoId);
-    setEditStatus('Deleting…');
-    try {
-      await deletePhotoMutation.mutateAsync({ collectionId, photoId });
-    } catch {
-      /* onError sets editStatus */
-    } finally {
-      setBusyPhotoId(null);
-    }
-  };
-
   const photoActionsBusy =
     updateMutation.isPending ||
-    deletePhotoMutation.isPending ||
     transitionMutation.isPending ||
     reopenPicksMutation.isPending ||
     exportPickFilenamesMutation.isPending ||
     markDeliveredMutation.isPending ||
-    linkFinalMutation.isPending ||
-    busyPhotoId !== null;
+    promoteFinalMutation.isPending ||
+    purgeRoundsMutation.isPending ||
+    linkFinalMutation.isPending;
 
   const copyFilenames = async () => {
     setEditStatus('Preparing filenames…');
@@ -372,6 +369,7 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
       {collection ? (
         <AdminJobStepRail
           status={collection.status}
+          reviewPath={reviewPath}
           primaryAction={primaryAction}
           markSharedPending={transitionMutation.isPending}
           onMarkShared={() => {
@@ -409,6 +407,12 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
             }
             setEditStatus('Updating step…');
             void markDeliveredMutation.mutateAsync({ id: collectionId });
+          }}
+          markClosedPending={transitionMutation.isPending}
+          onMarkClosed={() => {
+            if (!confirm('Mark this shoot closed? You can still purge storage below.')) return;
+            setEditStatus('Closing shoot…');
+            void transitionMutation.mutateAsync({ id: collectionId, to: 'closed' });
           }}
           copyDeliveryMessagePending={photoActionsBusy}
           onCopyDeliveryMessage={() => {
@@ -556,7 +560,6 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
               <AdminTableHeaderCell>Selection</AdminTableHeaderCell>
               <AdminTableHeaderCell>Updated</AdminTableHeaderCell>
               <AdminTableHeaderCell>Id</AdminTableHeaderCell>
-              <AdminTableHeaderCell className="py-2">Actions</AdminTableHeaderCell>
             </AdminTableHead>
             <tbody>
               {photos.map((photo) => (
@@ -596,18 +599,6 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
                   <td className={`py-2 pr-4 align-middle font-mono text-xs ${adminClass.fgMuted}`}>
                     {photo.id}
                   </td>
-                  <td className="py-2 align-middle">
-                    <button
-                      type="button"
-                      className={`text-xs ${adminClass.linkMuted} ${adminClass.accent}`}
-                      disabled={photoActionsBusy}
-                      onClick={() => {
-                        void deletePhoto(photo.id);
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </td>
                 </AdminTableRow>
               ))}
             </tbody>
@@ -620,6 +611,7 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
                 <AdminTableHeaderCell>Filename</AdminTableHeaderCell>
                 <AdminTableHeaderCell>Matched pick</AdminTableHeaderCell>
                 <AdminTableHeaderCell>Ingest</AdminTableHeaderCell>
+                <AdminTableHeaderCell>Actions</AdminTableHeaderCell>
               </AdminTableHead>
               <tbody>
                 {finalPhotos.map((photo) => (
@@ -668,10 +660,73 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
                       )}
                     </td>
                     <td className="py-2 pr-4 align-middle font-mono text-xs">{photo.status}</td>
+                    <td className="py-2 align-middle">
+                      {photo.status === 'ready' ? (
+                        <button
+                          type="button"
+                          className={`text-xs ${adminClass.linkMuted}`}
+                          disabled={photoActionsBusy}
+                          onClick={() => {
+                            void promoteFinalMutation.mutateAsync({
+                              collectionId,
+                              finalPhotoId: photo.id,
+                            });
+                          }}
+                        >
+                          Promote
+                        </button>
+                      ) : (
+                        <span className={`text-xs ${adminClass.fgMuted}`}>—</span>
+                      )}
+                    </td>
                   </AdminTableRow>
                 ))}
               </tbody>
             </AdminTable>
+          ) : null}
+
+          {collection.status === 'closed' ? (
+            <section className={`mt-8 rounded border p-4 ${adminClass.uploadSection}`}>
+              <AdminSectionHeading>Retention</AdminSectionHeading>
+              <p className={`mt-2 text-sm ${adminClass.fgMuted}`}>
+                Purge deletes rows and R2 objects for the selected rounds. Type the shoot slug{' '}
+                <code className="admin-code">{collection.slug}</code> to confirm.
+              </p>
+              <form
+                className="mt-4 flex flex-wrap items-end gap-4"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  const data = new FormData(event.currentTarget);
+                  const confirmSlug = String(data.get('confirmSlug') ?? '');
+                  void purgeRoundsMutation.mutateAsync({
+                    collectionId,
+                    proofs: data.get('purgeProofs') === 'on',
+                    finals: data.get('purgeFinals') === 'on',
+                    cleanupR2: true,
+                    confirmSlug,
+                  });
+                }}
+              >
+                <label className={`flex items-center gap-2 text-sm ${adminClass.fg}`}>
+                  <input type="checkbox" name="purgeProofs" />
+                  Purge proofs
+                </label>
+                <label className={`flex items-center gap-2 text-sm ${adminClass.fg}`}>
+                  <input type="checkbox" name="purgeFinals" />
+                  Purge finals
+                </label>
+                <input
+                  type="text"
+                  name="confirmSlug"
+                  placeholder="Shoot slug"
+                  className={`max-w-xs text-sm ${adminClass.field}`}
+                  aria-label="Confirm shoot slug"
+                />
+                <button type="submit" className={adminClass.btnPrimary} disabled={photoActionsBusy}>
+                  Purge selected
+                </button>
+              </form>
+            </section>
           ) : null}
         </>
       ) : null}

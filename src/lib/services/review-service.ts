@@ -1,3 +1,5 @@
+import { createId } from '@paralleldrive/cuid2';
+
 import type { AppEnv } from '../env.ts';
 import { createDb } from '../../db/client.ts';
 import { deletePhotoObjects } from '../dao/delete-photo-objects.ts';
@@ -6,13 +8,16 @@ import { ReviewPhotosDAO } from '../dao/review-photos-dao.ts';
 import type { SelectionStatus } from '../../db/schema/review/selection-status.ts';
 import type { ReviewJobStatus } from '../../db/schema/review/job-status.ts';
 import { AppError } from '../http/app-error.ts';
-import { GALLERY_VARIANT, THUMB_VARIANT } from '../ingest/keys.ts';
+import { GALLERY_VARIANT, THUMB_VARIANT, photoIngestObjectKeys } from '../ingest/keys.ts';
 import {
   reviewOriginalPublicUrl,
   reviewVariantAdminUrl,
   reviewVariantPublicUrl,
 } from '../media/variant-media-url.ts';
-import { resolveReviewCollectionAccess } from '../review/collection-access.ts';
+import {
+  isReviewDownloadMode,
+  resolveReviewCollectionAccess,
+} from '../review/collection-access.ts';
 import { isTransitionAllowed } from '../review/job-steps.ts';
 import { areClientPicksLocked } from '../review/picks-lock.ts';
 export { updateReviewSelection } from '../review/update-selection.ts';
@@ -194,6 +199,9 @@ export class ReviewService {
     if (to === 'editing' && from === 'finals_delivered') {
       timestamps.deliveredAt = null;
     }
+    if (to === 'closed' && collection.closedAt == null) {
+      timestamps.closedAt = now;
+    }
 
     const updated = await this.app.d1.reviewCollections.update(id, {
       status: to,
@@ -318,6 +326,99 @@ export class ReviewService {
     return updated;
   }
 
+  async promoteFinalToPortfolio(collectionId: string, finalPhotoId: string) {
+    const collection = await this.app.d1.reviewCollections.getById(collectionId);
+    if (!collection) {
+      throw new AppError('NOT_FOUND', `Review collection not found: ${collectionId}`);
+    }
+    const finalPhoto = await this.app.d1.reviewPhotos.getById(finalPhotoId);
+    if (
+      !finalPhoto ||
+      finalPhoto.collectionId !== collectionId ||
+      finalPhoto.round !== 'final' ||
+      finalPhoto.status !== 'ready'
+    ) {
+      throw new AppError('NOT_FOUND', `Final photo not found: ${finalPhotoId}`);
+    }
+
+    const existing = await this.app.d1.portfolioPhotos.getBySourceReviewPhotoId(finalPhotoId);
+    if (existing) {
+      throw new AppError('CONFLICT', 'This final was already promoted to portfolio');
+    }
+
+    const objectKeys = photoIngestObjectKeys(finalPhotoId);
+    const sources: {
+      key: string;
+      body: ReadableStream | ArrayBuffer | ArrayBufferView;
+      httpMetadata?: R2HTTPMetadata;
+    }[] = [];
+    for (const key of objectKeys) {
+      const object = await this.app.r2.get('review', key);
+      if (!object?.body) {
+        throw new AppError('PRECONDITION_FAILED', `Review object missing for promote: ${key}`);
+      }
+      sources.push({ key, body: object.body, httpMetadata: object.httpMetadata });
+    }
+
+    const portfolioId = createId();
+    try {
+      for (const { key, body, httpMetadata } of sources) {
+        const suffix = key.slice(finalPhotoId.length + 1);
+        const destKey = `${portfolioId}/${suffix}`;
+        await this.app.r2.put('portfolio', destKey, body, { httpMetadata });
+      }
+    } catch (error) {
+      await deletePhotoObjects({
+        r2: this.app.r2,
+        bucket: 'portfolio',
+        photoIds: [portfolioId],
+        logLabel: 'review-promote-rollback',
+        logDetails: { collectionId, finalPhotoId, portfolioId },
+        errorMessage: 'Failed to roll back portfolio objects after promote copy error',
+      }).catch(() => undefined);
+      throw error;
+    }
+
+    try {
+      const portfolioPhoto = await this.app.d1.portfolioPhotos.insert({
+        id: portfolioId,
+        status: 'ready',
+        mimeType: finalPhoto.mimeType,
+        published: false,
+        width: finalPhoto.width,
+        height: finalPhoto.height,
+        sourceReviewPhotoId: finalPhotoId,
+      });
+      return portfolioPhoto;
+    } catch (error) {
+      await deletePhotoObjects({
+        r2: this.app.r2,
+        bucket: 'portfolio',
+        photoIds: [portfolioId],
+        logLabel: 'review-promote-rollback',
+        logDetails: { collectionId, finalPhotoId, portfolioId },
+        errorMessage: 'Failed to roll back portfolio objects after promote insert error',
+      }).catch(() => undefined);
+      throw error;
+    }
+  }
+
+  async purgeCollectionRounds(
+    collectionId: string,
+    options: { proofs: boolean; finals: boolean; cleanupR2: boolean },
+  ) {
+    const rows = await this.app.d1.reviewPhotos.listByCollectionId(collectionId);
+    const targets = rows.filter((row) => {
+      if (row.round === 'proof') return options.proofs;
+      if (row.round === 'final') return options.finals;
+      return false;
+    });
+    for (const photo of targets) {
+      await this.deleteCollectionPhoto(collectionId, photo.id, { cleanupR2: options.cleanupR2 });
+    }
+    return { deleted: targets.length };
+  }
+
   async markFinalsDelivered(id: string) {
     const detail = await this.getCollectionDetailForAdmin(id);
     if (detail.finals.readyCount === 0) {
@@ -427,7 +528,7 @@ export class ReviewService {
 
 export type ReviewPageState =
   | { kind: 'ok'; collection: PublicReviewCollection }
-  | { kind: 'expired'; title: string | null }
+  | { kind: 'gallery_closed'; title: string | null }
   | { kind: 'not_found' };
 
 export async function resolveReviewPageState(
@@ -440,19 +541,21 @@ export async function resolveReviewPageState(
   if (!row) {
     return { kind: 'not_found' };
   }
-  const access = resolveReviewCollectionAccess(row);
+  const downloadMode = isReviewDownloadMode(row.status);
+  const proofRows = await photos.listReadyByCollectionIdAndRound(row.id, 'proof');
+  const finalRows = downloadMode
+    ? await photos.listReadyByCollectionIdAndRound(row.id, 'final')
+    : [];
+  const access = resolveReviewCollectionAccess(row, Date.now(), {
+    readyProofCount: proofRows.length,
+    readyFinalCount: finalRows.length,
+  });
   if (!access.ok) {
-    if (access.reason === 'expired') {
-      return { kind: 'expired', title: row.title };
+    if (access.reason === 'gallery_closed') {
+      return { kind: 'gallery_closed', title: row.title };
     }
     return { kind: 'not_found' };
   }
-  const downloadMode =
-    access.collection.status === 'finals_delivered' || access.collection.status === 'closed';
-  const proofRows = await photos.listReadyByCollectionIdAndRound(access.collection.id, 'proof');
-  const finalRows = downloadMode
-    ? await photos.listReadyByCollectionIdAndRound(access.collection.id, 'final')
-    : [];
   return {
     kind: 'ok',
     collection: {

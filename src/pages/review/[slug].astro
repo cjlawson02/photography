@@ -16,8 +16,8 @@ if (state.kind === 'not_found') {
 const pageTitle =
 	state.kind === 'ok'
 		? state.collection.title?.trim() || 'Client review'
-		: state.kind === 'expired'
-			? 'Review link expired'
+		: state.kind === 'gallery_closed'
+			? 'Gallery closed'
 			: 'Client review';
 
 const pageDescription =
@@ -25,8 +25,8 @@ const pageDescription =
 		? state.collection.mode === 'download'
 			? `Download your edited photos for ${pageTitle}.`
 			: `Review and select photos for ${pageTitle}. Choices save automatically.`
-		: state.kind === 'expired'
-			? 'This client review link has expired. Contact Lawson Photography for a new link.'
+		: state.kind === 'gallery_closed'
+			? 'This gallery has closed.'
 			: 'This client review link could not be found.';
 ---
 
@@ -40,15 +40,15 @@ const pageDescription =
 				</p>
 			</main>
 		</ReviewLayout>
-	) : state.kind === 'expired' ? (
+	) : state.kind === 'gallery_closed' ? (
 		<ReviewLayout title={pageTitle} description={pageDescription}>
 			<main class="public-wrap text-center" style="padding-block: var(--space-5) var(--space-4)">
-				<h1 class="public-section-title">This review link has expired</h1>
+				<h1 class="public-section-title">This gallery has closed</h1>
 				{state.title ? (
 					<p class="mt-3 text-sm" style="color: var(--color-fg-muted)">{state.title}</p>
 				) : null}
 				<p class="mt-6 text-sm" style="color: var(--color-fg-muted)">
-					Contact Lawson Photography if you need a new link.
+					Contact Lawson Photography if you need help.
 				</p>
 			</main>
 		</ReviewLayout>

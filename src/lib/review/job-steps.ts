@@ -60,7 +60,7 @@ export const ADMIN_JOB_TRANSITION_TARGETS: Partial<Record<ReviewJobStatus, Revie
   proofs_uploaded: ['shared'],
   picks_submitted: ['editing', 'shared'],
   editing: ['shared', 'finals_delivered'],
-  finals_delivered: ['editing'],
+  finals_delivered: ['editing', 'closed'],
 };
 
 export function isTransitionAllowed(from: ReviewJobStatus, to: ReviewJobStatus): boolean {
@@ -89,6 +89,7 @@ export type JobStepPrimaryAction =
   | { kind: 'preview_download'; label: string; href: string }
   | { kind: 'copy_filenames'; label: string }
   | { kind: 'mark_delivered'; label: string; targetStatus: 'finals_delivered' }
+  | { kind: 'mark_closed'; label: string; targetStatus: 'closed' }
   | { kind: 'copy_delivery_message'; label: string }
   | { kind: 'reopen_picks'; label: string; targetStatus: 'shared' }
   | { kind: 'none'; label: string };
@@ -123,20 +124,26 @@ export function jobStepPrimaryAction(input: {
           }
         : { kind: 'upload_finals', label: 'Upload finals', href: finalsUploadAnchor };
     case 'finals_delivered':
-      return { kind: 'preview_download', label: 'Preview download mode', href: reviewPath };
+      return { kind: 'mark_closed', label: 'Close out shoot', targetStatus: 'closed' };
     case 'closed':
-      return { kind: 'none', label: 'Job closed.' };
+      return { kind: 'preview_download', label: 'Preview download mode', href: reviewPath };
     default:
       return { kind: 'none', label: '—' };
   }
 }
 
 /** Secondary admin action on job page when picks are locked. */
-export function jobStepSecondaryAction(status: ReviewJobStatus): JobStepPrimaryAction | null {
+export function jobStepSecondaryAction(
+  status: ReviewJobStatus,
+  reviewPath: string,
+): JobStepPrimaryAction | null {
   if (status === 'picks_submitted' || status === 'editing') {
     return { kind: 'reopen_picks', label: 'Reopen picks', targetStatus: 'shared' };
   }
   if (status === 'finals_delivered') {
+    return { kind: 'preview_download', label: 'Preview download mode', href: reviewPath };
+  }
+  if (status === 'closed') {
     return { kind: 'copy_delivery_message', label: 'Copy notify message' };
   }
   return null;
