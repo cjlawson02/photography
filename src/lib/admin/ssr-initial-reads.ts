@@ -1,5 +1,6 @@
 import { portfolioListInputSchema } from './portfolio-schemas.ts';
 import type {
+  AdminFrontPageList,
   AdminPortfolioListPage,
   AdminReviewCollection,
   AdminReviewCollectionDetail,
@@ -31,6 +32,10 @@ export async function loadReviewCollectionsList(app: AppEnv): Promise<AdminRevie
 export async function loadPortfolioAdminFirstPage(app: AppEnv): Promise<AdminPortfolioListPage> {
   const input = portfolioListInputSchema.parse({ stalePendingOnly: false });
   return PortfolioService.from(app).listForAdminPage(input);
+}
+
+export async function loadPortfolioFrontPage(app: AppEnv): Promise<AdminFrontPageList> {
+  return PortfolioService.from(app).listFrontPageForAdmin();
 }
 
 /** Parity with tRPC list procedures — fire-and-forget stale pending cleanup when `waitUntil` exists. */

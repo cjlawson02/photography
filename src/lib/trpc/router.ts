@@ -1,8 +1,11 @@
 import { z } from 'zod/v4';
 
 import {
+  portfolioBulkDeleteInputSchema,
   portfolioBulkUpdateInputSchema,
+  portfolioFrontPageAddInputSchema,
   portfolioFrontPageReorderInputSchema,
+  portfolioFrontPageSetInputSchema,
   portfolioListInputSchema,
   portfolioPhotoAdminUpdateBodySchema,
 } from '../admin/portfolio-schemas.ts';
@@ -36,11 +39,6 @@ const portfolioUpdateInputSchema = z.object({
   data: portfolioPhotoAdminUpdateBodySchema,
 });
 
-const portfolioDeleteInputSchema = z.object({
-  id: idSchema,
-  cleanupR2: cleanupR2Field,
-});
-
 const reviewRevokeInputSchema = z.object({
   id: idSchema,
   cleanupR2: cleanupR2Field,
@@ -62,17 +60,17 @@ export const appRouter = createTRPCRouter({
       .mutation(async ({ ctx, input }) =>
         PortfolioService.from(ctx.getAppEnv()).updateMetadata(input.id, input.data),
       ),
-    delete: adminProcedure.input(portfolioDeleteInputSchema).mutation(async ({ ctx, input }) =>
-      PortfolioService.from(ctx.getAppEnv())
-        .deletePhoto(input.id, {
-          cleanupR2: input.cleanupR2,
-        })
-        .then(() => ({ id: input.id })),
-    ),
     bulkUpdate: adminProcedure
       .input(portfolioBulkUpdateInputSchema)
       .mutation(async ({ ctx, input }) =>
         PortfolioService.from(ctx.getAppEnv()).bulkUpdateMetadata(input.ids, input.data),
+      ),
+    bulkDelete: adminProcedure
+      .input(portfolioBulkDeleteInputSchema)
+      .mutation(async ({ ctx, input }) =>
+        PortfolioService.from(ctx.getAppEnv()).bulkDeletePhotos(input.ids, {
+          cleanupR2: input.cleanupR2,
+        }),
       ),
     frontPage: createTRPCRouter({
       list: adminProcedure.query(async ({ ctx }) =>
@@ -83,18 +81,15 @@ export const appRouter = createTRPCRouter({
         .mutation(async ({ ctx, input }) =>
           PortfolioService.from(ctx.getAppEnv()).reorderFrontPage(input.orderedIds),
         ),
-      setMembership: adminProcedure
-        .input(
-          z.object({
-            id: idSchema,
-            onFrontPage: z.boolean(),
-          }),
-        )
+      set: adminProcedure
+        .input(portfolioFrontPageSetInputSchema)
         .mutation(async ({ ctx, input }) =>
-          PortfolioService.from(ctx.getAppEnv()).setFrontPageMembership(
-            input.id,
-            input.onFrontPage,
-          ),
+          PortfolioService.from(ctx.getAppEnv()).setFrontPage(input.orderedIds, input.heroIds),
+        ),
+      add: adminProcedure
+        .input(portfolioFrontPageAddInputSchema)
+        .mutation(async ({ ctx, input }) =>
+          PortfolioService.from(ctx.getAppEnv()).addToFrontPage(input.ids),
         ),
     }),
   }),

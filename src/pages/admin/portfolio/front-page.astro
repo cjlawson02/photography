@@ -1,7 +1,13 @@
 ---
+import { env } from 'cloudflare:workers';
+
 import AdminPageHeader from '../../../components/admin/AdminPageHeader.astro';
 import PortfolioFrontPageAdmin from '../../../components/admin/PortfolioFrontPageAdmin.tsx';
+import { loadPortfolioFrontPage } from '../../../lib/admin/ssr-initial-reads.ts';
+import { AppEnv } from '../../../lib/env.ts';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
+
+const initialFrontPage = await loadPortfolioFrontPage(AppEnv.fromBindings(env));
 ---
 
 <AdminLayout title="Admin — Front page" current="portfolio">
@@ -9,5 +15,5 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 		title="Portfolio — Front page"
 		lede="Curated, ordered best-of for the public home page. Hero carousel uses photos flagged hero in this set."
 	/>
-	<PortfolioFrontPageAdmin client:load />
+	<PortfolioFrontPageAdmin client:load initialFrontPage={initialFrontPage} />
 </AdminLayout>

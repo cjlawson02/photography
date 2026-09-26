@@ -21,17 +21,19 @@ Interactive UI uses **React** via `@astrojs/react`. Astro pages own layout and S
 | Home hero carousel | `client:load` | Above the fold; autoplay and keyboard nav should work immediately. |
 | Home masonry gallery | `client:visible` | Below hero; defer JS until the gallery scrolls into view. |
 | Review gallery | `client:load` | Primary task on the page; selection + lightbox need JS on arrival. |
-| Admin portfolio table | `client:load` | Access-gated; table edits need JS on arrival. |
+| Admin portfolio library | `client:load` | Access-gated; grid selection + inspector autosave need JS on arrival. SSR seeds the first page. |
+| Admin front page | `client:load` | Drag reorder + hero toggles on arrival. SSR seeds the set. |
 | Admin ingest upload | `client:load` | Primary task; presigned upload flow needs JS on arrival. |
 | Admin review collections | `client:load` | Create/list/revoke and copy links on arrival. |
 | Admin review collection detail | `client:load` | Same as list; SSR seeds collection + photos for first paint. |
 
-Admin **portfolio**, **client shoots list**, and **shoot job** pages load D1 data in Astro frontmatter (`AppEnv.fromBindings` + the same services as tRPC) and pass results into islands as optional `initial*` props. Islands seed TanStack Query with `initialData` and a mount-time `initialDataUpdatedAt` (`useState(() => Date.now())` so render stays pure) so the default `staleTime` (30s in `query-client.ts`) avoids an immediate duplicate tRPC read after hydration. Mutations, invalidation, portfolio “load more”, and `stalePendingOnly: true` stay client-only. Missing shoot ids redirect to `/admin/shoots` during SSR. Legacy `/admin/review*` redirects to `/admin/shoots*`.
+Admin **portfolio** (library + front page), **client shoots list**, and **shoot job** pages load D1 data in Astro frontmatter (`AppEnv.fromBindings` + the same services as tRPC) and pass results into islands as optional `initial*` props. Islands seed TanStack Query with `initialData` and a mount-time `initialDataUpdatedAt` (`useState(() => Date.now())` so render stays pure) so the default `staleTime` (30s in `query-client.ts`) avoids an immediate duplicate tRPC read after hydration. Mutations, invalidation, portfolio “load more”, and `stalePendingOnly: true` stay client-only. Missing shoot ids redirect to `/admin/shoots` during SSR. Legacy `/admin/review*` redirects to `/admin/shoots*`.
 
 ## Libraries
 
 - [Embla Carousel](https://www.embla-carousel.com/) + autoplay — hero only.
 - [PhotoSwipe 5](https://photoswipe.com/) — grid lightbox (`gallery.webp` URLs).
+- Admin front-page reorder uses native HTML5 drag-and-drop (desktop-only admin) with up/down buttons as the keyboard fallback — no DnD library.
 
 ## Tests (Vitest + RTL)
 
