@@ -6,7 +6,7 @@ import ApertureMark from '../components/public/ApertureMark.tsx';
 import { sentryClientConfigFromEnv } from '../lib/observability/sentry-config.ts';
 import BaseLayout from './BaseLayout.astro';
 
-export type AdminNavId = 'dashboard' | 'portfolio' | 'review';
+export type AdminNavId = 'dashboard' | 'portfolio' | 'shoots';
 
 interface Props {
 	title?: string;
@@ -20,7 +20,7 @@ const adminSentry = sentryClientConfigFromEnv(env);
 const nav: { id: AdminNavId; href: string; label: string }[] = [
 	{ id: 'dashboard', href: '/admin', label: 'Dashboard' },
 	{ id: 'portfolio', href: '/admin/portfolio', label: 'Portfolio' },
-	{ id: 'review', href: '/admin/review', label: 'Review' },
+	{ id: 'shoots', href: '/admin/shoots', label: 'Client shoots' },
 ];
 ---
 

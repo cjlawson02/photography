@@ -8,6 +8,7 @@ import { ReviewPhotos } from './review/photos.ts';
 import { PORTFOLIO_CATEGORIES } from './portfolio/categories.ts';
 import { photoStatuses } from './photo-status.ts';
 import { selectionStatuses } from './review/selection-status.ts';
+import { reviewJobStatuses } from './review/job-status.ts';
 
 /** cuid2 primary key shape (matches `@paralleldrive/cuid2`). */
 export const idSchema = z.string().refine((value) => isCuid(value), 'Expected cuid2 id');
@@ -19,6 +20,8 @@ export const optionalTrimmedString = z.string().trim().min(1).optional();
 export const photoStatusSchema = z.enum(photoStatuses);
 
 export const selectionStatusSchema = z.enum(selectionStatuses);
+
+export const reviewJobStatusSchema = z.enum(reviewJobStatuses);
 
 export const portfolioCategorySchema = z.enum(PORTFOLIO_CATEGORIES);
 
@@ -81,18 +84,39 @@ export const portfolioPhotoUpdateSchema = createUpdateSchema(PortfolioPhotos, {
 export const reviewCollectionSelectSchema = createSelectSchema(ReviewCollections, {
   slug: slugSchema,
   title: z.string().nullable(),
+  personName: z.string().nullable(),
+  status: reviewJobStatusSchema,
+  notes: z.string().nullable(),
+  sharedAt: z.number().int().nullable(),
+  submittedAt: z.number().int().nullable(),
+  deliveredAt: z.number().int().nullable(),
+  closedAt: z.number().int().nullable(),
   expiresAt: z.number().int().nullable(),
 });
 
 export const reviewCollectionInsertSchema = createInsertSchema(ReviewCollections, {
   slug: slugSchema,
   title: optionalTrimmedString.nullable().optional(),
+  personName: optionalTrimmedString.nullable().optional(),
+  status: reviewJobStatusSchema.optional(),
+  notes: optionalTrimmedString.nullable().optional(),
+  sharedAt: z.number().int().nullable().optional(),
+  submittedAt: z.number().int().nullable().optional(),
+  deliveredAt: z.number().int().nullable().optional(),
+  closedAt: z.number().int().nullable().optional(),
   expiresAt: z.number().int().nullable().optional(),
 }).omit(immutableTimestamps);
 
 export const reviewCollectionUpdateSchema = createUpdateSchema(ReviewCollections, {
   slug: slugSchema.optional(),
   title: optionalTrimmedString.nullable().optional(),
+  personName: optionalTrimmedString.nullable().optional(),
+  status: reviewJobStatusSchema.optional(),
+  notes: optionalTrimmedString.nullable().optional(),
+  sharedAt: z.number().int().nullable().optional(),
+  submittedAt: z.number().int().nullable().optional(),
+  deliveredAt: z.number().int().nullable().optional(),
+  closedAt: z.number().int().nullable().optional(),
   expiresAt: z.number().int().nullable().optional(),
 }).omit(updateOmitImmutable);
 

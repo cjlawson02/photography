@@ -6,5 +6,6 @@
  */
 export { ReviewCollections } from './collections.ts';
 export { ReviewPhotos } from './photos.ts';
+export { reviewJobStatuses, type ReviewJobStatus } from './job-status.ts';
 export { selectionStatuses, type SelectionStatus } from './selection-status.ts';
 export { reviewCollectionsRelations, reviewPhotosRelations } from './relations.ts';

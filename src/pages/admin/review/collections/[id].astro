@@ -1,33 +1,7 @@
 ---
-import { env } from 'cloudflare:workers';
-
-import AdminPageHeader from '../../../../components/admin/AdminPageHeader.astro';
-import ReviewCollectionDetailAdmin from '../../../../components/admin/ReviewCollectionDetailAdmin.tsx';
-import { idSchema } from '../../../../db/schema/types.ts';
-import { loadReviewCollectionDetail } from '../../../../lib/admin/ssr-initial-reads.ts';
-import { AppEnv } from '../../../../lib/env.ts';
-import AdminLayout from '../../../../layouts/AdminLayout.astro';
-
 const { id } = Astro.params;
-if (!id || !idSchema.safeParse(id).success) {
-	return Astro.redirect('/admin/review');
+if (!id) {
+	return Astro.redirect('/admin/shoots');
 }
-
-const app = AppEnv.fromBindings(env);
-const initialDetail = await loadReviewCollectionDetail(app, id);
-if (!initialDetail) {
-	return Astro.redirect('/admin/review');
-}
+return Astro.redirect(`/admin/shoots/${id}`);
 ---
-
-<AdminLayout title="Admin — Review collection" current="review">
-	<p class="text-sm">
-		<a class="admin-link" href="/admin/review">← Review collections</a>
-	</p>
-	<AdminPageHeader
-		title="Collection detail"
-		lede="Client selections and ingest status for each photo in this proofing set."
-	/>
-
-	<ReviewCollectionDetailAdmin client:load collectionId={id} initialDetail={initialDetail} />
-</AdminLayout>

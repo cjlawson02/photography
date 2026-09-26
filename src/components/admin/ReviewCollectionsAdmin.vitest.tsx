@@ -15,21 +15,21 @@ vi.mock('../../lib/trpc/query-client.ts', () => ({
 
 describe('ReviewCollectionsAdmin SSR seed', () => {
   it('lists seeded collections without Loading', () => {
-    const row = makeAdminReviewCollection({ slug: 'seeded-slug-xyz' });
+    const row = makeAdminReviewCollection({ slug: 'seeded-slug-xyz', personName: 'Sam' });
     render(<ReviewCollectionsAdmin initialCollections={[row]} />);
 
     expect(screen.queryByText('Loading…')).not.toBeInTheDocument();
-    expect(screen.getByText('seeded-slug-xyz')).toBeInTheDocument();
+    expect(screen.getByText('Sam')).toBeInTheDocument();
     expect(screen.getByText('1 collection(s).')).toBeInTheDocument();
   });
 
-  it('navigates via Inspect with userEvent', async () => {
+  it('navigates via Open job with userEvent', async () => {
     const user = userEvent.setup();
     const row = makeAdminReviewCollection({ slug: 'nav-slug' });
     render(<ReviewCollectionsAdmin initialCollections={[row]} />);
 
-    const inspect = screen.getByRole('link', { name: 'Inspect' });
-    await user.click(inspect);
-    expect(inspect).toHaveAttribute('href', `/admin/review/collections/${row.id}`);
+    const openJob = screen.getByRole('link', { name: 'Open job' });
+    await user.click(openJob);
+    expect(openJob).toHaveAttribute('href', `/admin/shoots/${row.id}`);
   });
 });

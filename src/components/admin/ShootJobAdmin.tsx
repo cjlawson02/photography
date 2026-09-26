@@ -1,11 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { expiresAtToDatetimeLocal } from '../../lib/admin/admin-form-datetime.ts';
 import {
   reviewCollectionExpiresFieldSchema,
+  reviewCollectionNotesFieldSchema,
+  reviewCollectionPersonNameFieldSchema,
   reviewCollectionTitleFieldSchema,
 } from '../../lib/admin/admin-form-schemas.ts';
 import type { ReviewCollectionAdminUpdateBody } from '../../lib/admin/review-collection-schemas.ts';
@@ -13,7 +15,9 @@ import type {
   AdminReviewCollectionDetail,
   AdminReviewCollectionDetailPhoto,
 } from '../../lib/admin/trpc-types.ts';
+import { jobStepPrimaryAction } from '../../lib/review/job-steps.ts';
 import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
+import AdminJobStepRail, { AdminJobStatusBadge } from './AdminJobStepRail.tsx';
 import {
   errorMessage,
   formatAdminDimensions,
@@ -39,30 +43,79 @@ function selectionLabel(status: AdminReviewCollectionDetailPhoto['selectionStatu
   }
 }
 
-type CollectionTitleInputProps = {
+type CollectionTextInputProps = {
+  label: string;
   value: string | null;
   busy: boolean;
-  onSave: (title: string | null) => void;
+  onSave: (value: string | null) => void;
 };
 
-function CollectionTitleInput({ value, busy, onSave }: CollectionTitleInputProps) {
+function CollectionPersonNameInput({
+  value,
+  busy,
+  onSave,
+}: Omit<CollectionTextInputProps, 'label'>) {
   const { register, handleSubmit } = useForm({
-    resolver: zodResolver(reviewCollectionTitleFieldSchema),
-    values: { title: value ?? '' },
+    resolver: zodResolver(reviewCollectionPersonNameFieldSchema),
+    values: { personName: value ?? '' },
   });
-
   return (
     <input
       type="text"
       className={`block w-full max-w-md text-sm ${adminClass.field}`}
-      aria-label="Collection title"
-      placeholder="—"
+      aria-label="Person name"
+      disabled={busy}
+      {...register('personName', {
+        onBlur: () => {
+          void handleSubmit((data) => {
+            if (data.personName === normalizeNullableText(value)) return;
+            onSave(data.personName);
+          })();
+        },
+      })}
+    />
+  );
+}
+
+function CollectionTitleInput({ value, busy, onSave }: Omit<CollectionTextInputProps, 'label'>) {
+  const { register, handleSubmit } = useForm({
+    resolver: zodResolver(reviewCollectionTitleFieldSchema),
+    values: { title: value ?? '' },
+  });
+  return (
+    <input
+      type="text"
+      className={`block w-full max-w-md text-sm ${adminClass.field}`}
+      aria-label="Shoot title"
       disabled={busy}
       {...register('title', {
         onBlur: () => {
           void handleSubmit((data) => {
             if (data.title === normalizeNullableText(value)) return;
             onSave(data.title);
+          })();
+        },
+      })}
+    />
+  );
+}
+
+function CollectionNotesInput({ value, busy, onSave }: Omit<CollectionTextInputProps, 'label'>) {
+  const { register, handleSubmit } = useForm({
+    resolver: zodResolver(reviewCollectionNotesFieldSchema),
+    values: { notes: value ?? '' },
+  });
+  return (
+    <textarea
+      rows={3}
+      className={`block w-full max-w-md text-sm ${adminClass.field}`}
+      aria-label="Shoot notes"
+      disabled={busy}
+      {...register('notes', {
+        onBlur: () => {
+          void handleSubmit((data) => {
+            if (data.notes === normalizeNullableText(value ?? '')) return;
+            onSave(data.notes);
           })();
         },
       })}
@@ -87,7 +140,7 @@ function CollectionExpiresInput({ value, busy, onSave, onInvalid }: CollectionEx
     <input
       type="datetime-local"
       className={`block w-full max-w-md text-sm ${adminClass.field}`}
-      aria-label="Collection expiry"
+      aria-label="Shoot expiry"
       disabled={busy}
       {...register('expiresAtLocal', {
         onBlur: () => {
@@ -108,15 +161,12 @@ function CollectionExpiresInput({ value, busy, onSave, onInvalid }: CollectionEx
   );
 }
 
-type ReviewCollectionDetailAdminInnerProps = {
+type ShootJobAdminInnerProps = {
   collectionId: string;
   initialDetail?: AdminReviewCollectionDetail;
 };
 
-function ReviewCollectionDetailAdminInner({
-  collectionId,
-  initialDetail,
-}: ReviewCollectionDetailAdminInnerProps) {
+function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [editStatus, setEditStatus] = useState<string | null>(null);
@@ -131,6 +181,19 @@ function ReviewCollectionDetailAdminInner({
     trpc.review.collections.update.mutationOptions({
       onSuccess: async () => {
         setEditStatus('Saved.');
+        await queryClient.invalidateQueries(trpc.review.collections.detail.queryFilter());
+        await queryClient.invalidateQueries(trpc.review.collections.list.queryFilter());
+      },
+      onError: (error) => {
+        setEditStatus(errorMessage(error));
+      },
+    }),
+  );
+
+  const transitionMutation = useMutation(
+    trpc.review.collections.transition.mutationOptions({
+      onSuccess: async () => {
+        setEditStatus('Job step updated.');
         await queryClient.invalidateQueries(trpc.review.collections.detail.queryFilter());
         await queryClient.invalidateQueries(trpc.review.collections.list.queryFilter());
       },
@@ -175,7 +238,10 @@ function ReviewCollectionDetailAdminInner({
   };
 
   const photoActionsBusy =
-    updateMutation.isPending || deletePhotoMutation.isPending || busyPhotoId !== null;
+    updateMutation.isPending ||
+    deletePhotoMutation.isPending ||
+    transitionMutation.isPending ||
+    busyPhotoId !== null;
 
   const statusMessage = detailQuery.isPending
     ? 'Loading…'
@@ -185,6 +251,7 @@ function ReviewCollectionDetailAdminInner({
 
   const detail = detailQuery.data;
   const photos = detail?.photos ?? [];
+  const collection = detail?.collection;
 
   const selectionCounts = photos.reduce(
     (acc, photo) => {
@@ -194,29 +261,68 @@ function ReviewCollectionDetailAdminInner({
     { none: 0, selected: 0, approved: 0 },
   );
 
-  const reviewPath = detail ? `/review/${encodeURIComponent(detail.collection.slug)}` : null;
+  const reviewPath = collection ? `/review/${encodeURIComponent(collection.slug)}` : '/review';
+  const primaryAction = useMemo(
+    () =>
+      jobStepPrimaryAction({
+        status: collection?.status ?? 'setup',
+        reviewPath,
+        uploadAnchor: '#upload',
+      }),
+    [collection?.status, reviewPath],
+  );
+
+  const jobDisplayName =
+    collection?.personName?.trim() || collection?.title?.trim() || collection?.slug || 'Shoot job';
 
   return (
     <>
-      <AdminStatusLine>
+      {collection ? (
+        <AdminJobStepRail
+          status={collection.status}
+          primaryAction={primaryAction}
+          markSharedPending={transitionMutation.isPending}
+          onMarkShared={() => {
+            if (primaryAction.kind !== 'mark_shared') return;
+            setEditStatus('Updating step…');
+            void transitionMutation.mutateAsync({
+              id: collectionId,
+              to: primaryAction.targetStatus,
+            });
+          }}
+        />
+      ) : null}
+
+      <AdminStatusLine className="mt-4">
         {statusMessage ??
           (photos.length === 0
-            ? 'No photos in this collection yet — upload below.'
-            : `${photos.length} photo(s) · ${selectionCounts.selected} selected · ${selectionCounts.approved} approved`)}
+            ? 'No proofs yet — use Upload proofs on the step rail.'
+            : `${photos.length} proof(s) · ${selectionCounts.selected} selected · ${selectionCounts.approved} approved`)}
       </AdminStatusLine>
 
-      {detail ? (
+      {collection ? (
         <>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <h2 className={`text-lg font-medium ${adminClass.fg}`}>{jobDisplayName}</h2>
+            <AdminJobStatusBadge status={collection.status} />
+          </div>
+
           <dl className={`mt-6 grid gap-3 text-sm sm:grid-cols-2 ${adminClass.fg}`}>
             <div>
-              <dt className={adminClass.fgMuted}>Slug</dt>
-              <dd className="mt-0.5 font-mono text-xs">{detail.collection.slug}</dd>
+              <dt className={adminClass.fgMuted}>Person</dt>
+              <dd className="mt-0.5">
+                <CollectionPersonNameInput
+                  value={collection.personName}
+                  busy={updateMutation.isPending}
+                  onSave={(personName) => patchCollection({ personName })}
+                />
+              </dd>
             </div>
             <div>
               <dt className={adminClass.fgMuted}>Title</dt>
               <dd className="mt-0.5">
                 <CollectionTitleInput
-                  value={detail.collection.title}
+                  value={collection.title}
                   busy={updateMutation.isPending}
                   onSave={(title) => patchCollection({ title })}
                 />
@@ -226,35 +332,39 @@ function ReviewCollectionDetailAdminInner({
               <dt className={adminClass.fgMuted}>Expires</dt>
               <dd className="mt-0.5 text-xs">
                 <CollectionExpiresInput
-                  value={detail.collection.expiresAt}
+                  value={collection.expiresAt}
                   busy={updateMutation.isPending}
                   onSave={(expiresAt) => patchCollection({ expiresAt })}
                   onInvalid={(message) => setEditStatus(message)}
                 />
                 <span className={`mt-1 block ${adminClass.fgMuted}`}>
-                  {detail.collection.expiresAt == null
+                  {collection.expiresAt == null
                     ? 'No expiry — link stays active until revoked.'
-                    : `Shown: ${formatAdminTime(detail.collection.expiresAt)}`}
+                    : `Shown: ${formatAdminTime(collection.expiresAt)}`}
                 </span>
               </dd>
             </div>
             <div>
               <dt className={adminClass.fgMuted}>Client link</dt>
               <dd className="mt-0.5 text-xs">
-                {reviewPath ? (
-                  <a href={reviewPath} className={adminClass.link}>
-                    {reviewPath}
-                  </a>
-                ) : (
-                  '—'
-                )}
+                <a href={reviewPath} className={adminClass.link}>
+                  {reviewPath}
+                </a>
+              </dd>
+            </div>
+            <div className="sm:col-span-2">
+              <dt className={adminClass.fgMuted}>Notes</dt>
+              <dd className="mt-0.5">
+                <CollectionNotesInput
+                  value={collection.notes}
+                  busy={updateMutation.isPending}
+                  onSave={(notes) => patchCollection({ notes })}
+                />
               </dd>
             </div>
             <div className="sm:col-span-2">
               <dt className={adminClass.fgMuted}>Collection id</dt>
-              <dd className={`mt-0.5 font-mono text-xs ${adminClass.fgMuted}`}>
-                {detail.collection.id}
-              </dd>
+              <dd className={`mt-0.5 font-mono text-xs ${adminClass.fgMuted}`}>{collection.id}</dd>
             </div>
           </dl>
           {editStatus ? <AdminStatusLine className="mt-2">{editStatus}</AdminStatusLine> : null}
@@ -264,7 +374,7 @@ function ReviewCollectionDetailAdminInner({
             className={`mt-8 scroll-mt-8 ${adminClass.uploadSection}`}
             aria-label="Upload review photo"
           >
-            <AdminSectionHeading>Upload</AdminSectionHeading>
+            <AdminSectionHeading>Upload proofs</AdminSectionHeading>
             <div className="mt-3">
               <AdminPhotoUpload
                 bucket="review"
@@ -273,6 +383,7 @@ function ReviewCollectionDetailAdminInner({
                 onSuccess={async () => {
                   setEditStatus('Upload complete.');
                   await queryClient.invalidateQueries(trpc.review.collections.detail.queryFilter());
+                  await queryClient.invalidateQueries(trpc.review.collections.list.queryFilter());
                 }}
               />
             </div>
@@ -348,18 +459,15 @@ function ReviewCollectionDetailAdminInner({
   );
 }
 
-type ReviewCollectionDetailAdminProps = {
+type ShootJobAdminProps = {
   collectionId: string;
   initialDetail?: AdminReviewCollectionDetail;
 };
 
-export default function ReviewCollectionDetailAdmin({
-  collectionId,
-  initialDetail,
-}: ReviewCollectionDetailAdminProps) {
+export default function ShootJobAdmin({ collectionId, initialDetail }: ShootJobAdminProps) {
   return (
     <AdminTrpcProvider>
-      <ReviewCollectionDetailAdminInner collectionId={collectionId} initialDetail={initialDetail} />
+      <ShootJobAdminInner collectionId={collectionId} initialDetail={initialDetail} />
     </AdminTrpcProvider>
   );
 }
