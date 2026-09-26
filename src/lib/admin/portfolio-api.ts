@@ -1,12 +1,8 @@
-import type { inferRouterOutputs } from '@trpc/server';
-
 import type { PortfolioPhotoAdminUpdateBody } from './portfolio-schemas.ts';
-import type { AppRouter } from '../trpc/router.ts';
+import type { AdminPortfolioPhoto } from './trpc-types.ts';
 import { adminTrpc } from '../trpc/client.ts';
 
-type RouterOutputs = inferRouterOutputs<AppRouter>;
-
-export type AdminPortfolioPhoto = RouterOutputs['portfolio']['list'][number];
+export type { AdminPortfolioPhoto } from './trpc-types.ts';
 
 export async function fetchPortfolioPhotos(): Promise<AdminPortfolioPhoto[]> {
 	return adminTrpc.portfolio.list.query();

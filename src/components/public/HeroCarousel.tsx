@@ -1,6 +1,6 @@
 import EmblaCarousel from 'embla-carousel';
 import Autoplay from 'embla-carousel-autoplay';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react';
 
 import type { PublicPortfolioPhoto } from '../../lib/services/portfolio-service.ts';
 
@@ -12,13 +12,15 @@ type Props = {
 };
 
 export default function HeroCarousel({ photos }: Props) {
-	const rootRef = useRef<HTMLElement>(null);
 	const viewportRef = useRef<HTMLDivElement>(null);
 	const emblaRef = useRef<ReturnType<typeof EmblaCarousel> | null>(null);
 	const autoplayRef = useRef<ReturnType<typeof Autoplay> | null>(null);
 	const [indicator, setIndicator] = useState('');
+	const [autoplayEnabled, setAutoplayEnabled] = useState(true);
+	const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
 	const showNav = photos.length > 1;
+	const motionAutoplay = showNav && autoplayEnabled && !prefersReducedMotion;
 
 	const scrollPrev = useCallback(() => {
 		autoplayRef.current?.reset();
@@ -30,6 +32,41 @@ export default function HeroCarousel({ photos }: Props) {
 		emblaRef.current?.scrollNext();
 	}, []);
 
+	const handleKeyDown = useCallback(
+		(event: KeyboardEvent<HTMLElement>) => {
+			if (!showNav) return;
+			if (event.key === 'ArrowLeft') {
+				event.preventDefault();
+				scrollPrev();
+			}
+			if (event.key === 'ArrowRight') {
+				event.preventDefault();
+				scrollNext();
+			}
+		},
+		[showNav, scrollPrev, scrollNext],
+	);
+
+	const toggleAutoplay = useCallback(() => {
+		setAutoplayEnabled((prev) => {
+			const next = !prev;
+			const plugin = autoplayRef.current;
+			if (plugin) {
+				if (next) plugin.play();
+				else plugin.stop();
+			}
+			return next;
+		});
+	}, []);
+
+	useEffect(() => {
+		const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+		const apply = () => setPrefersReducedMotion(media.matches);
+		apply();
+		media.addEventListener('change', apply);
+		return () => media.removeEventListener('change', apply);
+	}, []);
+
 	useEffect(() => {
 		const viewport = viewportRef.current;
 		if (!viewport || photos.length <= 1) return;
@@ -38,9 +75,14 @@ export default function HeroCarousel({ photos }: Props) {
 			delay: AUTOPLAY_DELAY_MS,
 			stopOnInteraction: false,
 		});
-		const embla = EmblaCarousel(viewport, { loop: true, align: 'start' }, [autoplay]);
+		const plugins = motionAutoplay ? [autoplay] : [];
+		const embla = EmblaCarousel(viewport, { loop: true, align: 'start' }, plugins);
 		emblaRef.current = embla;
 		autoplayRef.current = autoplay;
+
+		if (!motionAutoplay) {
+			autoplay.stop();
+		}
 
 		const updateIndicator = () => {
 			const total = embla.scrollSnapList().length;
@@ -50,38 +92,24 @@ export default function HeroCarousel({ photos }: Props) {
 		embla.on('select', updateIndicator);
 		updateIndicator();
 
-		const root = rootRef.current;
-		if (!root) return;
-
-		const onKeyDown = (event: KeyboardEvent) => {
-			if (event.key === 'ArrowLeft') {
-				event.preventDefault();
-				scrollPrev();
-			}
-			if (event.key === 'ArrowRight') {
-				event.preventDefault();
-				scrollNext();
-			}
-		};
-		root.addEventListener('keydown', onKeyDown);
-
 		return () => {
-			root.removeEventListener('keydown', onKeyDown);
 			embla.destroy();
 			emblaRef.current = null;
 			autoplayRef.current = null;
 		};
-	}, [photos.length, scrollPrev, scrollNext]);
+	}, [photos.length, motionAutoplay]);
 
 	if (photos.length === 0) return null;
 
+	const pauseLabel = autoplayEnabled ? 'Pause automatic slide show' : 'Resume automatic slide show';
+
 	return (
 		<section
-			ref={rootRef}
 			className="public-hero"
 			aria-label="Featured work"
 			aria-roledescription="carousel"
 			tabIndex={showNav ? 0 : undefined}
+			onKeyDown={handleKeyDown}
 		>
 			<div className="public-hero__frame">
 				<div className="overflow-hidden" ref={viewportRef}>
@@ -125,7 +153,18 @@ export default function HeroCarousel({ photos }: Props) {
 						>
 							Next
 						</button>
-						<p className="public-hero__indicator m-0" aria-live="polite">
+						{!prefersReducedMotion ? (
+							<button
+								type="button"
+								className="public-hero__pause-btn"
+								aria-pressed={!autoplayEnabled}
+								aria-label={pauseLabel}
+								onClick={toggleAutoplay}
+							>
+								{autoplayEnabled ? 'Pause' : 'Play'}
+							</button>
+						) : null}
+						<p className="public-hero__indicator m-0" aria-hidden="true">
 							{indicator}
 						</p>
 					</>

@@ -52,23 +52,23 @@ export default function PublicHomeGallery({ photos }: Props) {
 		>
 			<h2 className="public-section-title">Gallery</h2>
 
-			<div className="public-filters flex flex-wrap justify-center gap-0" role="list">
+			<ul className="public-filters m-0 flex list-none flex-wrap justify-center gap-0 p-0">
 				{PORTFOLIO_CATEGORY_LABELS.map((label) => {
 					const isActive = label === activeCategory;
 					return (
-						<button
-							key={label}
-							type="button"
-							role="listitem"
-							className="public-filter-btn"
-							aria-pressed={isActive}
-							onClick={() => setActiveCategory(label)}
-						>
-							{label}
-						</button>
+						<li key={label}>
+							<button
+								type="button"
+								className="public-filter-btn"
+								aria-pressed={isActive}
+								onClick={() => setActiveCategory(label)}
+							>
+								{label}
+							</button>
+						</li>
 					);
 				})}
-			</div>
+			</ul>
 
 			{photos.length === 0 ? (
 				<p className="text-center text-sm" style={{ color: 'var(--color-fg-muted)' }}>
