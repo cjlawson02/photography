@@ -4,6 +4,7 @@ import type { DrizzleD1Database } from 'drizzle-orm/d1';
 import * as schema from '../../db/schema/index.ts';
 import { ReviewPhotos } from '../../db/schema/review/photos.ts';
 import type { PhotoStatus } from '../../db/schema/photo-status.ts';
+import type { ReviewPhotoRound } from '../../db/schema/review/round.ts';
 import type { SelectionStatus } from '../../db/schema/review/selection-status.ts';
 import { definedProps } from '../utils/merge-defined.ts';
 
@@ -19,6 +20,8 @@ export class ReviewPhotosDAO {
     mimeType?: string | null;
     selectionStatus?: SelectionStatus;
     originalFilename?: string | null;
+    round?: ReviewPhotoRound;
+    matchedPickId?: string | null;
     id?: string;
     width?: number | null;
     height?: number | null;
@@ -29,6 +32,8 @@ export class ReviewPhotosDAO {
       mimeType: values.mimeType ?? null,
       selectionStatus: values.selectionStatus ?? ('none' as const),
       originalFilename: values.originalFilename ?? null,
+      round: values.round ?? 'proof',
+      matchedPickId: values.matchedPickId ?? null,
       width: values.width ?? null,
       height: values.height ?? null,
       ...(values.id ? { id: values.id } : {}),
@@ -59,6 +64,20 @@ export class ReviewPhotosDAO {
       .orderBy(asc(ReviewPhotos.createdAt));
   }
 
+  async listReadyByCollectionIdAndRound(collectionId: string, round: ReviewPhotoRound) {
+    return this.db
+      .select()
+      .from(ReviewPhotos)
+      .where(
+        and(
+          eq(ReviewPhotos.collectionId, collectionId),
+          eq(ReviewPhotos.status, 'ready'),
+          eq(ReviewPhotos.round, round),
+        ),
+      )
+      .orderBy(asc(ReviewPhotos.createdAt));
+  }
+
   async listPendingCreatedBefore(cutoffMs: number, limit = 100) {
     return this.db
       .select()
@@ -85,6 +104,8 @@ export class ReviewPhotosDAO {
       mimeType?: string | null;
       selectionStatus?: SelectionStatus;
       originalFilename?: string | null;
+      round?: ReviewPhotoRound;
+      matchedPickId?: string | null;
       width?: number | null;
       height?: number | null;
     },
@@ -111,6 +132,8 @@ export class ReviewPhotosDAO {
       mimeType?: string | null;
       selectionStatus?: SelectionStatus;
       originalFilename?: string | null;
+      round?: ReviewPhotoRound;
+      matchedPickId?: string | null;
       width?: number | null;
       height?: number | null;
     },

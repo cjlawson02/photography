@@ -13,6 +13,8 @@ describe('AdminJobStepRail', () => {
           status: 'proofs_uploaded',
           reviewPath: '/review/x',
           uploadAnchor: '#upload',
+          finalsUploadAnchor: '#upload-finals',
+          hasReadyFinals: false,
         })}
       />,
     );

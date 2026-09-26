@@ -11,6 +11,8 @@ export type AdminPhotoUploadBucket = 'portfolio' | 'review';
 type AdminPhotoUploadProps = {
   bucket: AdminPhotoUploadBucket;
   collectionId?: string;
+  /** Review bucket only — proof vs delivery final (defaults to proof). */
+  reviewRound?: 'proof' | 'final';
   onSuccess?: () => void | Promise<void>;
   /** Shorter layout for strips above tables. */
   compact?: boolean;
@@ -19,6 +21,7 @@ type AdminPhotoUploadProps = {
 export default function AdminPhotoUpload({
   bucket,
   collectionId,
+  reviewRound = 'proof',
   onSuccess,
   compact = false,
 }: AdminPhotoUploadProps) {
@@ -59,7 +62,13 @@ export default function AdminPhotoUpload({
         try {
           const result =
             bucket === 'review'
-              ? await uploadPhoto({ file, bucket, collectionId: collectionId!, onProgress })
+              ? await uploadPhoto({
+                  file,
+                  bucket,
+                  collectionId: collectionId!,
+                  round: reviewRound,
+                  onProgress,
+                })
               : await uploadPhoto({ file, bucket, onProgress });
           setPutPercent(null);
           setStatusText(

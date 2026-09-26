@@ -203,6 +203,31 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
     }),
   );
 
+  const markDeliveredMutation = useMutation(
+    trpc.review.collections.markDelivered.mutationOptions({
+      onSuccess: async () => {
+        setEditStatus('Finals marked delivered — client link is in download mode.');
+        await queryClient.invalidateQueries(trpc.review.collections.detail.queryFilter());
+        await queryClient.invalidateQueries(trpc.review.collections.list.queryFilter());
+      },
+      onError: (error) => {
+        setEditStatus(errorMessage(error));
+      },
+    }),
+  );
+
+  const linkFinalMutation = useMutation(
+    trpc.review.collections.linkFinalToPick.mutationOptions({
+      onSuccess: async () => {
+        setEditStatus('Final linked to pick.');
+        await queryClient.invalidateQueries(trpc.review.collections.detail.queryFilter());
+      },
+      onError: (error) => {
+        setEditStatus(errorMessage(error));
+      },
+    }),
+  );
+
   const reopenPicksMutation = useMutation(
     trpc.review.collections.reopenPicks.mutationOptions({
       onSuccess: async () => {
@@ -255,6 +280,8 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
     deletePhotoMutation.isPending ||
     transitionMutation.isPending ||
     reopenPicksMutation.isPending ||
+    markDeliveredMutation.isPending ||
+    linkFinalMutation.isPending ||
     busyPhotoId !== null;
 
   const copyFilenames = async () => {
@@ -284,7 +311,12 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
 
   const detail = detailQuery.data;
   const photos = detail?.photos ?? [];
+  const finalsSummary = detail?.finals;
+  const finalPhotos = finalsSummary?.photos ?? [];
   const collection = detail?.collection;
+  const pickCandidates = photos.filter(
+    (photo) => photo.selectionStatus === 'selected' || photo.selectionStatus === 'approved',
+  );
 
   const selectionCounts = photos.reduce(
     (acc, photo) => {
@@ -295,15 +327,32 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
   );
 
   const reviewPath = collection ? `/review/${encodeURIComponent(collection.slug)}` : '/review';
+  const hasReadyFinals = (finalsSummary?.readyCount ?? 0) > 0;
+
   const primaryAction = useMemo(
     () =>
       jobStepPrimaryAction({
         status: collection?.status ?? 'setup',
         reviewPath,
-        uploadAnchor: '#upload',
+        uploadAnchor: '#upload-proofs',
+        finalsUploadAnchor: '#upload-finals',
+        hasReadyFinals,
       }),
-    [collection?.status, reviewPath],
+    [collection?.status, reviewPath, hasReadyFinals],
   );
+
+  const copyDeliveryMessage = async () => {
+    setEditStatus('Preparing message…');
+    try {
+      const result = await queryClient.fetchQuery(
+        trpc.review.collections.deliveryMessage.queryOptions({ id: collectionId }),
+      );
+      await navigator.clipboard.writeText(result.text);
+      setEditStatus('Copied delivery message for the client.');
+    } catch (error) {
+      setEditStatus(errorMessage(error));
+    }
+  };
 
   const jobDisplayName =
     collection?.personName?.trim() || collection?.title?.trim() || collection?.slug || 'Shoot job';
@@ -338,6 +387,22 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
             }
             setEditStatus('Reopening picks…');
             void reopenPicksMutation.mutateAsync({ id: collectionId });
+          }}
+          markDeliveredPending={markDeliveredMutation.isPending}
+          onMarkDelivered={() => {
+            if (
+              !confirm(
+                'Mark finals delivered? The client link switches to download mode for uploaded finals.',
+              )
+            ) {
+              return;
+            }
+            setEditStatus('Updating step…');
+            void markDeliveredMutation.mutateAsync({ id: collectionId });
+          }}
+          copyDeliveryMessagePending={photoActionsBusy}
+          onCopyDeliveryMessage={() => {
+            void copyDeliveryMessage();
           }}
         />
       ) : null}
@@ -419,7 +484,7 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
           {editStatus ? <AdminStatusLine className="mt-2">{editStatus}</AdminStatusLine> : null}
 
           <section
-            id="upload"
+            id="upload-proofs"
             className={`mt-8 scroll-mt-8 ${adminClass.uploadSection}`}
             aria-label="Upload review photo"
           >
@@ -437,6 +502,41 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
               />
             </div>
           </section>
+
+          {collection.status === 'editing' ||
+          collection.status === 'finals_delivered' ||
+          collection.status === 'closed' ? (
+            <section
+              id="upload-finals"
+              className={`mt-8 scroll-mt-8 ${adminClass.uploadSection}`}
+              aria-label="Upload delivery finals"
+            >
+              <AdminSectionHeading>Upload finals</AdminSectionHeading>
+              <p className={`mt-2 text-sm ${adminClass.fgMuted}`}>
+                Filenames are matched to picks automatically when they line up. Unmatched finals can
+                be linked manually below.
+              </p>
+              <div className="mt-3">
+                <AdminPhotoUpload
+                  bucket="review"
+                  collectionId={collectionId}
+                  reviewRound="final"
+                  compact
+                  onSuccess={async () => {
+                    setEditStatus('Final upload complete.');
+                    await queryClient.invalidateQueries(
+                      trpc.review.collections.detail.queryFilter(),
+                    );
+                  }}
+                />
+              </div>
+              {finalsSummary && finalsSummary.unmatchedCount > 0 ? (
+                <p className={`mt-3 text-sm ${adminClass.fgMuted}`}>
+                  {finalsSummary.unmatchedCount} final(s) still need a pick match.
+                </p>
+              ) : null}
+            </section>
+          ) : null}
 
           <AdminTable className="mt-8">
             <AdminTableHead>
@@ -502,6 +602,67 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
               ))}
             </tbody>
           </AdminTable>
+
+          {finalPhotos.length > 0 ? (
+            <AdminTable className="mt-8">
+              <AdminTableHead>
+                <AdminTableHeaderCell>Final preview</AdminTableHeaderCell>
+                <AdminTableHeaderCell>Filename</AdminTableHeaderCell>
+                <AdminTableHeaderCell>Matched pick</AdminTableHeaderCell>
+                <AdminTableHeaderCell>Ingest</AdminTableHeaderCell>
+              </AdminTableHead>
+              <tbody>
+                {finalPhotos.map((photo) => (
+                  <AdminTableRow key={photo.id}>
+                    <td className="py-3 pr-4 align-middle">
+                      {photo.thumbUrl ? (
+                        <img
+                          src={photo.thumbUrl}
+                          alt=""
+                          width={72}
+                          height={54}
+                          className={adminClass.thumb}
+                        />
+                      ) : (
+                        <span className={`text-xs ${adminClass.fgMuted}`}>—</span>
+                      )}
+                    </td>
+                    <td className="py-2 pr-4 align-middle text-xs">
+                      {photo.originalFilename ?? '—'}
+                    </td>
+                    <td className="py-2 pr-4 align-middle text-xs">
+                      {photo.matchedPickId ? (
+                        <span className={adminClass.fgMuted}>{photo.matchedPickId}</span>
+                      ) : (
+                        <select
+                          className={`text-xs ${adminClass.field}`}
+                          disabled={photoActionsBusy || pickCandidates.length === 0}
+                          defaultValue=""
+                          onChange={(event) => {
+                            const pickPhotoId = event.target.value;
+                            if (!pickPhotoId) return;
+                            void linkFinalMutation.mutateAsync({
+                              collectionId,
+                              finalPhotoId: photo.id,
+                              pickPhotoId,
+                            });
+                          }}
+                        >
+                          <option value="">Link to pick…</option>
+                          {pickCandidates.map((pick) => (
+                            <option key={pick.id} value={pick.id}>
+                              {pick.originalFilename ?? pick.id}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </td>
+                    <td className="py-2 pr-4 align-middle font-mono text-xs">{photo.status}</td>
+                  </AdminTableRow>
+                ))}
+              </tbody>
+            </AdminTable>
+          ) : null}
         </>
       ) : null}
     </>

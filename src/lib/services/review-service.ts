@@ -7,7 +7,11 @@ import type { SelectionStatus } from '../../db/schema/review/selection-status.ts
 import type { ReviewJobStatus } from '../../db/schema/review/job-status.ts';
 import { AppError } from '../http/app-error.ts';
 import { GALLERY_VARIANT, THUMB_VARIANT } from '../ingest/keys.ts';
-import { reviewVariantAdminUrl, reviewVariantPublicUrl } from '../media/variant-media-url.ts';
+import {
+  reviewOriginalPublicUrl,
+  reviewVariantAdminUrl,
+  reviewVariantPublicUrl,
+} from '../media/variant-media-url.ts';
 import { resolveReviewCollectionAccess } from '../review/collection-access.ts';
 import { isTransitionAllowed } from '../review/job-steps.ts';
 import { areClientPicksLocked } from '../review/picks-lock.ts';
@@ -24,12 +28,23 @@ export type PublicReviewPhoto = {
   height: number | null;
 };
 
+export type PublicReviewDownloadPhoto = {
+  id: string;
+  thumbUrl: string;
+  downloadUrl: string;
+  originalFilename: string | null;
+  width: number | null;
+  height: number | null;
+};
+
 export type AdminReviewCollectionPhoto = {
   id: string;
   status: PhotoStatus;
   selectionStatus: SelectionStatus;
   mimeType: string | null;
   originalFilename: string | null;
+  round: 'proof' | 'final';
+  matchedPickId: string | null;
   createdAt: number;
   updatedAt: number;
   thumbUrl: string | null;
@@ -42,7 +57,9 @@ export type PublicReviewCollection = {
   slug: string;
   title: string | null;
   picksLocked: boolean;
+  mode: 'picks' | 'download';
   photos: PublicReviewPhoto[];
+  downloadPhotos: PublicReviewDownloadPhoto[];
 };
 
 export type AdminReviewCollectionDetail = {
@@ -62,6 +79,12 @@ export type AdminReviewCollectionDetail = {
     updatedAt: number;
   };
   photos: AdminReviewCollectionPhoto[];
+  finals: {
+    readyCount: number;
+    unmatchedCount: number;
+    unmatched: AdminReviewCollectionPhoto[];
+    photos: AdminReviewCollectionPhoto[];
+  };
 };
 
 export class ReviewService {
@@ -147,7 +170,7 @@ export class ReviewService {
     const timestamps: {
       sharedAt?: number;
       submittedAt?: number | null;
-      deliveredAt?: number;
+      deliveredAt?: number | null;
       closedAt?: number;
     } = {};
     if (to === 'shared' && collection.sharedAt == null) {
@@ -161,6 +184,12 @@ export class ReviewService {
     }
     if (to === 'editing' && collection.submittedAt == null) {
       timestamps.submittedAt = now;
+    }
+    if (to === 'finals_delivered' && collection.deliveredAt == null) {
+      timestamps.deliveredAt = now;
+    }
+    if (to === 'editing' && from === 'finals_delivered') {
+      timestamps.deliveredAt = null;
     }
 
     const updated = await this.app.d1.reviewCollections.update(id, {
@@ -212,7 +241,7 @@ export class ReviewService {
     }
 
     const rows = await this.app.d1.reviewPhotos.listByCollectionId(id);
-    const readyCount = rows.filter((row) => row.status === 'ready').length;
+    const readyCount = rows.filter((row) => row.status === 'ready' && row.round === 'proof').length;
     const advanced = await this.maybeAdvanceProofsUploaded(id, collection.status, readyCount);
     if (advanced) {
       collection = advanced;
@@ -226,6 +255,8 @@ export class ReviewService {
         selectionStatus: row.selectionStatus,
         mimeType: row.mimeType,
         originalFilename: row.originalFilename,
+        round: row.round,
+        matchedPickId: row.matchedPickId,
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
         thumbUrl: ready ? reviewVariantAdminUrl(row.id, THUMB_VARIANT.suffix, row.updatedAt) : null,
@@ -237,10 +268,70 @@ export class ReviewService {
       };
     });
 
+    const proofPhotos = photos.filter((photo) => photo.round === 'proof');
+    const finalPhotos = photos.filter((photo) => photo.round === 'final');
+    const unmatched = finalPhotos.filter(
+      (photo) => photo.status === 'ready' && photo.matchedPickId == null,
+    );
+
     return {
       collection: this.mapCollectionRow(collection),
-      photos,
+      photos: proofPhotos,
+      finals: {
+        readyCount: finalPhotos.filter((photo) => photo.status === 'ready').length,
+        unmatchedCount: unmatched.length,
+        unmatched,
+        photos: finalPhotos,
+      },
     };
+  }
+
+  async linkFinalToPick(input: {
+    collectionId: string;
+    finalPhotoId: string;
+    pickPhotoId: string;
+  }) {
+    const collection = await this.app.d1.reviewCollections.getById(input.collectionId);
+    if (!collection) {
+      throw new AppError('NOT_FOUND', `Review collection not found: ${input.collectionId}`);
+    }
+    const finalPhoto = await this.app.d1.reviewPhotos.getById(input.finalPhotoId);
+    const pickPhoto = await this.app.d1.reviewPhotos.getById(input.pickPhotoId);
+    if (
+      !finalPhoto ||
+      finalPhoto.collectionId !== input.collectionId ||
+      finalPhoto.round !== 'final'
+    ) {
+      throw new AppError('NOT_FOUND', `Final photo not found: ${input.finalPhotoId}`);
+    }
+    if (
+      !pickPhoto ||
+      pickPhoto.collectionId !== input.collectionId ||
+      pickPhoto.round !== 'proof'
+    ) {
+      throw new AppError('NOT_FOUND', `Proof photo not found: ${input.pickPhotoId}`);
+    }
+    const updated = await this.app.d1.reviewPhotos.update(input.finalPhotoId, {
+      matchedPickId: input.pickPhotoId,
+    });
+    if (!updated) {
+      throw new AppError('NOT_FOUND', `Final photo not found: ${input.finalPhotoId}`);
+    }
+    return updated;
+  }
+
+  async markFinalsDelivered(id: string) {
+    const detail = await this.getCollectionDetailForAdmin(id);
+    if (detail.finals.readyCount === 0) {
+      throw new AppError('BAD_REQUEST', 'Upload at least one ready final before marking delivered');
+    }
+    return this.transitionJobStatus(id, 'finals_delivered');
+  }
+
+  buildDeliveryMessage(collection: { title: string | null; slug: string }, siteOrigin: string) {
+    const title = collection.title?.trim() || 'your photos';
+    const link = `${siteOrigin}/review/${encodeURIComponent(collection.slug)}`;
+    return `Your edited photos are ready to download: ${title}\n${link}`;
   }
 
   async exportPickFilenames(id: string): Promise<{ filenames: string[]; text: string }> {
@@ -354,17 +445,31 @@ export async function resolveReviewPageState(
     }
     return { kind: 'not_found' };
   }
-  const ready = await photos.listReadyByCollectionId(access.collection.id);
+  const downloadMode =
+    access.collection.status === 'finals_delivered' || access.collection.status === 'closed';
+  const proofRows = await photos.listReadyByCollectionIdAndRound(access.collection.id, 'proof');
+  const finalRows = downloadMode
+    ? await photos.listReadyByCollectionIdAndRound(access.collection.id, 'final')
+    : [];
   return {
     kind: 'ok',
     collection: {
       slug: access.collection.slug,
       title: access.collection.title,
       picksLocked: areClientPicksLocked(access.collection.status),
-      photos: ready.map((photo) => ({
+      mode: downloadMode ? 'download' : 'picks',
+      photos: proofRows.map((photo) => ({
         id: photo.id,
         galleryUrl: reviewVariantPublicUrl(photo.id, GALLERY_VARIANT.suffix, photo.updatedAt),
         selectionStatus: photo.selectionStatus,
+        width: photo.width,
+        height: photo.height,
+      })),
+      downloadPhotos: finalRows.map((photo) => ({
+        id: photo.id,
+        thumbUrl: reviewVariantPublicUrl(photo.id, THUMB_VARIANT.suffix, photo.updatedAt),
+        downloadUrl: reviewOriginalPublicUrl(photo.id, photo.updatedAt),
+        originalFilename: photo.originalFilename,
         width: photo.width,
         height: photo.height,
       })),
