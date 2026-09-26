@@ -1,5 +1,6 @@
 import { z } from 'zod/v4';
 
+import { REVIEW_PHOTO_ROUNDS } from '../../db/schema/review/round.ts';
 import { idSchema, optionalTrimmedString } from '../../db/schema/types.ts';
 import { PURPOSE_BUCKETS, type PurposeBucket } from '../dao/r2-dao.ts';
 
@@ -36,6 +37,7 @@ export const presignBodySchema = z.discriminatedUnion('bucket', [
     contentType: ingestContentTypeSchema,
     collectionId: idSchema,
     filename: optionalTrimmedString,
+    round: z.enum(REVIEW_PHOTO_ROUNDS).optional(),
   }),
 ]);
 

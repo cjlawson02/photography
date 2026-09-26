@@ -12,6 +12,8 @@ import {
   reviewCollectionIdInputSchema,
   reviewCollectionTransitionInputSchema,
   reviewCollectionUpdateInputSchema,
+  reviewLinkFinalToPickInputSchema,
+  reviewMarkDeliveredInputSchema,
 } from '../admin/review-collection-schemas.ts';
 import { idSchema } from '../../db/schema/types.ts';
 import { completeBodySchema, presignBodySchema, reprocessBodySchema } from '../ingest/schemas.ts';
@@ -98,6 +100,26 @@ export const appRouter = createTRPCRouter({
         .mutation(async ({ ctx, input }) =>
           ReviewService.from(ctx.getAppEnv()).reopenPicks(input.id),
         ),
+      linkFinalToPick: adminProcedure
+        .input(reviewLinkFinalToPickInputSchema)
+        .mutation(async ({ ctx, input }) =>
+          ReviewService.from(ctx.getAppEnv()).linkFinalToPick(input),
+        ),
+      markDelivered: adminProcedure
+        .input(reviewMarkDeliveredInputSchema)
+        .mutation(async ({ ctx, input }) =>
+          ReviewService.from(ctx.getAppEnv()).markFinalsDelivered(input.id),
+        ),
+      deliveryMessage: adminProcedure
+        .input(reviewCollectionIdInputSchema)
+        .query(async ({ ctx, input }) => {
+          const service = ReviewService.from(ctx.getAppEnv());
+          const detail = await service.getCollectionDetailForAdmin(input.id);
+          const origin = new URL(ctx.request.url).origin;
+          return {
+            text: service.buildDeliveryMessage(detail.collection, origin),
+          };
+        }),
       deletePhoto: adminProcedure
         .input(reviewCollectionDeletePhotoInputSchema)
         .mutation(async ({ ctx, input }) =>

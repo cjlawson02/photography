@@ -21,6 +21,8 @@ describe('job-steps', () => {
       status: 'setup',
       reviewPath: '/review/x',
       uploadAnchor: '#upload',
+      finalsUploadAnchor: '#upload-finals',
+      hasReadyFinals: false,
     });
     expect(action.kind).toBe('upload_proofs');
   });

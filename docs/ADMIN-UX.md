@@ -267,7 +267,7 @@ Spec only — implement in later phases. Auth, bucket split, and promote-as-copy
 | Change | Notes |
 | --- | --- |
 | `ReviewCollections` | Add `personName`, `status` (job step), `sharedAt`, `submittedAt`, `deliveredAt`, `closedAt`, `notes`. **No** `Clients` table. |
-| Delivery round | Either `round: proof \| final` on `ReviewPhotos` **or** separate `ReviewFinals` table — `_TBD_`. Add `matchedPickId` for filename matching. |
+| Delivery round | `round: proof \| final` on `ReviewPhotos` + `matchedPickId` (see [D2](#open-decisions)). |
 | `ReviewPhotos` | Add `originalFilename` (presign already accepts filename; must persist for Lightroom export + final matching). |
 | Front-page set | `frontPage` + `frontPageOrder` columns **or** small ordered table — `_TBD_`. Keep `hero`. |
 | `PortfolioPhotos` | Add `sourceReviewPhotoId` (nullable) for promote provenance. |
@@ -294,7 +294,7 @@ Mark resolved here when decided; do not invent in IMPLEMENTATION.
 | ID | Topic | Options / default lean |
 | --- | --- | --- |
 | D1 | Download all | Worker streaming ZIP (~50 full-res) vs per-file only |
-| D2 | Finals storage | Round column on `ReviewPhotos` vs `ReviewFinals` table |
+| D2 | Finals storage | **Resolved:** `round` (`proof` \| `final`) + `matchedPickId` on `ReviewPhotos` (no separate table) |
 | D3 | Retention | Defaults after Delivered / Closed; R2 cost |
 | D4 | Client notify | Copy ready-made message only (lean) vs email (no infra today) |
 | D5 | Upload tray shell | Page-scoped tray inside islands (lean) vs Astro `transition:persist` |
