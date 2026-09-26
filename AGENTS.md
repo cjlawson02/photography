@@ -73,7 +73,7 @@ npx wrangler deploy
 
 - Phase 0 / manual smoke: [docs/SMOKE.md](docs/SMOKE.md)
 - Auth, tRPC mount, admin JWT: [docs/HLD.md#admin-auth](docs/HLD.md#admin-auth)
-- Unit: `npm test` — **Vitest jsdom** (`src/**/*.vitest.{ts,tsx}`), **Vitest node** (`src/**/*.server.vitest.ts`). Workerd pool still open: [IMPLEMENTATION.md](docs/IMPLEMENTATION.md) (T1 / FIX-28). End-to-end upload against live R2/Images `_TBD_` until Access + CORS + secrets are set.
+- Unit: `npm test` — **Vitest jsdom** (`src/**/*.vitest.{ts,tsx}`), **Vitest node** (`src/**/*.server.vitest.ts`), **Vitest workerd** (`src/**/*.workers.vitest.ts` via `@cloudflare/vitest-plugin`). End-to-end upload against live R2/Images `_TBD_` until Access + CORS + secrets are set.
 - Ingest tip: `AppEnv.from` on **`ingest.*` only** fail-fast (503) without R2 S3 secrets; other admin tRPC is bindings-only and returns **403** without JWT. Local secrets: [`.dev.vars.example`](.dev.vars.example) → `.dev.vars` ([DEPLOY.md](docs/DEPLOY.md)).
 
 ## Security considerations

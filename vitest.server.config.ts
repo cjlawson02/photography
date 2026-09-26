@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config';
 
-/** Node-environment Vitest for Worker/server modules (FIX-28 slice; workers pool TBD). */
+/** Node-environment Vitest for Worker/server modules. Workerd binding pilots: vitest.workers.config. */
 export default defineConfig({
   test: {
     environment: 'node',

@@ -1,0 +1,46 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "lawson-photography-workers-test",
+  "main": "./src/test/workers-entry.ts",
+  "compatibility_date": "2026-09-25",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "photography",
+      "database_id": "4f01bd2c-355d-4501-914d-7cb9cf68a70c",
+      "migrations_dir": "src/db/migrations",
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "PORTFOLIO",
+      "bucket_name": "photography-portfolio",
+    },
+    {
+      "binding": "REVIEW",
+      "bucket_name": "photography-review",
+    },
+  ],
+  "images": {
+    "binding": "IMAGES",
+  },
+  "ratelimits": [
+    {
+      "name": "REVIEW_SELECTION_RATE_LIMITER",
+      "namespace_id": "1001",
+      "simple": {
+        "limit": 120,
+        "period": 60,
+      },
+    },
+    {
+      "name": "ADMIN_TRPC_RATE_LIMITER",
+      "namespace_id": "1002",
+      "simple": {
+        "limit": 300,
+        "period": 60,
+      },
+    },
+  ],
+}

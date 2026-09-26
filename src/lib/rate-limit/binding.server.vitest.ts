@@ -28,7 +28,7 @@ describe('rate limit binding', () => {
     expect(() => resolveRateLimiterBinding(undefined, 'TEST_RATE_LIMITER')).toThrow(AppError);
     try {
       resolveRateLimiterBinding(undefined, 'TEST_RATE_LIMITER');
-      expect.unreachable('expected throw');
+      throw new Error('expected throw');
     } catch (error) {
       expect(error).toBeInstanceOf(AppError);
       expect((error as AppError).code).toBe('SERVICE_UNAVAILABLE');
