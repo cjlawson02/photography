@@ -2,13 +2,13 @@
 
 Move production traffic from the legacy WordPress site to the Workers deployment. Architecture and delivery constraints live in [HLD.md](HLD.md); phase checklist in [IMPLEMENTATION.md](IMPLEMENTATION.md#phase-5--cutover).
 
-**Status:** in progress — **portfolio import done** (Chris, 2026-09-26); **T6 cutover sequence** is next ([Cutover sequence (after migration)](#cutover-sequence-after-migration)). Legacy Picu/review import and redirect map remain _TBD_ if needed later.
+**Status:** **cutover signed off** (Chris, 2026-09-26) — legacy **301** + production [SMOKE.md](SMOKE.md) pass; **post-cutover monitoring** and legacy decommission remain ([§6](#6-post-cutover-monitoring)). Picu/review import and path-specific redirect map _TBD_ if needed later.
 
 ## Sequencing
 
 **Chris (2026-09-26):** Phase 5 **cutover** steps in [Cutover sequence (after migration)](#cutover-sequence-after-migration) run **only after** [T7 bulk migration](#content-and-asset-migration-t7) is complete and signed off. Do not treat remote promote + production smoke as the formal cutover gate until imported content is on production.
 
-**Already in place (does not complete cutover):** Workers custom domain on `photography.chrislawson.dev` and legacy zone **301** to the new host (Chris, 2026-09-26) — useful for testing; formal cutover still needs full [SMOKE.md](SMOKE.md) sign-off.
+**Completed for cutover:** Workers host on `photography.chrislawson.dev`, legacy zone **301**, and production smoke (Chris, 2026-09-26).
 
 Order: **T7 migration** → **T6 cutover sequence** → post-cutover monitoring / legacy decommission (_TBD_).
 
@@ -17,11 +17,11 @@ Order: **T7 migration** → **T6 cutover sequence** → post-cutover monitoring 
 | Item | Status |
 | --- | --- |
 | Workers production host `https://photography.chrislawson.dev` | **Live** — custom domain + SSL on Workers ([DEPLOY.md](DEPLOY.md)) |
-| Legacy public site `lawsonphotography.me` (+ `www`) | **301** → `https://photography.chrislawson.dev` (Chris, 2026-09-26). Cloud agent re-check ~06:15 UTC: **NXDOMAIN** on `www` + apex (could not curl); confirm locally with `curl -sI https://www.lawsonphotography.me/` |
-| Admin Access on `/admin*` | Configured per [DEPLOY.md](DEPLOY.md) — **re-verify** after any Access or DNS change |
+| Legacy public site `lawsonphotography.me` (+ `www`) | **301** → `https://photography.chrislawson.dev` — verified (Chris, 2026-09-26) |
+| Admin Access on `/admin*` | **Verified** on production smoke (Chris, 2026-09-26); re-check after Access or DNS changes ([DEPLOY.md](DEPLOY.md)) |
+| Production smoke | **Pass** — [SMOKE.md](SMOKE.md) on `photography.chrislawson.dev` (Chris, 2026-09-26) |
 | Remote D1 migrations on production | **Applied** — production `d1_migrations` matches repo (**5/5**); latest `main` deploy reported no pending migrations (2026-09-26) |
 | Bulk legacy WordPress → D1/R2 **portfolio** import | **Done (34 posts)** — FooGallery/Picu excluded — [migration/legacy-bulk-import.md](migration/legacy-bulk-import.md) |
-| Automated production smoke | Manual — [SMOKE.md](SMOKE.md) |
 
 ## Chris input needed
 
@@ -38,7 +38,7 @@ Resolved for T7 portfolio import (see [migration/legacy-bulk-import.md](migratio
 
 - [x] Production Cloudflare resources wired in [DEPLOY.md](DEPLOY.md) (D1 id, R2 buckets, Access vars, secrets inventory documented)
 - [x] CI/CD green on `main` ([`.github/workflows/ci-cd.yml`](../.github/workflows/ci-cd.yml)) immediately before promote (verified run `36222384679` @ `f4da23c`, 2026-09-26)
-- [ ] Manual smoke pass on production host — [SMOKE.md](SMOKE.md) (public checks OK; **admin Access + review slug** still Chris)
+- [x] Manual smoke pass on production host — [SMOKE.md](SMOKE.md) (Chris, 2026-09-26; review slug N/A — no Picu collections)
 - [x] Remote D1 journal matches repo (`npx wrangler d1 migrations list photography --remote`) — confirmed via production D1 + CI deploy migrate step (2026-09-26)
 
 ## DNS and domain
@@ -49,7 +49,7 @@ Resolved for T7 portfolio import (see [migration/legacy-bulk-import.md](migratio
 | Step | Owner | Notes |
 | --- | --- | --- |
 | Workers custom domain + SSL for `photography.chrislawson.dev` | **Done** | Live on Workers (Chris, 2026-09-26) |
-| Access application covers `/admin*` on `photography.chrislawson.dev` | Verify | Self-hosted Public DNS app; path `/admin*` ([DEPLOY.md](DEPLOY.md#2-cloudflare-access-admin)) |
+| Access application covers `/admin*` on `photography.chrislawson.dev` | **Done** | Verified on production smoke (Chris, 2026-09-26) |
 | **301 redirect** `lawsonphotography.me` (+ `www`) → `photography.chrislawson.dev` | **Done** | Redirect Rules on legacy zone (Chris, 2026-09-26) |
 | Lower TTL on legacy DNS | _Optional_ | Note if origin DNS changes again |
 
@@ -97,11 +97,7 @@ Confirm `SENTRY_RELEASE` / source maps if Sentry vars are set ([DEPLOY.md](DEPLO
 
 ### 4. Production smoke
 
-Run [SMOKE.md](SMOKE.md) against `https://photography.chrislawson.dev`:
-
-- Public home, gallery lightbox (caption/title when set), `/media/portfolio` variants
-- Admin `/admin` with Access JWT path
-- Review `/review/{slug}` if collections exist
+- [x] [SMOKE.md](SMOKE.md) on `https://photography.chrislawson.dev` (Chris, 2026-09-26) — public gallery + admin Access path; review slug N/A
 
 ### 5. Legacy traffic
 
