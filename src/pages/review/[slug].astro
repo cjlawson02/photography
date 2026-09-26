@@ -18,26 +18,29 @@ const pageTitle =
 		: state.kind === 'expired'
 			? 'Review link expired'
 			: 'Client review';
+
+const pageDescription =
+	state.kind === 'ok'
+		? `Review and select photos for ${pageTitle}. Choices save automatically.`
+		: state.kind === 'expired'
+			? 'This client review link has expired. Contact Lawson Photography for a new link.'
+			: 'This client review link could not be found.';
 ---
 
 {
 	state.kind === 'not_found' ? (
-		<ReviewLayout title="Review not found">
-			<main class="mx-auto max-w-xl px-4 py-16 text-center">
-				<h1 class="text-2xl" style="font-family: var(--font-display); color: var(--color-fg)">
-					Review not found
-				</h1>
+		<ReviewLayout title="Review not found" description={pageDescription}>
+			<main class="public-wrap text-center" style="padding-block: var(--space-5) var(--space-4)">
+				<h1 class="public-section-title">Review not found</h1>
 				<p class="mt-6 text-sm" style="color: var(--color-fg-muted)">
 					This link may be incorrect or has been revoked.
 				</p>
 			</main>
 		</ReviewLayout>
 	) : state.kind === 'expired' ? (
-		<ReviewLayout title={pageTitle}>
-			<main class="mx-auto max-w-xl px-4 py-16 text-center">
-				<h1 class="text-2xl" style="font-family: var(--font-display); color: var(--color-fg)">
-					This review link has expired
-				</h1>
+		<ReviewLayout title={pageTitle} description={pageDescription}>
+			<main class="public-wrap text-center" style="padding-block: var(--space-5) var(--space-4)">
+				<h1 class="public-section-title">This review link has expired</h1>
 				{state.title ? (
 					<p class="mt-3 text-sm" style="color: var(--color-fg-muted)">{state.title}</p>
 				) : null}
@@ -47,10 +50,10 @@ const pageTitle =
 			</main>
 		</ReviewLayout>
 	) : state.kind === 'ok' ? (
-		<ReviewLayout title={pageTitle}>
+		<ReviewLayout title={pageTitle} description={pageDescription}>
 			<main>
-				<header class="mx-auto max-w-3xl px-4 pt-10 text-center">
-					<h1 class="text-2xl" style="font-family: var(--font-display); color: var(--color-fg)">
+				<header class="public-wrap text-center" style="padding-top: var(--space-5)">
+					<h1 class="public-section-title">
 						{state.collection.title?.trim() || 'Client review'}
 					</h1>
 					<p class="mt-3 text-sm" style="color: var(--color-fg-muted)">

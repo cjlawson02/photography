@@ -93,8 +93,8 @@ export default function ReviewGallery({ slug, photos: initialPhotos }: Props) {
 
 	return (
 		<section
-			className="mx-auto px-4 py-10"
-			style={{ maxWidth: 1200 }}
+			className="public-wrap"
+			style={{ paddingBlock: 'var(--space-4) var(--space-5)' }}
 			aria-label="Review gallery"
 		>
 			{statusMessage ? (
@@ -112,20 +112,13 @@ export default function ReviewGallery({ slug, photos: initialPhotos }: Props) {
 					No photos are ready in this collection yet.
 				</p>
 			) : (
-				<ul className="m-0 list-none columns-2 gap-3 p-0 sm:columns-3 lg:columns-4">
+				<ul className="public-masonry-grid columns-2 sm:columns-3 lg:columns-4">
 					{photos.map((photo) => {
 						const busy = pendingId === photo.id;
 						const selected =
 							photo.selectionStatus === 'selected' || photo.selectionStatus === 'approved';
 						return (
-							<li
-								key={photo.id}
-								className="mb-3 break-inside-avoid overflow-hidden border"
-								style={{
-									borderColor: 'var(--color-border)',
-									background: 'var(--color-bg-elevated)',
-								}}
-							>
+							<li key={photo.id} className="public-masonry-item">
 								<button
 									type="button"
 									className="block w-full cursor-pointer border-0 p-0"
@@ -140,17 +133,13 @@ export default function ReviewGallery({ slug, photos: initialPhotos }: Props) {
 										height={DEFAULT_GALLERY_HEIGHT}
 										loading="lazy"
 										decoding="async"
-										className="block h-auto w-full grayscale transition-[filter] duration-300 hover:grayscale-0"
+										className="public-masonry-img"
 									/>
 								</button>
-								<div className="flex flex-wrap gap-2 px-2 py-2 text-xs">
+								<div className="flex flex-wrap gap-2 px-1 py-2">
 									<button
 										type="button"
-										className="border px-2 py-1 uppercase tracking-wide"
-										style={{
-											borderColor: 'var(--color-border)',
-											color: 'var(--color-fg)',
-										}}
+										className="public-action-btn"
 										aria-pressed={selected}
 										disabled={busy}
 										onClick={() => onToggleSelect(photo.id, photo.selectionStatus)}
@@ -159,11 +148,7 @@ export default function ReviewGallery({ slug, photos: initialPhotos }: Props) {
 									</button>
 									<button
 										type="button"
-										className="border px-2 py-1 uppercase tracking-wide"
-										style={{
-											borderColor: 'var(--color-border)',
-											color: 'var(--color-fg-muted)',
-										}}
+										className="public-action-btn"
 										disabled={busy}
 										onClick={() => onToggleApprove(photo.id, photo.selectionStatus)}
 									>

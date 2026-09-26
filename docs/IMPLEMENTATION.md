@@ -111,7 +111,7 @@ Shareable review links protected by secrecy only. Media via Worker `/media/revie
 
 ### Phase 5 — Cutover
 
-Move traffic/content from the current site to the new Workers deployment. Exact cutover runbook `_TBD_`.
+Move traffic/content from the current site to the new Workers deployment. Runbook: [CUTOVER.md](CUTOVER.md).
 
 **Tasks**
 

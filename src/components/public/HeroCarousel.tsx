@@ -78,13 +78,12 @@ export default function HeroCarousel({ photos }: Props) {
 	return (
 		<section
 			ref={rootRef}
-			className="relative w-full overflow-hidden"
-			style={{ background: 'var(--color-bg-elevated)' }}
+			className="public-hero"
 			aria-label="Featured work"
 			aria-roledescription="carousel"
 			tabIndex={showNav ? 0 : undefined}
 		>
-			<div className="relative mx-auto" style={{ maxWidth: 1400 }}>
+			<div className="public-hero__frame">
 				<div className="overflow-hidden" ref={viewportRef}>
 					<ul className="m-0 flex list-none touch-pan-y p-0">
 						{photos.map((photo, index) => (
@@ -112,12 +111,7 @@ export default function HeroCarousel({ photos }: Props) {
 					<>
 						<button
 							type="button"
-							className="absolute top-1/2 left-2 z-10 -translate-y-1/2 border px-3 py-2 text-sm uppercase tracking-wide"
-							style={{
-								borderColor: 'var(--color-border)',
-								color: 'var(--color-fg)',
-								background: 'rgba(43, 43, 43, 0.75)',
-							}}
+							className="public-hero__nav-btn public-hero__nav-btn--prev"
 							aria-label="Previous featured photo"
 							onClick={scrollPrev}
 						>
@@ -125,22 +119,13 @@ export default function HeroCarousel({ photos }: Props) {
 						</button>
 						<button
 							type="button"
-							className="absolute top-1/2 right-2 z-10 -translate-y-1/2 border px-3 py-2 text-sm uppercase tracking-wide"
-							style={{
-								borderColor: 'var(--color-border)',
-								color: 'var(--color-fg)',
-								background: 'rgba(43, 43, 43, 0.75)',
-							}}
+							className="public-hero__nav-btn public-hero__nav-btn--next"
 							aria-label="Next featured photo"
 							onClick={scrollNext}
 						>
 							Next
 						</button>
-						<p
-							className="absolute bottom-3 left-1/2 z-10 -translate-x-1/2 text-xs uppercase tracking-widest"
-							style={{ color: 'var(--color-fg-muted)' }}
-							aria-live="polite"
-						>
+						<p className="public-hero__indicator m-0" aria-live="polite">
 							{indicator}
 						</p>
 					</>
