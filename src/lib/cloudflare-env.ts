@@ -59,7 +59,7 @@ export function getCloudflareBindings(raw: unknown): CloudflareBindings {
 }
 
 /**
- * Parse Worker env for ingest / AppEnv (FamilyNotes-style, no STAGE/Clerk/Sentry).
+ * Parse Worker env for ingest / AppEnv (FamilyNotes-style bindings + R2 secrets; optional Sentry via Worker entry).
  * Missing R2 S3 secrets throw `R2ConfigError` (admin maps to 503).
  */
 export function getCloudflareEnv(raw: unknown): CloudflareAppEnv {

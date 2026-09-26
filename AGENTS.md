@@ -91,6 +91,7 @@ Phase 1 ingest (JWT + Zod body → `IngestService` via tRPC):
 - Required config (see [docs/DEPLOY.md](docs/DEPLOY.md)):
   - `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD` — plain **vars** in `wrangler.jsonc` (identifiers, not credentials)
   - `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` — production via `npx wrangler secret put <NAME>` (presigned PUT; not covered by R2 bindings alone)
+  - `SENTRY_DSN` (optional) — Worker error monitoring; no-op when unset ([DEPLOY.md](docs/DEPLOY.md#3a-sentry-optional-worker-errors))
   - D1 + R2 resource names are wired in `wrangler.jsonc` (`photography`, `photography-portfolio`, `photography-review`)
   - Configure R2 CORS on both buckets: `npm run r2:cors:apply`
   - Cloudflare Access **Public DNS** app on `photography.chrislawson.dev` path `/admin*` (not Workers destination)

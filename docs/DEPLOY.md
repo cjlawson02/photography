@@ -51,6 +51,24 @@ npx wrangler secret put R2_SECRET_ACCESS_KEY
 
 Local: copy `.dev.vars.example` → `.dev.vars` and fill the same three keys plus Access vars.
 
+## 3a. Sentry (optional Worker errors)
+
+Server-side error monitoring uses `@sentry/cloudflare` via [`sentry.server.config.ts`](../sentry.server.config.ts) (custom Worker entry in `wrangler.jsonc`). When `SENTRY_DSN` is unset, the SDK is a no-op — safe for local dev without a project.
+
+Create a Sentry project (Cloudflare / JavaScript) and copy the DSN. **Do not commit the DSN** — store it as a Worker secret:
+
+```bash
+npx wrangler secret put SENTRY_DSN
+```
+
+Optional release identifier (for deploy correlation later — e.g. Git SHA from CI):
+
+```bash
+npx wrangler secret put SENTRY_RELEASE
+```
+
+Local: add `SENTRY_DSN=` (and optionally `SENTRY_RELEASE=`) to `.dev.vars`. Browser / admin client SDK and CI source-map upload are deferred (see [IMPLEMENTATION.md](IMPLEMENTATION.md) Phase 2.5 **O1**).
+
 ## 4. R2 CORS (IaC)
 
 CORS JSON lives under [`infra/r2-cors/`](../infra/r2-cors/). Origins: production host and `http://localhost:4321` for `astro dev`.
@@ -77,7 +95,7 @@ npx wrangler d1 migrations apply photography --remote
 | DNS | Automatic if zone on account + custom domain deploy; else manual `CNAME` |
 | Access app | Public DNS path `/admin*` on `photography.chrislawson.dev` |
 | Access vars | `CF_ACCESS_*` in `wrangler.jsonc` vars (redeploy) |
-| Secrets | `R2_*` via `wrangler secret put` only |
+| Secrets | `R2_*` via `wrangler secret put`; optional `SENTRY_DSN` / `SENTRY_RELEASE` |
 | R2 CORS | `npm run r2:cors:apply` (or dashboard JSON paste) |
 | Deploy | `npm run build && npx wrangler deploy` |
 

@@ -5,6 +5,8 @@
  *
  * Set secrets via `.dev.vars` locally or `npx wrangler secret put <NAME>` in prod:
  *   R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY
+ * Optional observability (Worker no-op when unset):
+ *   SENTRY_DSN, SENTRY_RELEASE
  */
 declare global {
   namespace Cloudflare {
@@ -12,6 +14,8 @@ declare global {
       R2_ACCOUNT_ID?: string;
       R2_ACCESS_KEY_ID?: string;
       R2_SECRET_ACCESS_KEY?: string;
+      SENTRY_DSN?: string;
+      SENTRY_RELEASE?: string;
     }
   }
 
@@ -19,6 +23,8 @@ declare global {
     R2_ACCOUNT_ID?: string;
     R2_ACCESS_KEY_ID?: string;
     R2_SECRET_ACCESS_KEY?: string;
+    SENTRY_DSN?: string;
+    SENTRY_RELEASE?: string;
   }
 }
 

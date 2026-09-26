@@ -3,6 +3,7 @@ import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 import { getHTTPStatusCodeFromError } from '@trpc/server/http';
 
 import { createTrpcContext } from '../../../../lib/trpc/context.ts';
+import { reportTrpcErrorIfServer } from '../../../../lib/trpc/errors.ts';
 import { appRouter } from '../../../../lib/trpc/router.ts';
 
 /**
@@ -20,6 +21,7 @@ export const ALL: APIRoute = ({ request }) =>
       if (status >= 500) {
         console.error('[trpc]', { path, type, code: error.code, message: error.message });
       }
+      reportTrpcErrorIfServer(error, { path, type });
     },
   });
 
