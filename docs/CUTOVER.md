@@ -20,7 +20,7 @@ Move production traffic from the legacy WordPress site to the Workers deployment
 | Workers custom domain + SSL for `photography.chrislawson.dev` | Done | Live on Workers (Chris, 2026-09-26) |
 | Access application covers `/admin*` on `photography.chrislawson.dev` | _TBD_ | Re-verify after DNS or Access changes |
 | Lower TTL on **legacy** DNS (`lawsonphotography.me`) | _TBD_ | Before pointing legacy host at Workers or redirects |
-| **301 redirect** `lawsonphotography.me` (+ `www`) → `photography.chrislawson.dev` | Chris / Cloudflare | Preferred cutover: Redirect Rules (or Bulk Redirects) on the **legacy zone**, preserve path/query where sensible (`$1`). No code change required in this Worker unless we later host the legacy zone on the same script. |
+| **301 redirect** `lawsonphotography.me` (+ `www`) → `photography.chrislawson.dev` | Done (Chris, 2026-09-26) | Cloudflare **Redirect Rules** on the legacy zone (not Worker middleware). Preserve path/query per rule config. |
 
 ## Content and asset migration
 
