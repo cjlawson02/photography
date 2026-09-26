@@ -3,6 +3,7 @@ import { env } from 'cloudflare:workers';
 
 import HeroCarousel from '../components/public/HeroCarousel.tsx';
 import PublicHomeGallery from '../components/public/PublicHomeGallery.tsx';
+import PublicIntro from '../components/public/PublicIntro.astro';
 import PublicLayout from '../layouts/PublicLayout.astro';
 import { selectHeroPhotos } from '../lib/portfolio/hero-photos.ts';
 import { canonicalUrl, DEFAULT_SITE_DESCRIPTION, SITE_NAME } from '../lib/site/public-meta.ts';
@@ -21,7 +22,9 @@ const ogImage =
 	description={DEFAULT_SITE_DESCRIPTION}
 	canonical={canonicalUrl('/')}
 	ogImage={ogImage}
+	overlayHeader={heroPhotos.length > 0}
 >
 	<HeroCarousel client:load photos={heroPhotos} />
+	<PublicIntro />
 	<PublicHomeGallery client:visible photos={photos} />
 </PublicLayout>
