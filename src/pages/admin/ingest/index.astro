@@ -1,23 +1,4 @@
 ---
-import IngestSmokeForm from '../../../components/admin/IngestSmokeForm.tsx';
-import AdminLayout from '../../../layouts/AdminLayout.astro';
-
-/** Ingest smoke UI — presigned PUT, completion, optional reprocess (Phase 1) in admin shell. */
+/** Legacy ingest smoke URL — uploads live on portfolio and review collection detail. */
+return Astro.redirect('/admin/portfolio');
 ---
-
-<AdminLayout title="Admin — Upload" current="ingest">
-	<h1 class="text-2xl" style="font-family: var(--font-display); color: var(--color-fg)">Upload</h1>
-	<p class="mt-2 text-sm" style="color: var(--color-fg-muted); max-width: var(--measure)">
-		Presigned PUT → R2 → completion callback. Review uploads require a collection from
-		<a href="/admin/review" style="color: var(--color-accent)">Review</a>.
-	</p>
-
-	<div class="mt-8" style="max-width: var(--measure)">
-		<IngestSmokeForm client:load />
-	</div>
-
-	<p class="mt-8 text-xs" style="color: var(--color-fg-muted)">
-		API: <code>/admin/api/trpc</code> (<code>ingest.presign</code>, <code>ingest.complete</code>,
-		<code>ingest.reprocess</code>)
-	</p>
-</AdminLayout>

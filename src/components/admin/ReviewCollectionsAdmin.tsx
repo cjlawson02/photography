@@ -176,12 +176,9 @@ function ReviewCollectionsAdminInner() {
         {showCollectionsEmpty ? (
           <AdminEmptyState title="No review collections yet">
             <p>
-              Use the form above to create a collection, then upload review photos on{' '}
-              <a href="/admin/ingest" style={{ color: 'var(--color-accent)' }}>
-                Upload
-              </a>{' '}
-              (choose the <strong>review</strong> bucket and pick this collection). Share the client
-              link from the table once rows appear here.
+              Use the form above to create a collection, then open <strong>Inspect</strong> and
+              upload photos on the collection detail page. Share the client link from the table once
+              rows appear here.
             </p>
           </AdminEmptyState>
         ) : (
@@ -240,6 +237,13 @@ function ReviewCollectionsAdminInner() {
                           style={{ color: 'var(--color-accent)' }}
                         >
                           Inspect
+                        </a>
+                        <a
+                          href={`${detailPath}#upload`}
+                          className="mr-3"
+                          style={{ color: 'var(--color-accent)' }}
+                        >
+                          Upload
                         </a>
                         <button
                           type="button"

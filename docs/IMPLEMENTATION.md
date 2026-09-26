@@ -77,8 +77,8 @@ Access-gated admin UI and mutations for managing portfolio and (as review lands)
 
 - [x] Admin shell/layout behind Access ([PR #8](https://github.com/cjlawson02/photography/pull/8))
 - [x] Portfolio CRUD/list/publish/hero/sort flows — `/admin/portfolio` + tRPC `portfolio.*`
-- [x] Trigger/monitor ingest from admin — `/admin/ingest` smoke UI ([PR #8](https://github.com/cjlawson02/photography/pull/8)); reprocess also on portfolio admin for failed rows
-- [x] Review-collection management (create/list/revoke; attach uploads via ingest `collectionId`) — API + admin UI ([PR #8](https://github.com/cjlawson02/photography/pull/8)); revoke in Phase 4
+- [x] Trigger/monitor ingest from admin — inline upload on portfolio + review collection detail (`AdminPhotoUpload`); `/admin/ingest` redirects to portfolio; reprocess on portfolio admin for failed rows
+- [x] Review-collection management (create/list/revoke; attach uploads via ingest `collectionId`) — API + admin UI ([PR #8](https://github.com/cjlawson02/photography/pull/8)); revoke in Phase 4; list row **Upload** → detail `#upload`
 - [x] Confirm no admin mutations exist outside `/admin/*`
 
 ### Phase 3 — Public site
@@ -108,6 +108,7 @@ Shareable review links protected by secrecy only. Media via Worker `/media/revie
 - [x] `noindex` meta + `robots.txt` Disallow for review surfaces
 - [x] On review revoke: optional R2 cleanup + shorter `/media/review` cache TTL than portfolio
 - [x] Extension point for future password gate — `resolveReviewCollectionAccess` in `src/lib/review/collection-access.ts`
+- [x] Inline review upload on collection detail (`#upload`); list **Upload** links to detail anchor
 
 ### Phase 5 — Cutover
 
@@ -133,7 +134,7 @@ Tracked after [#21](https://github.com/cjlawson02/photography/pull/21)–[#23](h
 | S6 | Security headers | Done — Astro `src/middleware.ts` + `src/lib/http/security-headers.ts` |
 | P1 | Ingest dimensions | **Done** — `width`/`height` on `PortfolioPhotos` / `ReviewPhotos` via Images `info()` at ingest complete; admin portfolio + review detail; public home masonry + review gallery (`aspect-ratio`, PhotoSwipe) with 1600×1200 fallback when null |
 | P2 | Portfolio alt / title / caption | **Done (foundation)** — nullable `alt`, `title`, `caption` on `PortfolioPhotos` (migration `0004_*`); `portfolio.update` + admin `PortfolioRow`; public home gallery/hero pass `alt` to `<img>`; lightbox uses `alt` with `title` fallback (caption UI `_TBD_`) |
-| P6 | Pending ingest TTL | **Partial** — stale cutoff in `stale-pending.ts`; daily Cron `scheduled` + `ingest.cleanupStalePending`; portfolio admin stale filter/cleanup. Review stale rows: cron/manual only (no list UI) |
+| P6 | Pending ingest TTL | **Done** — `PENDING_INGEST_STALE_MS` in `stale-pending.ts`; lazy `waitUntil` cleanup on admin `portfolio.list` / `review.collections.list`; portfolio stale filter + manual `ingest.cleanupStalePending` (no Cron) |
 | P3–P5, P7 | Product polish | Empty states, review lifecycle, upload hardening, admin pagination — see [HLD](HLD.md) `_TBD_` |
 | M1–M4 | Frontend islands + primitives | Query islands on admin portfolio/review/ingest; **M2** — removed `lib/admin/portfolio-api.ts` and `review-collections-api.ts` (router output types in `trpc-types.ts`); shared UI primitives + optional `embla-carousel-react` `_TBD_` |
 | T1 | Test suite | **Partial** — node:test for `POST /review/api/selection` (`post-selection.ts`), security headers, tRPC rate-limit middleware; RTL + Vitest migration `_TBD_` |

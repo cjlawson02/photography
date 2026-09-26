@@ -10,6 +10,8 @@ import { AppEnv as AppEnvFactory } from '../env.ts';
 export type TrpcContext = {
   request: Request;
   accessEnv: AccessEnv;
+  /** Cloudflare `waitUntil` when the tRPC route runs on Workers (optional in tests). */
+  waitUntil?: (promise: Promise<unknown>) => void;
   /** Set after first successful JWT verify in this HTTP request (batch-safe). */
   accessIdentity?: AccessIdentity;
   ensureAccessIdentity: () => Promise<AccessIdentity>;
@@ -18,7 +20,10 @@ export type TrpcContext = {
   getAdminTrpcRateLimiter: () => Cloudflare.Env['ADMIN_TRPC_RATE_LIMITER'] | undefined;
 };
 
-export function createTrpcContext(input: { request: Request }): TrpcContext {
+export function createTrpcContext(input: {
+  request: Request;
+  waitUntil?: (promise: Promise<unknown>) => void;
+}): TrpcContext {
   let appEnv: AppEnv | undefined;
   let ingestAppEnv: AppEnv | undefined;
   const accessEnv = accessEnvFrom(env);
@@ -27,6 +32,7 @@ export function createTrpcContext(input: { request: Request }): TrpcContext {
 
   const ctx: TrpcContext = {
     request: input.request,
+    waitUntil: input.waitUntil,
     accessEnv,
     accessIdentity,
     ensureAccessIdentity() {

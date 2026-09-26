@@ -25,7 +25,7 @@ export class IngestMaintenanceService {
     private readonly r2: R2DAO,
   ) {}
 
-  /** Bindings-only bootstrap (scheduled cron + admin cleanup; no R2 S3 secrets). */
+  /** Bindings-only bootstrap (lazy admin list cleanup + manual mutation; no R2 S3 secrets). */
   static fromAppEnv(app: AppEnv): IngestMaintenanceService {
     return new IngestMaintenanceService(app.d1, app.r2);
   }
