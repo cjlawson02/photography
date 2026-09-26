@@ -16,7 +16,8 @@ const [photos, featured] = await Promise.all([
 	listPublishedPortfolioPhotos(env.DB),
 	listFrontPagePortfolioPhotos(env.DB),
 ]);
-const heroPhotos = selectHeroPhotos(photos);
+// Heroes live on the Featured set once curated; before that, any published hero still works.
+const heroPhotos = selectHeroPhotos(featured.length > 0 ? featured : photos);
 const ogImage =
 	heroPhotos[0]?.galleryUrl != null
 		? canonicalUrl(heroPhotos[0].galleryUrl)
