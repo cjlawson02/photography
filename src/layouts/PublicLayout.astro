@@ -15,10 +15,7 @@ const { title, description, ogImage, canonical } = Astro.props;
 <BaseLayout title={title} description={description} ogImage={ogImage} canonical={canonical}>
 	<SiteHeader />
 	<slot />
-	<footer
-		class="mt-auto px-4 py-6 text-center text-sm"
-		style="background: var(--color-bg-elevated); color: var(--color-fg-muted)"
-	>
-		&copy; {new Date().getFullYear()} Lawson Photography
+	<footer class="public-footer">
+		<p class="m-0 text-xs" style="line-height: 1.666">&copy; {new Date().getFullYear()} Lawson Photography</p>
 	</footer>
 </BaseLayout>

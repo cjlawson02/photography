@@ -1,28 +1,21 @@
 ---
-/** Static category chips — matches live WP filter labels until D1 portfolio CRUD wires real counts. */
+/** Static category chips — reference-only placeholder (live filters in PublicHomeGallery.tsx). */
 const categories = ['All', 'Friends', 'Nature', 'Portraits', 'People', 'Beach'] as const;
 const active = 'All';
 ---
 
-<div class="border-b px-4 py-3" style="border-color: var(--color-border); background: var(--color-bg)">
-	<div class="mx-auto flex flex-wrap justify-center gap-2" style="max-width: 1200px" role="list">
-		{
-			categories.map((label) => (
-				<button
-					type="button"
-					role="listitem"
-					class="cursor-default border px-4 py-1.5 text-sm uppercase tracking-wide"
-					style={
-						label === active
-							? 'border-color: var(--color-accent); color: var(--color-fg); background: transparent'
-							: 'border-color: var(--color-border); color: var(--color-fg-muted); background: transparent'
-					}
-					aria-pressed={label === active ? 'true' : 'false'}
-					disabled
-				>
-					{label}
-				</button>
-			))
-		}
-	</div>
+<div class="public-wrap public-filters" style="padding-block: var(--space-3)" role="list">
+	{
+		categories.map((label) => (
+			<button
+				type="button"
+				role="listitem"
+				class="public-filter-btn"
+				aria-pressed={label === active ? 'true' : 'false'}
+				disabled
+			>
+				{label}
+			</button>
+		))
+	}
 </div>
