@@ -147,25 +147,6 @@ export class PortfolioService {
     return { added, skipped };
   }
 
-  async setFrontPageMembership(id: string, onFrontPage: boolean) {
-    const photo = await this.app.d1.portfolioPhotos.getById(id);
-    if (!photo) {
-      throw new AppError('NOT_FOUND', `Portfolio photo not found: ${id}`);
-    }
-    if (onFrontPage) {
-      const { skipped } = await this.addToFrontPage([id]);
-      if (skipped[0]) {
-        throw new AppError('BAD_REQUEST', `Cannot add to the front page: ${skipped[0].reason}`);
-      }
-      return (await this.app.d1.portfolioPhotos.getById(id)) ?? photo;
-    }
-    return this.app.d1.portfolioPhotos.update(id, {
-      frontPage: false,
-      frontPageOrder: null,
-      hero: false,
-    });
-  }
-
   /** Single UPDATE for the whole selection (atomic); unpublish also leaves the front page. */
   async bulkUpdateMetadata(ids: string[], patch: PortfolioPhotoAdminUpdateBody) {
     const items = await this.app.d1.portfolioPhotos.updateMany(
@@ -195,32 +176,6 @@ export class PortfolioService {
     }
     const deleted = await this.app.d1.portfolioPhotos.deleteMany(found);
     return { ids: deleted.map((row) => row.id) };
-  }
-
-  /** Same purge ordering as `bulkDeletePhotos`. */
-  async deletePhoto(id: string, options: { cleanupR2: boolean }) {
-    const existing = await this.app.d1.portfolioPhotos.getById(id);
-    if (!existing) {
-      throw new AppError('NOT_FOUND', `Portfolio photo not found: ${id}`);
-    }
-
-    if (options.cleanupR2) {
-      await deletePhotoObjects({
-        r2: this.app.r2,
-        bucket: 'portfolio',
-        photoIds: [id],
-        logLabel: 'portfolio-delete',
-        logDetails: { id },
-        errorMessage: 'Failed to delete portfolio objects from storage',
-      });
-    }
-
-    const deleted = await this.app.d1.portfolioPhotos.deleteById(id);
-    if (!deleted) {
-      throw new AppError('NOT_FOUND', `Portfolio photo not found: ${id}`);
-    }
-
-    return deleted;
   }
 }
 

@@ -1,7 +1,5 @@
 import { z } from 'zod/v4';
 
-import { portfolioCategorySchema } from '../../db/schema/types.ts';
-import { isPortfolioCategory } from '../portfolio/categories.ts';
 import { reviewSlugPrefixSchema } from '../review/slug.ts';
 import { parseDatetimeLocalToMs } from './admin-form-datetime.ts';
 import { reviewCollectionCreateBodySchema } from './review-collection-schemas.ts';
@@ -103,69 +101,38 @@ export const reviewCollectionExpiresFieldSchema = z
     expiresAt: parseDatetimeLocalToMs(data.expiresAtLocal),
   }));
 
-/** Portfolio row inline-edit state (not the PATCH body). */
-export const portfolioPhotoAdminRowFormSchema = z.object({
-  published: z.boolean(),
+/** Library inspector text fields (autosaved individually; not the PATCH body). */
+export const portfolioInspectorFormSchema = z.object({
   alt: z.string(),
   title: z.string(),
   caption: z.string(),
-  category: z.union([z.literal(''), portfolioCategorySchema]),
-  sortOrder: z.string(),
-  hero: z.boolean(),
+  sortOrder: z.string().regex(/^\s*(-?\d+)?\s*$/, 'Use a whole number, or leave empty.'),
 });
 
-export type PortfolioPhotoAdminRowFormValues = z.infer<typeof portfolioPhotoAdminRowFormSchema>;
+export type PortfolioInspectorFormValues = z.infer<typeof portfolioInspectorFormSchema>;
 
-export function portfolioRowFormValuesFromPhoto(photo: {
-  published: boolean;
-  alt: string | null;
-  title: string | null;
-  caption: string | null;
-  category: string | null;
-  sortOrder: number | null;
-  hero: boolean;
-}): PortfolioPhotoAdminRowFormValues {
-  return {
-    published: photo.published,
-    alt: photo.alt ?? '',
-    title: photo.title ?? '',
-    caption: photo.caption ?? '',
-    category: photo.category != null && isPortfolioCategory(photo.category) ? photo.category : '',
-    sortOrder: photo.sortOrder == null ? '' : String(photo.sortOrder),
-    hero: photo.hero,
-  };
-}
+export type PortfolioInspectorTextField = keyof PortfolioInspectorFormValues;
 
-export function parsePortfolioRowSortOrder(raw: string): number | null {
-  const trimmed = raw.trim();
-  if (trimmed === '') return null;
-  const parsed = Number.parseInt(trimmed, 10);
-  if (Number.isNaN(parsed)) {
-    throw new Error('Sort order must be an integer.');
-  }
-  return parsed;
-}
-
-export function portfolioRowPatchFromField(
-  field: keyof PortfolioPhotoAdminRowFormValues,
-  values: PortfolioPhotoAdminRowFormValues,
-): Record<string, unknown> {
+/** Validated field value → PATCH fragment (empty → null). */
+export function portfolioInspectorPatchFromField(
+  field: PortfolioInspectorTextField,
+  raw: string,
+):
+  | { alt: string | null }
+  | { title: string | null }
+  | { caption: string | null }
+  | {
+      sortOrder: number | null;
+    } {
+  const text = trimmedNullableText(raw);
   switch (field) {
-    case 'published':
-      return { published: values.published };
-    case 'alt':
-      return { alt: trimmedNullableText(values.alt) };
-    case 'title':
-      return { title: trimmedNullableText(values.title) };
-    case 'caption':
-      return { caption: trimmedNullableText(values.caption) };
-    case 'category':
-      return { category: values.category === '' ? null : values.category };
     case 'sortOrder':
-      return { sortOrder: parsePortfolioRowSortOrder(values.sortOrder) };
-    case 'hero':
-      return { hero: values.hero };
-    default:
-      return {};
+      return { sortOrder: text === null ? null : Number.parseInt(text, 10) };
+    case 'alt':
+      return { alt: text };
+    case 'title':
+      return { title: text };
+    case 'caption':
+      return { caption: text };
   }
 }
