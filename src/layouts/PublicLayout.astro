@@ -4,12 +4,15 @@ import SiteHeader from '../components/public/SiteHeader.astro';
 
 interface Props {
 	title?: string;
+	description?: string;
+	ogImage?: string;
+	canonical?: string;
 }
 
-const { title } = Astro.props;
+const { title, description, ogImage, canonical } = Astro.props;
 ---
 
-<BaseLayout title={title}>
+<BaseLayout title={title} description={description} ogImage={ogImage} canonical={canonical}>
 	<SiteHeader />
 	<slot />
 	<footer

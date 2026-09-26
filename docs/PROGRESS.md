@@ -10,9 +10,9 @@
 | Level of effort | Done | Rough phase/task sizes in [LOE.md](LOE.md) |
 | Phase 0 — Foundation | Done | Astro Workers scaffold ([PR #3](https://github.com/cjlawson02/photography/pull/3)); data layer ([PR #6](https://github.com/cjlawson02/photography/pull/6)) |
 | Phase 1 — Ingest | Done | Presign + complete + reprocess ([PR #7](https://github.com/cjlawson02/photography/pull/7)) |
-| Phase 2 — Admin | In progress | Shell, review collections API/UI, ingest UI ([PR #8](https://github.com/cjlawson02/photography/pull/8)); portfolio CRUD/publish still open |
-| Phase 3 — Public site | In progress | Home Embla hero (autoplay), masonry grid + PhotoSwipe lightbox (`gallery` variant), `/media/portfolio` delivery; further public routes `_TBD_` |
-| Phase 4 — Client review | Done (phase 1) | `/review/{slug}`, `/media/review`, selection API, admin revoke, `noindex` + robots |
+| Phase 2 — Admin | Done (v1) | Portfolio publish/hero/sort/category + ingest/reprocess UX; polish `_TBD_` |
+| Phase 3 — Public site | In progress | Home + React islands, SEO meta on home; extra public routes + brand tokens `_TBD_` |
+| Phase 4 — Client review | Done (phase 1) | `/review/{slug}`, React gallery, selection API, admin revoke, `noindex` + robots |
 
 Production host live (`photography.chrislawson.dev`): Access `/admin*`, D1 remote migrations, R2 CORS, Access vars + R2 secrets — [DEPLOY.md](DEPLOY.md).
 
@@ -49,6 +49,7 @@ gantt
 
 | Date | Update |
 | --- | --- |
+| 2026-09-26 | Open items batch: portfolio reprocess UX, home SEO meta, [SMOKE.md](SMOKE.md); IMPLEMENTATION checklist sync |
 | 2026-09-25 | First production deploy: custom domain, Access Public DNS `/admin*`, Access vars in wrangler, R2 secrets + CORS, D1 remote; [DEPLOY.md](DEPLOY.md) updated |
 | 2026-09-25 | Phase 4 client review phase 1: public `/review/{slug}`, `/media/review`, selection UX, admin revoke |
 | 2026-09-25 | Progress/IMPLEMENTATION sync through [PR #10](https://github.com/cjlawson02/photography/pull/10): Phase 1 done; Phase 2/3 partial; Gantt + status table |

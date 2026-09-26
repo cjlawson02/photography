@@ -59,9 +59,9 @@ _TBD — only rules that differ from language/tool defaults._
 
 ### Public client UI
 
-- **React islands** (`@astrojs/react`) for public interactive UI — no vanilla `src/lib/client/*` DOM wiring or page `<script>` blocks for home/review.
+- **React islands** (`@astrojs/react`) for interactive UI — no hand-rolled DOM `addEventListener` wiring; use React state/handlers in `src/components/public/*` and `src/components/admin/*`.
 - See [docs/FRONTEND.md](docs/FRONTEND.md) for hydration conventions and library usage.
-- Admin can stay Astro + scripts until migrated.
+- Legacy admin `<script>` pages (ingest, review) migrate to React as touched.
 
 ## Testing instructions
 
@@ -121,6 +121,7 @@ Phase 1 ingest (JWT + Zod body → `IngestService`):
 | Estimates | [docs/LOE.md](docs/LOE.md) |
 | Status, Gantt schedule, changelog | [docs/PROGRESS.md](docs/PROGRESS.md) |
 | Public React islands | [docs/FRONTEND.md](docs/FRONTEND.md) |
+| Manual smoke checklist | [docs/SMOKE.md](docs/SMOKE.md) |
 | Agent instructions | This file |
 
 Treat this file as living documentation: prune stale rules and fill `_TBD_` sections when decided.
