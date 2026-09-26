@@ -133,7 +133,7 @@ stateDiagram-v2
 | **On front page** | Published **and** in the curated front-page set (ordered). |
 | **Failed** | System overlay on any step; **Retry** / **Remove** inline. |
 
-`hero` remains a flag within the front-page set (one hero).
+`hero` marks carousel slides (several allowed). On the public home page the front-page set is the default **Featured** view in curated order; **All** and category chips browse every published photo.
 
 ## Workflows
 

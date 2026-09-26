@@ -11,7 +11,11 @@ import type { PublicPortfolioPhoto } from '../../lib/services/portfolio-service.
 
 type Props = {
   photos: PublicPortfolioPhoto[];
+  /** Curated front-page set; when non-empty it becomes the default "Featured" view. */
+  featured?: PublicPortfolioPhoto[];
 };
+
+const FEATURED_LABEL = 'Featured';
 
 type SheetPhase = 'idle' | 'exiting' | 'entering';
 
@@ -36,8 +40,10 @@ function wait(ms: number): Promise<void> {
 
 function photosForCategory(
   photos: PublicPortfolioPhoto[],
+  featured: PublicPortfolioPhoto[],
   category: string,
 ): PublicPortfolioPhoto[] {
+  if (category === FEATURED_LABEL) return featured;
   return category === 'All'
     ? photos
     : photos.filter((photo) => (photo.category ?? '') === category);
@@ -59,10 +65,15 @@ function mosaicOptions(containerWidth: number): MosaicOptions {
   };
 }
 
-export default function PublicHomeGallery({ photos }: Props) {
-  const [activeCategory, setActiveCategory] = useState('All');
+export default function PublicHomeGallery({ photos, featured = [] }: Props) {
+  const hasFeatured = featured.length > 0;
+  const labels = hasFeatured
+    ? [FEATURED_LABEL, ...PORTFOLIO_CATEGORY_LABELS]
+    : [...PORTFOLIO_CATEGORY_LABELS];
+  const defaultCategory = hasFeatured ? FEATURED_LABEL : 'All';
+  const [activeCategory, setActiveCategory] = useState(defaultCategory);
   /** Frames currently painted — lags `activeCategory` during the exit beat. */
-  const [sheetCategory, setSheetCategory] = useState('All');
+  const [sheetCategory, setSheetCategory] = useState(defaultCategory);
   const [phase, setPhase] = useState<SheetPhase>('idle');
   const [sheetWidth, setSheetWidth] = useState(DEFAULT_SHEET_WIDTH);
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -80,8 +91,8 @@ export default function PublicHomeGallery({ photos }: Props) {
   }, []);
 
   const visiblePhotos = useMemo(
-    () => photosForCategory(photos, sheetCategory),
-    [photos, sheetCategory],
+    () => photosForCategory(photos, featured, sheetCategory),
+    [photos, featured, sheetCategory],
   );
 
   const layout = useMemo(() => {
@@ -92,8 +103,7 @@ export default function PublicHomeGallery({ photos }: Props) {
     return computeMosaicLayout(ratios, mosaicOptions(sheetWidth));
   }, [visiblePhotos, sheetWidth]);
 
-  const countFor = (label: string) =>
-    label === 'All' ? photos.length : photos.filter((p) => (p.category ?? '') === label).length;
+  const countFor = (label: string) => photosForCategory(photos, featured, label).length;
 
   const setCategory = useCallback(
     async (label: string) => {
@@ -105,7 +115,7 @@ export default function PublicHomeGallery({ photos }: Props) {
         return;
       }
 
-      const nextCount = photosForCategory(photos, label).length;
+      const nextCount = photosForCategory(photos, featured, label).length;
       filterLockRef.current = true;
       try {
         setActiveCategory(label);
@@ -119,7 +129,7 @@ export default function PublicHomeGallery({ photos }: Props) {
         filterLockRef.current = false;
       }
     },
-    [activeCategory, photos],
+    [activeCategory, photos, featured],
   );
 
   const openLightbox = useCallback(
@@ -158,7 +168,7 @@ export default function PublicHomeGallery({ photos }: Props) {
         </div>
 
         <ul className="public-filters" aria-label="Filter by category">
-          {PORTFOLIO_CATEGORY_LABELS.map((label) => {
+          {labels.map((label) => {
             const isActive = label === activeCategory;
             const count = countFor(label);
             return (
