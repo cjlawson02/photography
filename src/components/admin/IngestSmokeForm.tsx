@@ -74,123 +74,11 @@ function IngestSmokeFormInner() {
           <a href="/admin/portfolio" style={{ color: 'var(--color-accent)' }}>
             Portfolio
           </a>{' '}
-          or the collection detail page.
+          or the collection detail page. Abandoned pending rows are removed automatically after the
+          stale cutoff (see portfolio <strong>Stale pending only</strong>).
         </p>
       </AdminEmptyState>
 
-<<<<<<< HEAD
-        setBusy(true);
-        setPutPercent(null);
-        setStatusText('Requesting upload URL…');
-        const onProgress = (progress: UploadProgress) => {
-          setPutPercent(progress.percent);
-          setStatusText(
-            progress.percent === null
-              ? 'Uploading to R2…'
-              : `Uploading to R2… ${progress.percent}%`,
-          );
-        };
-        try {
-          const result =
-            bucket === 'review'
-              ? await uploadPhoto({ file, bucket, collectionId, onProgress })
-              : await uploadPhoto({ file, bucket, onProgress });
-          setPutPercent(null);
-          setStatusText(JSON.stringify(result, null, 2));
-          form.reset();
-        } catch (error) {
-          setPutPercent(null);
-          setStatusText(error instanceof Error ? error.message : String(error));
-        } finally {
-          setBusy(false);
-        }
-      }}
-    >
-      <label className="block text-sm" style={{ color: 'var(--color-fg)' }}>
-        Bucket
-        <select
-          name="bucket"
-          className="mt-1 block w-full border px-3 py-2"
-          style={fieldStyle}
-          value={bucket}
-          disabled={busy}
-          onChange={(event) => {
-            setBucket(event.target.value as Bucket);
-          }}
-        >
-          <option value="portfolio">portfolio (PORTFOLIO)</option>
-          <option value="review">review (REVIEW)</option>
-        </select>
-      </label>
-
-      {bucket === 'review' ? (
-        <label className="block text-sm" style={{ color: 'var(--color-fg)' }}>
-          Review collection
-          <select
-            name="collectionId"
-            className="mt-1 block w-full border px-3 py-2 text-sm"
-            style={fieldStyle}
-            value={collectionId}
-            disabled={busy || collectionsQuery.isPending || collections.length === 0}
-            onChange={(event) => setCollectionId(event.target.value)}
-          >
-            {collectionOptions.map((option) => (
-              <option key={option.value || option.label} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <p className="mt-1 text-xs" style={{ color: 'var(--color-fg-muted)' }}>
-            <a href="/admin/review" style={{ color: 'var(--color-accent)' }}>
-              Create a collection
-            </a>{' '}
-            if none appear.
-          </p>
-        </label>
-      ) : null}
-
-      <label className="block text-sm" style={{ color: 'var(--color-fg)' }}>
-        Photo
-        <input
-          type="file"
-          name="file"
-          accept="image/*"
-          required
-          disabled={busy}
-          className="mt-1 block w-full text-sm"
-          style={{ color: 'var(--color-fg)' }}
-        />
-      </label>
-
-      <button
-        type="submit"
-        disabled={busy}
-        className="px-4 py-2 text-sm disabled:opacity-60"
-        style={{ background: 'var(--color-accent)', color: 'var(--color-bg)' }}
-      >
-        {busy ? 'Uploading…' : 'Upload'}
-      </button>
-
-      {busy && putPercent !== null ? (
-        <div className="space-y-1">
-          <progress
-            className="block h-2 w-full"
-            max={100}
-            value={putPercent}
-            aria-label="Upload progress"
-          />
-          <p className="text-xs tabular-nums" style={{ color: 'var(--color-fg-muted)' }}>
-            {putPercent}%
-          </p>
-        </div>
-      ) : null}
-
-      <pre
-        className="mt-6 overflow-x-auto p-3 text-xs"
-        style={{
-          background: 'color-mix(in oklab, var(--color-fg) 6%, transparent)',
-          color: 'var(--color-fg-muted)',
-=======
       <form
         className="mt-6 space-y-4"
         onSubmit={async (event) => {
@@ -208,20 +96,30 @@ function IngestSmokeFormInner() {
           }
 
           setBusy(true);
-          setStatusText('Uploading…');
+          setPutPercent(null);
+          setStatusText('Requesting upload URL…');
+          const onProgress = (progress: UploadProgress) => {
+            setPutPercent(progress.percent);
+            setStatusText(
+              progress.percent === null
+                ? 'Uploading to R2…'
+                : `Uploading to R2… ${progress.percent}%`,
+            );
+          };
           try {
             const result =
               bucket === 'review'
-                ? await uploadPhoto({ file, bucket, collectionId })
-                : await uploadPhoto({ file, bucket });
+                ? await uploadPhoto({ file, bucket, collectionId, onProgress })
+                : await uploadPhoto({ file, bucket, onProgress });
+            setPutPercent(null);
             setStatusText(JSON.stringify(result, null, 2));
             form.reset();
           } catch (error) {
+            setPutPercent(null);
             setStatusText(error instanceof Error ? error.message : String(error));
           } finally {
             setBusy(false);
           }
->>>>>>> f8bc1b3 (feat(admin): empty states and ingest guidance (P2.5 P3 partial))
         }}
       >
         <label className="block text-sm" style={{ color: 'var(--color-fg)' }}>
@@ -288,6 +186,20 @@ function IngestSmokeFormInner() {
         >
           {busy ? 'Uploading…' : 'Upload'}
         </button>
+
+        {busy && putPercent !== null ? (
+          <div className="space-y-1">
+            <progress
+              className="block h-2 w-full"
+              max={100}
+              value={putPercent}
+              aria-label="Upload progress"
+            />
+            <p className="text-xs tabular-nums" style={{ color: 'var(--color-fg-muted)' }}>
+              {putPercent}%
+            </p>
+          </div>
+        ) : null}
 
         <pre
           className="mt-6 overflow-x-auto p-3 text-xs"

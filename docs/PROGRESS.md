@@ -55,6 +55,7 @@ gantt
 | 2026-09-26 | B3: admin review collection detail — `review.collections.detail`, `/admin/review/collections/{id}` inspect UI |
 | 2026-09-26 | Post-MVP hardening PR: media D1 gate, portfolio cache-bust, hero pause, admin fetch/tRPC polish; [IMPLEMENTATION.md](IMPLEMENTATION.md) Phase 2.5 backlog |
 | 2026-09-26 | [#23](https://github.com/cjlawson02/photography/pull/23) Oxlint + oxfmt; [#22](https://github.com/cjlawson02/photography/pull/22) frontend P0 + portfolio Query; [#21](https://github.com/cjlawson02/photography/pull/21) tRPC hardening, REST removed |
+| 2026-09-26 | Phase 2.5 P6 (partial): stale pending ingest TTL, cron cleanup, admin filter + manual cleanup |
 | 2026-09-26 | Open items batch: portfolio reprocess UX, home SEO meta, [SMOKE.md](SMOKE.md); IMPLEMENTATION checklist sync |
 | 2026-09-25 | First production deploy: custom domain, Access Public DNS `/admin*`, Access vars in wrangler, R2 secrets + CORS, D1 remote; [DEPLOY.md](DEPLOY.md) updated |
 | 2026-09-25 | Phase 4 client review phase 1: public `/review/{slug}`, `/media/review`, selection UX, admin revoke |

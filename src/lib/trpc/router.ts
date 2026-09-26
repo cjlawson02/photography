@@ -11,6 +11,7 @@ import {
 } from '../admin/review-collection-schemas.ts';
 import { idSchema } from '../../db/schema/types.ts';
 import { completeBodySchema, presignBodySchema, reprocessBodySchema } from '../ingest/schemas.ts';
+import { IngestMaintenanceService } from '../services/ingest-maintenance-service.ts';
 import { IngestService } from '../services/ingest-service.ts';
 import { PortfolioService } from '../services/portfolio-service.ts';
 import { ReviewService } from '../services/review-service.ts';
@@ -95,6 +96,9 @@ export const appRouter = createTRPCRouter({
       .mutation(async ({ ctx, input }) =>
         IngestService.from(ctx.getIngestAppEnv()).reprocess(input),
       ),
+    cleanupStalePending: adminProcedure.mutation(async ({ ctx }) =>
+      IngestMaintenanceService.fromAppEnv(ctx.getAppEnv()).cleanupStalePending(),
+    ),
   }),
 });
 

@@ -30,9 +30,10 @@ function PortfolioAdminTableInner() {
   const queryClient = useQueryClient();
   const [actionStatus, setActionStatus] = useState<string | null>(null);
   const [busyIds, setBusyIds] = useState<Set<string>>(() => new Set());
+  const [stalePendingOnly, setStalePendingOnly] = useState(false);
 
   const listInfiniteQueryOptions = trpc.portfolio.list.infiniteQueryOptions(
-    {},
+    { stalePendingOnly },
     portfolioListInfiniteQueryConfig,
   );
 
@@ -94,6 +95,23 @@ function PortfolioAdminTableInner() {
     }),
   );
 
+  const cleanupStaleMutation = useMutation(
+    trpc.ingest.cleanupStalePending.mutationOptions({
+      onSuccess: (result) => {
+        const total = result.portfolioRemoved.length + result.reviewRemoved.length;
+        setActionStatus(
+          total === 0
+            ? 'No stale pending ingest rows to remove.'
+            : `Removed ${total} stale pending row(s) (portfolio ${result.portfolioRemoved.length}, review ${result.reviewRemoved.length}).`,
+        );
+        void queryClient.invalidateQueries(trpc.portfolio.list.queryFilter());
+      },
+      onError: (error) => {
+        setActionStatus(error instanceof Error ? error.message : String(error));
+      },
+    }),
+  );
+
   const runForPhoto = async (photoId: string, statusLabel: string, action: () => Promise<void>) => {
     setBusyIds((prev) => addBusyId(prev, photoId));
     setActionStatus(statusLabel);
@@ -132,7 +150,41 @@ function PortfolioAdminTableInner() {
 
   return (
     <>
-      <p className="mt-4 text-xs" style={{ color: 'var(--color-fg-muted)' }} aria-live="polite">
+      <div
+        className="mt-4 flex flex-wrap items-center gap-4 text-xs"
+        style={{ color: 'var(--color-fg-muted)' }}
+      >
+        <label className="inline-flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={stalePendingOnly}
+            onChange={(event) => {
+              setStalePendingOnly(event.target.checked);
+            }}
+          />
+          Stale pending only
+        </label>
+        <button
+          type="button"
+          className="underline"
+          style={{ color: 'var(--color-fg)' }}
+          disabled={cleanupStaleMutation.isPending || busyIds.size > 0}
+          onClick={() => {
+            if (
+              !confirm(
+                'Remove all stale pending ingest rows (portfolio + review) and best-effort R2 keys?',
+              )
+            ) {
+              return;
+            }
+            cleanupStaleMutation.mutate();
+          }}
+        >
+          {cleanupStaleMutation.isPending ? 'Cleaning…' : 'Clean up stale pending'}
+        </button>
+      </div>
+
+      <p className="mt-2 text-xs" style={{ color: 'var(--color-fg-muted)' }} aria-live="polite">
         {statusMessage}
       </p>
 

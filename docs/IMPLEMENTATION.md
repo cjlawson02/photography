@@ -133,7 +133,8 @@ Tracked after [#21](https://github.com/cjlawson02/photography/pull/21)–[#23](h
 | S6 | Security headers | Done — Astro `src/middleware.ts` + `src/lib/http/security-headers.ts` |
 | P1 | Ingest dimensions | **Done** — `width`/`height` on `PortfolioPhotos` / `ReviewPhotos` via Images `info()` at ingest complete; admin portfolio + review detail; public home masonry + review gallery (`aspect-ratio`, PhotoSwipe) with 1600×1200 fallback when null |
 | P2 | Portfolio alt / title / caption | **Done (foundation)** — nullable `alt`, `title`, `caption` on `PortfolioPhotos` (migration `0004_*`); `portfolio.update` + admin `PortfolioRow`; public home gallery/hero pass `alt` to `<img>`; lightbox uses `alt` with `title` fallback (caption UI `_TBD_`) |
-| P3–P7 | Product polish | Empty states, review lifecycle, upload hardening, pending TTL, admin pagination — see [HLD](HLD.md) `_TBD_` |
+| P6 | Pending ingest TTL | **Partial** — stale cutoff in `stale-pending.ts`; daily Cron `scheduled` + `ingest.cleanupStalePending`; portfolio admin stale filter/cleanup. Review stale rows: cron/manual only (no list UI) |
+| P3–P5, P7 | Product polish | Empty states, review lifecycle, upload hardening, admin pagination — see [HLD](HLD.md) `_TBD_` |
 | M1–M4 | Frontend islands + primitives | Query islands on admin portfolio/review/ingest; **M2** — removed `lib/admin/portfolio-api.ts` and `review-collections-api.ts` (router output types in `trpc-types.ts`); shared UI primitives + optional `embla-carousel-react` `_TBD_` |
 | T1 | Test suite | **Partial** — node:test for `POST /review/api/selection` (`post-selection.ts`), security headers, tRPC rate-limit middleware; RTL + Vitest migration `_TBD_` |
 | T4 | D1 migrations in CI | Pre-deploy apply on `main` in [ci-cd.yml](../.github/workflows/ci-cd.yml); optional gate / PR dry-run `_TBD_` |
