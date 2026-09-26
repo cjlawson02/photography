@@ -4,6 +4,7 @@ import { ReviewCollectionsDAO } from '../dao/review-collections-dao.ts';
 import { ReviewPhotosDAO } from '../dao/review-photos-dao.ts';
 import { AppError } from '../http/app-error.ts';
 import { resolveReviewCollectionAccess } from './collection-access.ts';
+import { areClientPicksLocked } from './picks-lock.ts';
 
 /** Public selection mutation — D1 only (no R2 S3 secrets). */
 export async function updateReviewSelection(
@@ -20,6 +21,10 @@ export async function updateReviewSelection(
       throw new AppError('PRECONDITION_FAILED', 'This review link has expired');
     }
     throw new AppError('NOT_FOUND', 'Review collection not found');
+  }
+
+  if (areClientPicksLocked(access.collection.status)) {
+    throw new AppError('PRECONDITION_FAILED', 'Picks are locked for this review link');
   }
 
   const updated = await photos.updateSelectionIfReady(

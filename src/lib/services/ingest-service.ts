@@ -58,6 +58,7 @@ export class IngestService {
             collectionId: input.collectionId,
             status: 'pending',
             mimeType: input.contentType,
+            originalFilename: input.filename ?? null,
           });
 
     const key = originalKey(photo.id);

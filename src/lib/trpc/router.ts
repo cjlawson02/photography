@@ -9,6 +9,7 @@ import {
   reviewCollectionCreateBodySchema,
   reviewCollectionDeletePhotoInputSchema,
   reviewCollectionDetailInputSchema,
+  reviewCollectionIdInputSchema,
   reviewCollectionTransitionInputSchema,
   reviewCollectionUpdateInputSchema,
 } from '../admin/review-collection-schemas.ts';
@@ -86,6 +87,16 @@ export const appRouter = createTRPCRouter({
         .input(reviewCollectionTransitionInputSchema)
         .mutation(async ({ ctx, input }) =>
           ReviewService.from(ctx.getAppEnv()).transitionJobStatus(input.id, input.to),
+        ),
+      exportPickFilenames: adminProcedure
+        .input(reviewCollectionIdInputSchema)
+        .query(async ({ ctx, input }) =>
+          ReviewService.from(ctx.getAppEnv()).exportPickFilenames(input.id),
+        ),
+      reopenPicks: adminProcedure
+        .input(reviewCollectionIdInputSchema)
+        .mutation(async ({ ctx, input }) =>
+          ReviewService.from(ctx.getAppEnv()).reopenPicks(input.id),
         ),
       deletePhoto: adminProcedure
         .input(reviewCollectionDeletePhotoInputSchema)

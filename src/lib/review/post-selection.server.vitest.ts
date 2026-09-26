@@ -92,6 +92,7 @@ describe('postReviewSelection', () => {
       selectionStatus: 'selected' as const,
       status: 'ready' as const,
       mimeType: 'image/jpeg',
+      originalFilename: null,
       width: null,
       height: null,
       createdAt: 1,
