@@ -7,6 +7,7 @@ import {
   openGalleryLightbox,
 } from '../../lib/gallery/lightbox.ts';
 import { assertOkJsonResponse } from '../../lib/http/assert-ok-json.ts';
+import { GALLERY_VARIANT, THUMB_VARIANT } from '../../lib/ingest/keys.ts';
 import type { PublicReviewPhoto } from '../../lib/services/review-service.ts';
 import { addToSet, removeFromSet } from '../../lib/util/immutable-set.ts';
 
@@ -199,7 +200,9 @@ export default function ReviewGallery({
                   onClick={() => openLightbox(photo.id)}
                 >
                   <img
-                    src={photo.thumbUrl}
+                    src={photo.galleryUrl}
+                    srcSet={`${photo.thumbUrl} ${THUMB_VARIANT.width}w, ${photo.galleryUrl} ${GALLERY_VARIANT.width}w`}
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                     alt=""
                     width={width}
                     height={height}

@@ -6,6 +6,7 @@ import {
   openGalleryLightbox,
 } from '../../lib/gallery/lightbox.ts';
 import { computeMosaicLayout, type MosaicOptions } from '../../lib/gallery/mosaic-layout.ts';
+import { GALLERY_VARIANT, THUMB_VARIANT } from '../../lib/ingest/keys.ts';
 import { formatPortfolioTags, PORTFOLIO_CATEGORY_LABELS } from '../../lib/portfolio/categories.ts';
 import type { PublicPortfolioPhoto } from '../../lib/services/portfolio-service.ts';
 
@@ -227,7 +228,9 @@ export default function PublicHomeGallery({ photos, featured = [] }: Props) {
                 onClick={() => openLightbox(photo.id)}
               >
                 <img
-                  src={photo.thumbUrl}
+                  src={photo.galleryUrl}
+                  srcSet={`${photo.thumbUrl} ${THUMB_VARIANT.width}w, ${photo.galleryUrl} ${GALLERY_VARIANT.width}w`}
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 40vw, 32vw"
                   alt={photo.alt?.trim() ?? ''}
                   width={width}
                   height={height}

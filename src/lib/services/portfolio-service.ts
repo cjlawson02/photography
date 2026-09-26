@@ -27,7 +27,7 @@ export type PublicPortfolioPhoto = {
   height: number | null;
   /** Public delivery: ingest gallery variant (largest generated width). */
   galleryUrl: string;
-  /** Mosaic / grid cells — smaller ingest thumb. */
+  /** Smaller ingest thumb — srcset / admin grids. */
   thumbUrl: string;
 };
 
