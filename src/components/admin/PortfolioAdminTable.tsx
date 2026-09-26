@@ -38,7 +38,7 @@ function PortfolioAdminTableInner() {
         ? 'No portfolio photos yet — upload via Upload.'
         : `${photos.length} photo(s).`;
 
-  const statusMessage = actionStatus ?? listStatus;
+  const statusMessage = actionStatus !== null ? actionStatus : listStatus;
 
   const updateMutation = useMutation(
     trpc.portfolio.update.mutationOptions({
@@ -47,6 +47,9 @@ function PortfolioAdminTableInner() {
           current?.map((row) => (row.id === updated.id ? updated : row)),
         );
         setActionStatus('Saved.');
+      },
+      onError: (error) => {
+        setActionStatus(error instanceof Error ? error.message : String(error));
       },
     }),
   );
@@ -59,6 +62,9 @@ function PortfolioAdminTableInner() {
         );
         setActionStatus('Deleted.');
       },
+      onError: (error) => {
+        setActionStatus(error instanceof Error ? error.message : String(error));
+      },
     }),
   );
 
@@ -67,9 +73,8 @@ function PortfolioAdminTableInner() {
     setActionStatus(statusLabel);
     try {
       await action();
-    } catch (error) {
-      setActionStatus(error instanceof Error ? error.message : String(error));
-      throw error;
+    } catch {
+      /* mutation onError or action handler sets actionStatus */
     } finally {
       setBusyIds((prev) => removeBusyId(prev, photoId));
     }

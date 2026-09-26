@@ -26,7 +26,15 @@ export function jsonError(message: string, status: HttpErrorStatus): Response {
   return Response.json({ ok: false, error: message }, { status });
 }
 
+export function requireJsonContentType(request: Request): void {
+  const contentType = request.headers.get('content-type') ?? '';
+  if (!contentType.toLowerCase().includes('application/json')) {
+    throw new AppError('BAD_REQUEST', 'Content-Type must be application/json');
+  }
+}
+
 export async function parseJsonBody<T>(request: Request, schema: z.ZodType<T>): Promise<T> {
+  requireJsonContentType(request);
   let raw: unknown;
   try {
     raw = await request.json();

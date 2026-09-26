@@ -48,15 +48,7 @@ export default function HeroCarousel({ photos }: Props) {
   );
 
   const toggleAutoplay = useCallback(() => {
-    setAutoplayEnabled((prev) => {
-      const next = !prev;
-      const plugin = autoplayRef.current;
-      if (plugin) {
-        if (next) plugin.play();
-        else plugin.stop();
-      }
-      return next;
-    });
+    setAutoplayEnabled((prev) => !prev);
   }, []);
 
   useEffect(() => {
@@ -75,14 +67,9 @@ export default function HeroCarousel({ photos }: Props) {
       delay: AUTOPLAY_DELAY_MS,
       stopOnInteraction: false,
     });
-    const plugins = motionAutoplay ? [autoplay] : [];
-    const embla = EmblaCarousel(viewport, { loop: true, align: 'start' }, plugins);
+    const embla = EmblaCarousel(viewport, { loop: true, align: 'start' }, [autoplay]);
     emblaRef.current = embla;
     autoplayRef.current = autoplay;
-
-    if (!motionAutoplay) {
-      autoplay.stop();
-    }
 
     const updateIndicator = () => {
       const total = embla.scrollSnapList().length;
@@ -97,7 +84,17 @@ export default function HeroCarousel({ photos }: Props) {
       emblaRef.current = null;
       autoplayRef.current = null;
     };
-  }, [photos.length, motionAutoplay]);
+  }, [photos.length]);
+
+  useEffect(() => {
+    const plugin = autoplayRef.current;
+    if (!plugin) return;
+    if (motionAutoplay) {
+      plugin.play();
+    } else {
+      plugin.stop();
+    }
+  }, [motionAutoplay]);
 
   if (photos.length === 0) return null;
 

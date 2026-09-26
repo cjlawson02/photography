@@ -11,7 +11,6 @@ export type PresignResult = {
   contentType: string;
   uploadUrl: string;
   expiresInSeconds: number;
-  completeUrl: string;
   collectionId?: string;
 };
 
@@ -22,9 +21,7 @@ export type IngestResult = {
   variants: string[];
 };
 
-/**
- * Ingest pipeline (FamilyNotes MediaService analogue). Admin UI calls via tRPC; REST wrappers remain for smoke docs.
- */
+/** Ingest pipeline — admin UI calls via tRPC (`ingest.*`). */
 export class IngestService {
   constructor(private readonly app: AppEnv) {}
 
@@ -67,7 +64,6 @@ export class IngestService {
       contentType: input.contentType,
       uploadUrl,
       expiresInSeconds,
-      completeUrl: '/admin/api/trpc',
       ...(input.bucket === 'review' ? { collectionId: input.collectionId } : {}),
     };
   }

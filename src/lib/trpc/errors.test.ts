@@ -47,6 +47,9 @@ test('adminProcedure is FORBIDDEN without JWT before AppEnv', async () => {
     getIngestAppEnv() {
       throw new Error('Ingest AppEnv must not load when unauthenticated');
     },
+    ensureAccessIdentity() {
+      return Promise.reject(new Error('missing jwt'));
+    },
   });
 
   await assert.rejects(
@@ -70,6 +73,7 @@ test('createCaller smoke — router resolves with stub context', () => {
     getIngestAppEnv: () => {
       throw new Error('stub');
     },
+    ensureAccessIdentity: () => Promise.reject(new Error('stub')),
   };
   const caller = createTestCaller(ctx);
   assert.equal(typeof caller.secret, 'function');

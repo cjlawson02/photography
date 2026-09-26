@@ -15,7 +15,6 @@ export type PresignResponse = {
   contentType: string;
   uploadUrl: string;
   expiresInSeconds: number;
-  completeUrl: string;
   collectionId?: string;
 };
 

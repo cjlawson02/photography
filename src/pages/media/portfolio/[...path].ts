@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
 
 import { parsePortfolioMediaPath } from '../../../lib/media/parse-portfolio-media-path.ts';
+import { isPortfolioMediaAllowed } from '../../../lib/media/portfolio-media-access.ts';
 import { PORTFOLIO_VARIANT_CACHE_CONTROL } from '../../../lib/media/portfolio-cache.ts';
 
 export const GET: APIRoute = async ({ params }) => {
@@ -10,6 +11,11 @@ export const GET: APIRoute = async ({ params }) => {
 
   const parsed = parsePortfolioMediaPath(path);
   if (!parsed.ok) {
+    return new Response('Not Found', { status: 404 });
+  }
+
+  const allowed = await isPortfolioMediaAllowed(env.DB, parsed.id);
+  if (!allowed) {
     return new Response('Not Found', { status: 404 });
   }
 
