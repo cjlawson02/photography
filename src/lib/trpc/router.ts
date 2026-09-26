@@ -1,6 +1,9 @@
 import { z } from 'zod/v4';
 
-import { portfolioPhotoAdminUpdateBodySchema } from '../admin/portfolio-schemas.ts';
+import {
+  portfolioListInputSchema,
+  portfolioPhotoAdminUpdateBodySchema,
+} from '../admin/portfolio-schemas.ts';
 import {
   reviewCollectionCreateBodySchema,
   reviewCollectionDetailInputSchema,
@@ -30,9 +33,11 @@ const reviewRevokeInputSchema = z.object({
 
 export const appRouter = createTRPCRouter({
   portfolio: createTRPCRouter({
-    list: adminProcedure.query(async ({ ctx }) =>
-      PortfolioService.from(ctx.getAppEnv()).listForAdmin(),
-    ),
+    list: adminProcedure
+      .input(portfolioListInputSchema)
+      .query(async ({ ctx, input }) =>
+        PortfolioService.from(ctx.getAppEnv()).listForAdminPage(input),
+      ),
     update: adminProcedure
       .input(portfolioUpdateInputSchema)
       .mutation(async ({ ctx, input }) =>

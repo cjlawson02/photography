@@ -1,10 +1,11 @@
-import { and, asc, desc, eq, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, lt, or, sql } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
 import * as schema from '../../db/schema/index.ts';
 import type { PortfolioCategory } from '../../db/schema/portfolio/categories.ts';
 import { PortfolioPhotos } from '../../db/schema/portfolio/photos.ts';
 import type { PhotoStatus } from '../../db/schema/photo-status.ts';
+import type { AdminListCursor } from '../pagination/admin-list-cursor.ts';
 import { mergeDefined } from '../utils/merge-defined.ts';
 
 type Db = DrizzleD1Database<typeof schema>;
@@ -50,12 +51,22 @@ export class PortfolioPhotosDAO {
     return rows[0] ?? null;
   }
 
-  async listForAdmin(limit = 200) {
-    return this.db
-      .select()
-      .from(PortfolioPhotos)
-      .orderBy(desc(PortfolioPhotos.updatedAt))
-      .limit(limit);
+  async listForAdminPage(options: { limit: number; cursor: AdminListCursor | null }) {
+    const take = options.limit + 1;
+    const cursorWhere = options.cursor
+      ? or(
+          lt(PortfolioPhotos.updatedAt, options.cursor.updatedAt),
+          and(
+            eq(PortfolioPhotos.updatedAt, options.cursor.updatedAt),
+            lt(PortfolioPhotos.id, options.cursor.id),
+          ),
+        )
+      : undefined;
+
+    const base = this.db.select().from(PortfolioPhotos);
+    const filtered = cursorWhere ? base.where(cursorWhere) : base;
+
+    return filtered.orderBy(desc(PortfolioPhotos.updatedAt), desc(PortfolioPhotos.id)).limit(take);
   }
 
   /** Public home grid — published ingest-ready rows only. */

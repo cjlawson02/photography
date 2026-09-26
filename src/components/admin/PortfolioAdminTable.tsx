@@ -1,10 +1,16 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import type { PortfolioPhotoAdminUpdateBody } from '../../lib/admin/portfolio-schemas.ts';
-import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
+import type { AdminPortfolioListPage } from '../../lib/admin/trpc-types.ts';
 import { requestReprocess } from '../../lib/ingest/browser-upload.ts';
+import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
 import PortfolioRow from './PortfolioRow.tsx';
+
+const portfolioListInfiniteQueryConfig = {
+  initialPageParam: null as string | null,
+  getNextPageParam: (lastPage: AdminPortfolioListPage) => lastPage.nextCursor,
+};
 
 function addBusyId(set: Set<string>, id: string): Set<string> {
   const next = new Set(set);
@@ -24,9 +30,14 @@ function PortfolioAdminTableInner() {
   const [actionStatus, setActionStatus] = useState<string | null>(null);
   const [busyIds, setBusyIds] = useState<Set<string>>(() => new Set());
 
-  const listQuery = useQuery(trpc.portfolio.list.queryOptions());
+  const listInfiniteQueryOptions = trpc.portfolio.list.infiniteQueryOptions(
+    {},
+    portfolioListInfiniteQueryConfig,
+  );
 
-  const photos = listQuery.data ?? [];
+  const listQuery = useInfiniteQuery(listInfiniteQueryOptions);
+
+  const photos = listQuery.data?.pages.flatMap((page) => page.items) ?? [];
 
   const listStatus = listQuery.isPending
     ? 'Loading…'
@@ -36,16 +47,29 @@ function PortfolioAdminTableInner() {
         : String(listQuery.error)
       : photos.length === 0
         ? 'No portfolio photos yet — upload via Upload.'
-        : `${photos.length} photo(s).`;
+        : `${photos.length} photo(s) shown${listQuery.hasNextPage ? ' — load more for older photos.' : '.'}`;
 
   const statusMessage = actionStatus !== null ? actionStatus : listStatus;
+
+  const updateListCache = (
+    updater: (items: AdminPortfolioListPage['items']) => AdminPortfolioListPage['items'],
+  ) => {
+    queryClient.setQueryData(listInfiniteQueryOptions.queryKey, (current) => {
+      if (!current) return current;
+      return {
+        ...current,
+        pages: current.pages.map((page) => ({
+          ...page,
+          items: updater(page.items),
+        })),
+      };
+    });
+  };
 
   const updateMutation = useMutation(
     trpc.portfolio.update.mutationOptions({
       onSuccess: (updated) => {
-        queryClient.setQueryData(trpc.portfolio.list.queryKey(), (current) =>
-          current?.map((row) => (row.id === updated.id ? updated : row)),
-        );
+        updateListCache((items) => items.map((row) => (row.id === updated.id ? updated : row)));
         setActionStatus('Saved.');
       },
       onError: (error) => {
@@ -57,9 +81,7 @@ function PortfolioAdminTableInner() {
   const deleteMutation = useMutation(
     trpc.portfolio.delete.mutationOptions({
       onSuccess: (_result, variables) => {
-        queryClient.setQueryData(trpc.portfolio.list.queryKey(), (current) =>
-          current?.filter((row) => row.id !== variables.id),
-        );
+        updateListCache((items) => items.filter((row) => row.id !== variables.id));
         setActionStatus('Deleted.');
       },
       onError: (error) => {
@@ -147,6 +169,20 @@ function PortfolioAdminTableInner() {
           </tbody>
         </table>
       </div>
+
+      {listQuery.hasNextPage ? (
+        <button
+          type="button"
+          className="mt-4 text-xs underline"
+          style={{ color: 'var(--color-fg)' }}
+          disabled={listQuery.isFetchingNextPage || busyIds.size > 0}
+          onClick={() => {
+            void listQuery.fetchNextPage();
+          }}
+        >
+          {listQuery.isFetchingNextPage ? 'Loading…' : 'Load more'}
+        </button>
+      ) : null}
     </>
   );
 }
