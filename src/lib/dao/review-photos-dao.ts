@@ -37,7 +37,11 @@ export class ReviewPhotosDAO {
   }
 
   async listByCollectionId(collectionId: string) {
-    return this.db.select().from(ReviewPhotos).where(eq(ReviewPhotos.collectionId, collectionId));
+    return this.db
+      .select()
+      .from(ReviewPhotos)
+      .where(eq(ReviewPhotos.collectionId, collectionId))
+      .orderBy(asc(ReviewPhotos.createdAt));
   }
 
   /** Public review grid — ingest-ready rows for one collection. */
