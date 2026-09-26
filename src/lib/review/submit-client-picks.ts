@@ -13,8 +13,8 @@ export async function submitClientPicks(d1: D1Database, slug: string) {
   const collection = await collections.getBySlug(slug);
   const access = resolveReviewCollectionAccess(collection);
   if (!access.ok) {
-    if (access.reason === 'expired') {
-      throw new AppError('PRECONDITION_FAILED', 'This review link has expired');
+    if (access.reason === 'gallery_closed') {
+      throw new AppError('PRECONDITION_FAILED', 'This gallery has closed');
     }
     throw new AppError('NOT_FOUND', 'Review collection not found');
   }
