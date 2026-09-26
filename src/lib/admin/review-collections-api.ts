@@ -1,10 +1,16 @@
-import type { AdminReviewCollection } from './trpc-types.ts';
+import type { AdminReviewCollection, AdminReviewCollectionDetail } from './trpc-types.ts';
 import { adminTrpc } from '../trpc/client.ts';
 
-export type { AdminReviewCollection } from './trpc-types.ts';
+export type { AdminReviewCollection, AdminReviewCollectionDetail } from './trpc-types.ts';
 
 export async function fetchReviewCollections(): Promise<AdminReviewCollection[]> {
   return adminTrpc.review.collections.list.query();
+}
+
+export async function fetchReviewCollectionDetail(
+  id: string,
+): Promise<AdminReviewCollectionDetail> {
+  return adminTrpc.review.collections.detail.query({ id });
 }
 
 export async function createReviewCollection(input: {

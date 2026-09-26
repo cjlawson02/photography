@@ -5,8 +5,10 @@ import { ReviewPhotosDAO } from '../dao/review-photos-dao.ts';
 import type { SelectionStatus } from '../../db/schema/review/selection-status.ts';
 import { AppError } from '../http/app-error.ts';
 import { originalKey, VARIANT_SPECS, variantKey } from '../ingest/keys.ts';
+import { reviewVariantPublicUrl } from '../media/review-public-url.ts';
 import { resolveReviewCollectionAccess } from '../review/collection-access.ts';
 import { isSqliteUniqueViolation } from '../sqlite-unique-violation.ts';
+import type { PhotoStatus } from '../../db/schema/photo-status.ts';
 
 export type PublicReviewPhoto = {
   id: string;
@@ -18,6 +20,29 @@ export type PublicReviewCollection = {
   slug: string;
   title: string | null;
   photos: PublicReviewPhoto[];
+};
+
+export type AdminReviewCollectionPhoto = {
+  id: string;
+  status: PhotoStatus;
+  selectionStatus: SelectionStatus;
+  mimeType: string | null;
+  createdAt: number;
+  updatedAt: number;
+  thumbUrl: string | null;
+  galleryUrl: string | null;
+};
+
+export type AdminReviewCollectionDetail = {
+  collection: {
+    id: string;
+    slug: string;
+    title: string | null;
+    expiresAt: number | null;
+    createdAt: number;
+    updatedAt: number;
+  };
+  photos: AdminReviewCollectionPhoto[];
 };
 
 export class ReviewService {
@@ -45,6 +70,40 @@ export class ReviewService {
       }
       throw error;
     }
+  }
+
+  async getCollectionDetailForAdmin(id: string): Promise<AdminReviewCollectionDetail> {
+    const collection = await this.app.d1.reviewCollections.getById(id);
+    if (!collection) {
+      throw new AppError('NOT_FOUND', `Review collection not found: ${id}`);
+    }
+
+    const rows = await this.app.d1.reviewPhotos.listByCollectionId(id);
+    const photos: AdminReviewCollectionPhoto[] = rows.map((row) => {
+      const ready = row.status === 'ready';
+      return {
+        id: row.id,
+        status: row.status,
+        selectionStatus: row.selectionStatus,
+        mimeType: row.mimeType,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+        thumbUrl: ready ? reviewVariantPublicUrl(row.id, 'thumb.webp', row.updatedAt) : null,
+        galleryUrl: ready ? reviewVariantPublicUrl(row.id, 'gallery.webp', row.updatedAt) : null,
+      };
+    });
+
+    return {
+      collection: {
+        id: collection.id,
+        slug: collection.slug,
+        title: collection.title,
+        expiresAt: collection.expiresAt,
+        createdAt: collection.createdAt,
+        updatedAt: collection.updatedAt,
+      },
+      photos,
+    };
   }
 
   async revokeCollection(id: string, options: { cleanupR2: boolean }) {

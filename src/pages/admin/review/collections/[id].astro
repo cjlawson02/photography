@@ -1,0 +1,23 @@
+---
+import ReviewCollectionDetailAdmin from '../../../../components/admin/ReviewCollectionDetailAdmin.tsx';
+import AdminLayout from '../../../../layouts/AdminLayout.astro';
+
+const { id } = Astro.params;
+if (!id) {
+  return Astro.redirect('/admin/review');
+}
+---
+
+<AdminLayout title="Admin — Review collection" current="review">
+	<p class="text-sm">
+		<a href="/admin/review" style="color: var(--color-accent)">← Review collections</a>
+	</p>
+	<h1 class="mt-4 text-2xl" style="font-family: var(--font-display); color: var(--color-fg)">
+		Collection detail
+	</h1>
+	<p class="mt-2 text-sm" style="color: var(--color-fg-muted); max-width: var(--measure)">
+		Client selections and ingest status for each photo in this proofing set.
+	</p>
+
+	<ReviewCollectionDetailAdmin client:load collectionId={id} />
+</AdminLayout>
