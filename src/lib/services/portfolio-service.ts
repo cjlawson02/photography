@@ -4,7 +4,11 @@ import { PortfolioPhotosDAO } from '../dao/portfolio-photos-dao.ts';
 import { AppError } from '../http/app-error.ts';
 import { photoIngestObjectKeys } from '../ingest/keys.ts';
 import { portfolioVariantPublicUrl } from '../media/portfolio-public-url.ts';
-import type { PortfolioPhotoAdminUpdateBody } from '../admin/portfolio-schemas.ts';
+import type {
+  PortfolioListInput,
+  PortfolioPhotoAdminUpdateBody,
+} from '../admin/portfolio-schemas.ts';
+import { decodeAdminListCursor, encodeAdminListCursor } from '../pagination/admin-list-cursor.ts';
 
 export type PublicPortfolioPhoto = {
   id: string;
@@ -31,8 +35,23 @@ export class PortfolioService {
     return new PortfolioService(app);
   }
 
-  async listForAdmin() {
-    return this.app.d1.portfolioPhotos.listForAdmin();
+  async listForAdminPage(input: PortfolioListInput) {
+    const cursor = input.cursor ? decodeAdminListCursor(input.cursor) : null;
+    if (input.cursor && !cursor) {
+      throw new AppError('BAD_REQUEST', 'Invalid list cursor');
+    }
+
+    const rows = await this.app.d1.portfolioPhotos.listForAdminPage({
+      limit: input.limit,
+      cursor,
+    });
+    const hasMore = rows.length > input.limit;
+    const items = hasMore ? rows.slice(0, input.limit) : rows;
+    const last = items.at(-1);
+    const nextCursor =
+      hasMore && last ? encodeAdminListCursor({ updatedAt: last.updatedAt, id: last.id }) : null;
+
+    return { items, nextCursor };
   }
 
   async listPublishedForPublic(): Promise<PublicPortfolioPhoto[]> {
