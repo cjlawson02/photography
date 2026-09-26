@@ -23,6 +23,8 @@ export class PortfolioPhotosDAO {
     category?: PortfolioCategory | null;
     sortOrder?: number | null;
     hero?: boolean;
+    width?: number | null;
+    height?: number | null;
   }) {
     const row = {
       status: values.status ?? ('pending' as const),
@@ -31,6 +33,8 @@ export class PortfolioPhotosDAO {
       category: values.category ?? null,
       sortOrder: values.sortOrder ?? null,
       hero: values.hero ?? false,
+      width: values.width ?? null,
+      height: values.height ?? null,
       ...(values.id ? { id: values.id } : {}),
     };
     const inserted = await this.db.insert(PortfolioPhotos).values(row).returning();
@@ -77,6 +81,8 @@ export class PortfolioPhotosDAO {
       category?: PortfolioCategory | null;
       sortOrder?: number | null;
       hero?: boolean;
+      width?: number | null;
+      height?: number | null;
     },
   ) {
     const existing = await this.getById(id);
@@ -89,6 +95,8 @@ export class PortfolioPhotosDAO {
         category: existing.category,
         sortOrder: existing.sortOrder,
         hero: existing.hero,
+        width: existing.width,
+        height: existing.height,
       },
       patch,
     );

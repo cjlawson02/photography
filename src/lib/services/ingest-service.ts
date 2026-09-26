@@ -113,7 +113,8 @@ export class IngestService {
         written.push(variant);
       }
 
-      await this.markReady(bucket, id);
+      const dimensions = await this.app.images.readDimensions(new Blob([source]).stream());
+      await this.markReady(bucket, id, dimensions);
       return { id, bucket, status: 'ready', variants: written };
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Ingest failed';
@@ -123,11 +124,19 @@ export class IngestService {
     }
   }
 
-  private async markReady(bucket: PurposeBucket, id: string): Promise<void> {
+  private async markReady(
+    bucket: PurposeBucket,
+    id: string,
+    dimensions: { width: number; height: number } | null,
+  ): Promise<void> {
+    const patch = {
+      status: 'ready' as const,
+      ...(dimensions ? { width: dimensions.width, height: dimensions.height } : {}),
+    };
     if (bucket === 'portfolio') {
-      await this.app.d1.portfolioPhotos.update(id, { status: 'ready' });
+      await this.app.d1.portfolioPhotos.update(id, patch);
     } else {
-      await this.app.d1.reviewPhotos.update(id, { status: 'ready' });
+      await this.app.d1.reviewPhotos.update(id, patch);
     }
   }
 

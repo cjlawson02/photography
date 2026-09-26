@@ -19,12 +19,16 @@ export class ReviewPhotosDAO {
     mimeType?: string | null;
     selectionStatus?: SelectionStatus;
     id?: string;
+    width?: number | null;
+    height?: number | null;
   }) {
     const row = {
       collectionId: values.collectionId,
       status: values.status ?? ('pending' as const),
       mimeType: values.mimeType ?? null,
       selectionStatus: values.selectionStatus ?? ('none' as const),
+      width: values.width ?? null,
+      height: values.height ?? null,
       ...(values.id ? { id: values.id } : {}),
     };
     const inserted = await this.db.insert(ReviewPhotos).values(row).returning();
@@ -64,6 +68,8 @@ export class ReviewPhotosDAO {
       status?: PhotoStatus;
       mimeType?: string | null;
       selectionStatus?: SelectionStatus;
+      width?: number | null;
+      height?: number | null;
     },
   ) {
     const existing = await this.getById(id);
@@ -74,6 +80,8 @@ export class ReviewPhotosDAO {
         status: existing.status,
         mimeType: existing.mimeType,
         selectionStatus: existing.selectionStatus,
+        width: existing.width,
+        height: existing.height,
       },
       patch,
     );

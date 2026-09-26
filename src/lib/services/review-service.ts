@@ -32,6 +32,8 @@ export type AdminReviewCollectionPhoto = {
   updatedAt: number;
   thumbUrl: string | null;
   galleryUrl: string | null;
+  width: number | null;
+  height: number | null;
 };
 
 export type AdminReviewCollectionDetail = {
@@ -99,6 +101,8 @@ export class ReviewService {
         updatedAt: row.updatedAt,
         thumbUrl: ready ? reviewVariantPublicUrl(row.id, 'thumb.webp', row.updatedAt) : null,
         galleryUrl: ready ? reviewVariantPublicUrl(row.id, 'gallery.webp', row.updatedAt) : null,
+        width: row.width,
+        height: row.height,
       };
     });
 

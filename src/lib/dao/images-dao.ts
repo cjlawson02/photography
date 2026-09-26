@@ -18,6 +18,15 @@ export class ImagesDAO {
     ImagesDAO.instance = undefined;
   }
 
+  /** Read natural width/height via Images binding (free; does not transform). */
+  async readDimensions(stream: ReadableStream): Promise<{ width: number; height: number } | null> {
+    const info = await this.images.info(stream);
+    if (!('width' in info) || !('height' in info)) {
+      return null;
+    }
+    return { width: info.width, height: info.height };
+  }
+
   /**
    * Transform an image stream to WebP (quality 80).
    * Callers may chain `.transform({ width, fit })` via the binding before output
