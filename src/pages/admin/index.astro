@@ -1,7 +1,7 @@
 ---
 import AdminLayout from '../../layouts/AdminLayout.astro';
 
-/** Admin dashboard — links into portfolio, review, and ingest sections. */
+/** Admin dashboard — links into portfolio and review sections. */
 ---
 
 <AdminLayout title="Admin — Dashboard" current="dashboard">
@@ -18,10 +18,6 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 		<li>
 			<a href="/admin/review" style="color: var(--color-accent)">Review collections</a>
 			<span style="color: var(--color-fg-muted)"> — create links for client proofing</span>
-		</li>
-		<li>
-			<a href="/admin/ingest" style="color: var(--color-accent)">Upload</a>
-			<span style="color: var(--color-fg-muted)"> — presigned PUT ingest smoke</span>
 		</li>
 	</ul>
 

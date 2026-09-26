@@ -46,10 +46,6 @@
   "images": {
     "binding": "IMAGES",
   },
-  // Daily cleanup for long-stuck pending ingest rows (see HLD ingest hygiene).
-  "triggers": {
-    "crons": ["0 5 * * *"],
-  },
   // Public review selection updates — per-IP limit (see selection-rate-limit.ts).
   "ratelimits": [
     {

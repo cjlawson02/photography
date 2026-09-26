@@ -6,6 +6,7 @@ import type { AdminPortfolioListPage } from '../../lib/admin/trpc-types.ts';
 import { requestReprocess } from '../../lib/ingest/browser-upload.ts';
 import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
 import AdminEmptyState from './AdminEmptyState.tsx';
+import AdminPhotoUpload from './AdminPhotoUpload.tsx';
 import PortfolioRow from './PortfolioRow.tsx';
 
 const portfolioListInfiniteQueryConfig = {
@@ -150,6 +151,21 @@ function PortfolioAdminTableInner() {
 
   return (
     <>
+      <section
+        className="mt-4 rounded border p-4"
+        style={{ borderColor: 'var(--color-border)' }}
+        aria-label="Upload portfolio photo"
+      >
+        <AdminPhotoUpload
+          bucket="portfolio"
+          compact
+          onSuccess={async () => {
+            setActionStatus('Upload complete — refresh list if the new row is not visible yet.');
+            await queryClient.invalidateQueries(trpc.portfolio.list.queryFilter());
+          }}
+        />
+      </section>
+
       <div
         className="mt-4 flex flex-wrap items-center gap-4 text-xs"
         style={{ color: 'var(--color-fg-muted)' }}
@@ -191,12 +207,8 @@ function PortfolioAdminTableInner() {
       {showEmptyState ? (
         <AdminEmptyState title="No portfolio photos yet">
           <p>
-            Upload originals on{' '}
-            <a href="/admin/ingest" style={{ color: 'var(--color-accent)' }}>
-              Upload
-            </a>
-            . When ingest status is <strong>ready</strong>, publish photos here for the public home
-            grid and hero.
+            Use the upload form above to add originals. When ingest status is <strong>ready</strong>
+            , publish photos here for the public home grid and hero.
           </p>
         </AdminEmptyState>
       ) : (

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { ReviewCollectionAdminUpdateBody } from '../../lib/admin/review-collection-schemas.ts';
 import type { AdminReviewCollectionDetailPhoto } from '../../lib/admin/trpc-types.ts';
 import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
+import AdminPhotoUpload from './AdminPhotoUpload.tsx';
 
 const borderStyle = { borderColor: 'var(--color-border)' };
 const fieldStyle = {
@@ -220,7 +221,7 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
       <p className="mt-4 text-xs" style={{ color: 'var(--color-fg-muted)' }} aria-live="polite">
         {statusMessage ??
           (photos.length === 0
-            ? 'No photos in this collection yet — upload via Upload with this collection id.'
+            ? 'No photos in this collection yet — upload below.'
             : `${photos.length} photo(s) · ${selectionCounts.selected} selected · ${selectionCounts.approved} approved`)}
       </p>
 
@@ -288,6 +289,31 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
               {editStatus}
             </p>
           ) : null}
+
+          <section
+            id="upload"
+            className="mt-8 rounded border p-4 scroll-mt-8"
+            style={{ borderColor: 'var(--color-border)' }}
+            aria-label="Upload review photo"
+          >
+            <h2
+              className="text-sm font-medium uppercase tracking-wide"
+              style={{ color: 'var(--color-fg-muted)' }}
+            >
+              Upload
+            </h2>
+            <div className="mt-3">
+              <AdminPhotoUpload
+                bucket="review"
+                collectionId={collectionId}
+                compact
+                onSuccess={async () => {
+                  setEditStatus('Upload complete.');
+                  await queryClient.invalidateQueries(trpc.review.collections.detail.queryFilter());
+                }}
+              />
+            </div>
+          </section>
 
           <div className="mt-8 overflow-x-auto">
             <table className="w-full text-left text-sm" style={{ color: 'var(--color-fg)' }}>

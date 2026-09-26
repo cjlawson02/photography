@@ -73,13 +73,9 @@ export default function PublicHomeGallery({ photos }: Props) {
 
       {photos.length === 0 ? (
         <p className="text-center text-sm" style={{ color: 'var(--color-fg-muted)' }}>
-          No published photos yet. Upload via{' '}
-          <a href="/admin/ingest" className="public-link">
-            admin upload
-          </a>
-          , then publish on{' '}
+          No published photos yet. Upload and publish from{' '}
           <a href="/admin/portfolio" className="public-link">
-            portfolio
+            portfolio admin
           </a>
           .
         </p>

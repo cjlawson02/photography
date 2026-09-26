@@ -1,7 +1,7 @@
 ---
 import BaseLayout from './BaseLayout.astro';
 
-export type AdminNavId = 'dashboard' | 'portfolio' | 'review' | 'ingest';
+export type AdminNavId = 'dashboard' | 'portfolio' | 'review';
 
 interface Props {
 	title?: string;
@@ -14,7 +14,6 @@ const nav: { id: AdminNavId; href: string; label: string }[] = [
 	{ id: 'dashboard', href: '/admin', label: 'Dashboard' },
 	{ id: 'portfolio', href: '/admin/portfolio', label: 'Portfolio' },
 	{ id: 'review', href: '/admin/review', label: 'Review' },
-	{ id: 'ingest', href: '/admin/ingest', label: 'Upload' },
 ];
 
 function navLinkStyle(active: boolean): string {

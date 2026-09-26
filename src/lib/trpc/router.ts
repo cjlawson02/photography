@@ -18,6 +18,7 @@ import { PortfolioService } from '../services/portfolio-service.ts';
 import { ReviewService } from '../services/review-service.ts';
 import { createTRPCRouter } from './init.ts';
 import { adminProcedure, rateLimitedAdminProcedure } from './middleware.ts';
+import { scheduleStalePendingCleanup } from './schedule-stale-pending-cleanup.ts';
 
 const portfolioUpdateInputSchema = z.object({
   id: idSchema,
@@ -36,11 +37,10 @@ const reviewRevokeInputSchema = z.object({
 
 export const appRouter = createTRPCRouter({
   portfolio: createTRPCRouter({
-    list: adminProcedure
-      .input(portfolioListInputSchema)
-      .query(async ({ ctx, input }) =>
-        PortfolioService.from(ctx.getAppEnv()).listForAdminPage(input),
-      ),
+    list: adminProcedure.input(portfolioListInputSchema).query(async ({ ctx, input }) => {
+      scheduleStalePendingCleanup(ctx);
+      return PortfolioService.from(ctx.getAppEnv()).listForAdminPage(input);
+    }),
     update: adminProcedure
       .input(portfolioUpdateInputSchema)
       .mutation(async ({ ctx, input }) =>
@@ -56,9 +56,10 @@ export const appRouter = createTRPCRouter({
   }),
   review: createTRPCRouter({
     collections: createTRPCRouter({
-      list: adminProcedure.query(async ({ ctx }) =>
-        ctx.getAppEnv().d1.reviewCollections.listRecent(),
-      ),
+      list: adminProcedure.query(async ({ ctx }) => {
+        scheduleStalePendingCleanup(ctx);
+        return ctx.getAppEnv().d1.reviewCollections.listRecent();
+      }),
       create: adminProcedure
         .input(reviewCollectionCreateBodySchema)
         .mutation(async ({ ctx, input }) =>
