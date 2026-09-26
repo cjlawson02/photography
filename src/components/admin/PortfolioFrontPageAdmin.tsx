@@ -126,13 +126,14 @@ function PortfolioFrontPageAdminInner({ initialFrontPage }: PortfolioFrontPageAd
     <>
       <AdminSectionHeading>Front-page set</AdminSectionHeading>
       <p className={`mt-2 text-sm ${adminClass.fgMuted}`}>
-        Drag photos to reorder, or use the arrow buttons. This order is the default Featured view on
-        the home page. Tick <strong>Hero</strong> on any number of photos to make them carousel
-        slides. Add photos from the{' '}
+        This is the curated <strong>Featured</strong> set on the public home page — not the full
+        gallery. Until you add photos here, visitors still see every published Library photo under
+        All and the category chips. Drag to reorder (or use the arrows). Tick <strong>Hero</strong>{' '}
+        for carousel slides. Add photos from the{' '}
         <a className={adminClass.link} href="/admin/portfolio/library">
           Library
         </a>
-        ; removing a photo here keeps it in the library.
+        ; removing one here keeps it in the library.
       </p>
       <div className={adminClass.toolbar}>
         <span>
@@ -156,9 +157,10 @@ function PortfolioFrontPageAdminInner({ initialFrontPage }: PortfolioFrontPageAd
         </div>
       ) : items.length === 0 && listQuery.isSuccess ? (
         <div className="mt-6">
-          <AdminEmptyState title="The front page is empty">
-            In the Library, select photos with details filled in, publish them, then choose “Add to
-            front page”.
+          <AdminEmptyState title="No Featured set yet">
+            The public gallery is fine — visitors still see published Library photos. This page only
+            curates the Featured chip and order. In the Library, select published photos with alt and
+            category filled in, then choose “Add to front page”.
           </AdminEmptyState>
         </div>
       ) : (
