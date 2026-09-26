@@ -1,6 +1,6 @@
 # Implementation
 
-Lean build plan for the Lawson Photography rebuild. Architecture, bindings, and security decisions live in [HLD.md](HLD.md) — this doc sequences work only. Schedule and estimates: [PROGRESS.md](PROGRESS.md), [LOE.md](LOE.md).
+Lean build plan for the Lawson Photography rebuild. Architecture, bindings, and security decisions live in [HLD.md](HLD.md) — this doc sequences work only. Admin workflows and interaction patterns: [ADMIN-UX.md](ADMIN-UX.md). Schedule and estimates: [PROGRESS.md](PROGRESS.md), [LOE.md](LOE.md).
 
 ## Scope
 
@@ -8,9 +8,9 @@ Sequence the rebuild described in [HLD.md](HLD.md): foundation → ingest → ad
 
 Out of scope for this plan: LOE numbers, scaffolding/code, and product details still marked `_TBD_` in HLD (exact D1 columns, variant set, public IA polish, cutover source).
 
-## Do not reopen — see HLD
+## Do not reopen — see HLD / ADMIN-UX
 
-Stack and product decisions are owned by [HLD.md](HLD.md). Do not mirror them here.
+Stack and product decisions are owned by [HLD.md](HLD.md). Admin workflows and IA are owned by [ADMIN-UX.md](ADMIN-UX.md). Do not mirror them here.
 
 Point at HLD for locked decisions:
 
@@ -18,6 +18,8 @@ Point at HLD for locked decisions:
 - [Key Components](HLD.md#key-components) — public site, admin, client review, Drizzle, `/admin/api/trpc`, Tailwind tokens
 - [Admin auth](HLD.md#admin-auth) — Access on `/admin*`; mutations under `/admin/*` + JWT verify
 - [Data & Content](HLD.md#data--content) — `PORTFOLIO`/`REVIEW` buckets, ingest sequence, D1 domain split, Worker delivery routes
+
+Point at ADMIN-UX for Phase 2.6 product decisions (job steps, delivery round, front-page set, patterns).
 
 **Plan-only sequencing rules** (not architecture restatement):
 
@@ -156,6 +158,21 @@ Hardening and polish after MVP ([#21](https://github.com/cjlawson02/photography/
 | T5 | Indexes | **Done** ([#25](https://github.com/cjlawson02/photography/pull/25)) |
 | T6–T7 | Cutover + bulk migration | **In progress** — [CUTOVER.md](CUTOVER.md) (domain + legacy 301 done; [cutover sequence](CUTOVER.md#cutover-sequence) + [bulk import scaffold](migration/legacy-bulk-import.md)) |
 | O1 | Sentry | **Done** — Worker (`@sentry/cloudflare` + `sentry.server.config.ts`), admin browser (`@sentry/react` via `AdminSentryBootstrap`), `SENTRY_DSN` + `SENTRY_RELEASE`; CI deploy uploads client (Vite plugin) and Worker (`dist-worker` + `npm run sentry:sourcemaps`) when `SENTRY_AUTH_TOKEN` + org/project vars are set ([DEPLOY.md](DEPLOY.md)) |
+
+### Phase 2.6 — Admin UX v2
+
+Guided, low-frequency admin: client-shoot step rail (proof → picks → deliver finals) and front-page curation. **Canonical product/UX:** [ADMIN-UX.md](ADMIN-UX.md). Do not restate workflows here — task IDs point at that doc. Estimates: [LOE.md](LOE.md) (`_TBD_` until sized).
+
+**Tasks** (planned)
+
+- [ ] **A1** Shoot job page + step rail — [ADMIN-UX § Lifecycles / Workflows 1–2](ADMIN-UX.md#lifecycles)
+- [ ] **A2** Client “Submit picks” + lock / reopen + filename export for Lightroom — [Workflow 2](ADMIN-UX.md#2-receive-picks); persist `originalFilename`
+- [ ] **A3** Delivery round + public download mode — [Workflow 3](ADMIN-UX.md#3-deliver-finals) (ZIP / storage shape: [open decisions](ADMIN-UX.md#open-decisions))
+- [ ] **A4** Front-page set (order, hero) + Library grid + inspector — [Workflow 5](ADMIN-UX.md#5-refresh-the-front-page); [patterns](ADMIN-UX.md#interaction-patterns)
+- [ ] **A5** Home (active shoot cards + attention banners) — [IA](ADMIN-UX.md#information-architecture)
+- [ ] **A6** Close-out, retention, promote-to-portfolio — [Workflow 4](ADMIN-UX.md#4-close-out); HLD promote-as-copy
+- [ ] **A7** Ingest recovery parity (retry/remove) on proofs and finals — [Workflow 6](ADMIN-UX.md#6-recover-failed--stale-ingest)
+- [ ] Forms on new surfaces: react-hook-form + zod (same as M5 / [FRONTEND.md](FRONTEND.md))
 
 ## Dependencies
 

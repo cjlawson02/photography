@@ -67,7 +67,7 @@ npx wrangler deploy
 
 - **React islands** (`@astrojs/react`) for interactive UI — no hand-rolled DOM `addEventListener` wiring; use React state/handlers in `src/components/public/*` and `src/components/admin/*`.
 - See [docs/FRONTEND.md](docs/FRONTEND.md) for hydration conventions and library usage.
-- Admin portfolio/review use React islands; uploads are inline (`AdminPhotoUpload`). `/admin/ingest` redirects to portfolio.
+- Admin workflows and interaction patterns (v2): [docs/ADMIN-UX.md](docs/ADMIN-UX.md). Uploads are inline (`AdminPhotoUpload`); `/admin/ingest` redirects to portfolio.
 
 ## Testing instructions
 
@@ -127,6 +127,7 @@ Phase 1 ingest (JWT + Zod body → `IngestService` via tRPC):
 | Estimates                         | [docs/LOE.md](docs/LOE.md)                       |
 | Status, Gantt schedule, changelog | [docs/PROGRESS.md](docs/PROGRESS.md)             |
 | Public React islands              | [docs/FRONTEND.md](docs/FRONTEND.md)             |
+| Admin workflows / patterns (v2)   | [docs/ADMIN-UX.md](docs/ADMIN-UX.md)             |
 | Manual smoke checklist            | [docs/SMOKE.md](docs/SMOKE.md)                   |
 | Agent instructions                | This file                                        |
 

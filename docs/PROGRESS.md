@@ -11,6 +11,7 @@
 | Phase 0 — Foundation | Done | Astro Workers scaffold ([PR #3](https://github.com/cjlawson02/photography/pull/3)); data layer ([PR #6](https://github.com/cjlawson02/photography/pull/6)) |
 | Phase 1 — Ingest | Done | Presign + complete + reprocess ([PR #7](https://github.com/cjlawson02/photography/pull/7)) |
 | Phase 2 — Admin | Done | Portfolio/review admin, tRPC, inline upload, M3 primitives, M6 SSR initial reads; post-MVP in [IMPLEMENTATION.md](IMPLEMENTATION.md#phase-25--post-mvp-backlog) |
+| Admin UX v2 | Planned | Workflows/patterns in [ADMIN-UX.md](ADMIN-UX.md); build sequence [IMPLEMENTATION.md](IMPLEMENTATION.md#phase-26--admin-ux-v2) |
 | Phase 3 — Public site | Done (MVP) | Home + React islands, SEO meta on home; extra public routes + brand tokens `_TBD_` |
 | Phase 4 — Client review | Done (phase 1) | `/review/{slug}`, React gallery, selection API, admin revoke, `noindex` + robots |
 | Post-MVP hardening | In progress | O1 Sentry, security audit ([#51](https://github.com/cjlawson02/photography/pull/51)–[#52](https://github.com/cjlawson02/photography/pull/52)); open backlog Phase 2.5 |
@@ -20,7 +21,7 @@ Production host live (`photography.chrislawson.dev`): Access `/admin*`, D1 remot
 
 Phases intentionally overlap: admin review tooling lands before public review surfaces; portfolio media delivery precedes full public IA and portfolio CRUD.
 
-Canonical plan: [IMPLEMENTATION.md](IMPLEMENTATION.md). Estimates: [LOE.md](LOE.md). Architecture: [HLD.md](HLD.md).
+Canonical plan: [IMPLEMENTATION.md](IMPLEMENTATION.md). Estimates: [LOE.md](LOE.md). Architecture: [HLD.md](HLD.md). Admin workflows: [ADMIN-UX.md](ADMIN-UX.md).
 
 ## Schedule
 
@@ -46,12 +47,14 @@ gantt
   Phase 4 Client review     :done,    p4, after p2, 1d
   Phase 5 Cutover           :         p5, after p3, 1d
   Post-MVP backlog          :active,  p25, after p4, 2d
+  Admin UX v2               :         p26, after p25, 2d
 ```
 
 ## Changelog
 
 | Date | Update |
 | --- | --- |
+| 2026-09-25 | Admin UX v2 spec: [ADMIN-UX.md](ADMIN-UX.md); Phase 2.6 planned in [IMPLEMENTATION.md](IMPLEMENTATION.md#phase-26--admin-ux-v2) |
 | 2026-09-26 | Docs sync: PROGRESS status/Gantt; [SMOKE.md](SMOKE.md) admin SSR; audit backlog in IMPLEMENTATION S7–R2 |
 | 2026-09-26 | [#50](https://github.com/cjlawson02/photography/pull/50) M6 admin SSR initial reads; [#51](https://github.com/cjlawson02/photography/pull/51)–[#52](https://github.com/cjlawson02/photography/pull/52) security audit fixes |
 | 2026-09-26 | [#49](https://github.com/cjlawson02/photography/pull/49) O1 Sentry browser + CI source maps; [#46](https://github.com/cjlawson02/photography/pull/46)–[#47](https://github.com/cjlawson02/photography/pull/47) M3 + Vitest/RTL |

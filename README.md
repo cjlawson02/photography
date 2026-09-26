@@ -8,6 +8,7 @@ Photography website for Chris Lawson — Astro hybrid SSR on Cloudflare Workers.
 | --- | --- |
 | [AGENTS.md](AGENTS.md) | Agent working guide (commands, secrets inventory) |
 | [docs/HLD.md](docs/HLD.md) | High-level design (Mermaid) |
+| [docs/ADMIN-UX.md](docs/ADMIN-UX.md) | Admin workflows and interaction patterns (v2) |
 | [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md) | Implementation plan (Mermaid) |
 | [docs/LOE.md](docs/LOE.md) | Estimates |
 | [docs/PROGRESS.md](docs/PROGRESS.md) | Status, Gantt schedule, & changelog |

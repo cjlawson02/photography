@@ -68,8 +68,8 @@ flowchart TB
 | Component | Role |
 | --- | --- |
 | **Public site** | Hero carousel, filterable gallery grid, lightbox; D1 + `/media/portfolio/...` Worker delivery |
-| **Admin (`/admin`)** | Manage portfolio and review collections; Cloudflare Access; presigned PUTs into the right bucket; Images ingest after upload |
-| **Client review (`/review/{slug}`)** | Picu-style select/approve; phase 1 = link secrecy only (not access control); `noindex` + `robots.txt` Disallow; reads only `REVIEW` bucket via Worker |
+| **Admin (`/admin`)** | Manage portfolio and review collections; Cloudflare Access; presigned PUTs into the right bucket; Images ingest after upload. Workflows and IA: [ADMIN-UX.md](ADMIN-UX.md) |
+| **Client review (`/review/{slug}`)** | Picu-style select/approve; phase 1 = link secrecy only (not access control); `noindex` + `robots.txt` Disallow; reads only `REVIEW` bucket via Worker. Delivery-round / download mode planned in [ADMIN-UX.md](ADMIN-UX.md) |
 | **Drizzle** | Schema source of truth and typed queries against D1 (`drizzle-orm/d1`); flat SQL migrations under `src/db` |
 | **Admin API (`/admin/api/trpc`)** | Type-safe **tRPC** (fetch adapter) for React admin islands; JWT middleware on every procedure |
 | **`GET /admin/api/health`** | Access JWT smoke; bindings snapshot (no R2 S3 secrets) |
@@ -132,7 +132,7 @@ A photo may move to **failed** and be **reprocessed** from the original; no full
 | **Portfolio** | albums/categories, portfolio photos, publish/hero/sort flags | Public site catalog → `PORTFOLIO` R2 |
 | **Review (Picu)** | review collections, review photos, selections/approvals | Proofing workflow → `REVIEW` R2 |
 
-Keep review as its **own table set** (and Drizzle schema module, e.g. `src/db/schema/review/`). Do **not** reuse portfolio photo rows for client collections — no shared “photos” table across domains. Foreign keys stay inside a domain; promoting a selected review image into the portfolio is an explicit copy/import, not a join across domains.
+Keep review as its **own table set** (and Drizzle schema module, e.g. `src/db/schema/review/`). Do **not** reuse portfolio photo rows for client collections — no shared “photos” table across domains. Foreign keys stay inside a domain; promoting a selected review image into the portfolio is an explicit copy/import, not a join across domains. Client-shoot job steps, delivery round, and front-page curation: [ADMIN-UX.md](ADMIN-UX.md) (do not restate here).
 
 **One D1 binding** is enough for a hobby site (one migration stream, one `drizzle()`). A second D1 database is optional later if you want hard backup/isolation; not required while the table boundary is clean. Not KV.
 
