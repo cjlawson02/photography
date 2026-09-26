@@ -19,25 +19,21 @@ If the zone is on another account or DNS is managed externally, add a `CNAME` fo
 
 ## 2. Cloudflare Access (admin)
 
-Create a **Self-hosted** Access application in Zero Trust:
+Create a **Self-hosted** Access application with a **Public DNS** destination (hostname + path). Do **not** use the **Workers** destination — that protects the entire Worker and would lock the public site.
 
 | Field | Value |
 | --- | --- |
+| Destination | Public DNS |
 | Application domain | `photography.chrislawson.dev` |
 | Path | `/admin*` |
 | Policy | Allow Chris (email / identity provider) |
 
 From the application settings, copy:
 
-- **Team domain** → `CF_ACCESS_TEAM_DOMAIN` (e.g. `https://<team>.cloudflareaccess.com`)
-- **Application AUD** → `CF_ACCESS_AUD`
+- **Team domain** → `CF_ACCESS_TEAM_DOMAIN` (host or `https://<team>.cloudflareaccess.com`; code normalizes either)
+- **Application Audience (AUD) Tag** → `CF_ACCESS_AUD`
 
-Set in production:
-
-```bash
-npx wrangler secret put CF_ACCESS_TEAM_DOMAIN
-npx wrangler secret put CF_ACCESS_AUD
-```
+These are identifiers, not credentials. Set them as plain Worker **vars** in [`wrangler.jsonc`](../wrangler.jsonc) (committed) — not `wrangler secret put` (same name cannot be both a var and a secret).
 
 For local admin JWT checks, put the same values in `.dev.vars` (from [`.dev.vars.example`](../.dev.vars.example)).
 
@@ -45,7 +41,7 @@ Admin browser uploads use **presigned PUT** to R2; the admin UI origin must be l
 
 ## 3. R2 S3 API secrets (presigned PUT)
 
-R2 **bindings** do not replace S3-compatible credentials for browser uploads. Create an R2 API token with Object Read & Write on `photography-portfolio` and `photography-review`, then:
+R2 **bindings** do not replace S3-compatible credentials for browser uploads. Create tokens in the dashboard: **R2 → Overview → Account details → API Tokens → Manage** → create with **Object Read & Write** on `photography-portfolio` and `photography-review`. Copy Access Key ID + Secret Access Key (secret shown once). Account ID is on the R2 / Workers overview.
 
 ```bash
 npx wrangler secret put R2_ACCOUNT_ID
@@ -79,7 +75,14 @@ npx wrangler d1 migrations apply photography --remote
 | Item | Notes |
 | --- | --- |
 | DNS | Automatic if zone on account + custom domain deploy; else manual `CNAME` |
-| Access app | Path `/admin*` on `photography.chrislawson.dev` |
-| Secrets | `CF_ACCESS_*`, `R2_*` via `wrangler secret put` |
+| Access app | Public DNS path `/admin*` on `photography.chrislawson.dev` |
+| Access vars | `CF_ACCESS_*` in `wrangler.jsonc` vars (redeploy) |
+| Secrets | `R2_*` via `wrangler secret put` only |
 | R2 CORS | `npm run r2:cors:apply` (or dashboard JSON paste) |
 | Deploy | `npm run build && npx wrangler deploy` |
+
+## Smoke checks
+
+- `GET /health` — public bindings JSON (no R2 S3 secrets required)
+- `GET /admin/api/health` — Access login redirect (302) without JWT; OK after Access session
+- `/admin` — sign in via Access, then ingest / portfolio UI

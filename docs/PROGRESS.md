@@ -14,7 +14,7 @@
 | Phase 3 — Public site | In progress | Home Embla hero (autoplay), masonry grid + PhotoSwipe lightbox (`gallery` variant), `/media/portfolio` delivery; further public routes `_TBD_` |
 | Phase 4 — Client review | Not started | Public `/review/{slug}`, `/media/review`, `noindex` — see [IMPLEMENTATION.md](IMPLEMENTATION.md) Phase 4 |
 
-Production hostname and ops checklist (Access app, R2 CORS apply, secrets): [DEPLOY.md](DEPLOY.md) — not design blockers.
+Production host live (`photography.chrislawson.dev`): Access `/admin*`, D1 remote migrations, R2 CORS, Access vars + R2 secrets — [DEPLOY.md](DEPLOY.md).
 
 Phases intentionally overlap: admin review tooling lands before public review surfaces; portfolio media delivery precedes full public IA and portfolio CRUD.
 
@@ -49,6 +49,7 @@ gantt
 
 | Date | Update |
 | --- | --- |
+| 2026-09-25 | First production deploy: custom domain, Access Public DNS `/admin*`, Access vars in wrangler, R2 secrets + CORS, D1 remote; [DEPLOY.md](DEPLOY.md) updated |
 | 2026-09-25 | Progress/IMPLEMENTATION sync through [PR #10](https://github.com/cjlawson02/photography/pull/10): Phase 1 done; Phase 2/3 partial; Gantt + status table |
 | 2026-09-25 | Public shell + `/media/portfolio` + deploy hostname docs ([PR #10](https://github.com/cjlawson02/photography/pull/10)); WP reference tokens ([PR #9](https://github.com/cjlawson02/photography/pull/9)) |
 | 2026-09-25 | Phase 2 admin shell: layout, review collection create/list API, ingest under `/admin/ingest` ([PR #8](https://github.com/cjlawson02/photography/pull/8)) |

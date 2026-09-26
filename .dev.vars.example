@@ -1,16 +1,17 @@
 # Local Worker secrets / vars — copy to `.dev.vars` and fill in.
-# Never commit real values. Production: `npx wrangler secret put <NAME>`.
+# Never commit real values.
+# Production Access: plain vars in wrangler.jsonc. Production R2: `npx wrangler secret put <NAME>`.
 
 # Production host: https://photography.chrislawson.dev (admin at /admin*)
 
 # Cloudflare Access (admin JWT verification on /admin/api/*)
-# Zero Trust → Access → application on photography.chrislawson.dev path /admin*
+# Zero Trust → Access → Public DNS app on photography.chrislawson.dev path /admin*
 CF_ACCESS_TEAM_DOMAIN=https://YOUR_TEAM.cloudflareaccess.com
 CF_ACCESS_AUD=
 
 # R2 S3 API credentials for browser presigned PUT (not provided by R2 bindings alone)
 # Required for AppEnv / ingest routes (fail-fast 503 if empty). /health does not need these.
-# Create an R2 API token with Object Read & Write on photography-portfolio + photography-review.
+# R2 → Overview → Account details → API Tokens → Object Read & Write on photography-portfolio + photography-review.
 R2_ACCOUNT_ID=
 R2_ACCESS_KEY_ID=
 R2_SECRET_ACCESS_KEY=

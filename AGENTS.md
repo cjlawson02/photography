@@ -76,14 +76,14 @@ Phase 1 ingest (JWT + Zod body → `IngestService`):
 
 ## Security considerations
 
-- Never commit `.dev.vars`, Access AUD, or R2 S3 API keys. Use `.dev.vars.example` as the inventory template.
-- Copy `.dev.vars.example` → `.dev.vars` for local; production via `npx wrangler secret put <NAME>`.
-- Required secrets / config (values owned by Chris — do not invent):
-  - `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD` (production host `photography.chrislawson.dev` — see [docs/DEPLOY.md](docs/DEPLOY.md))
-  - `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` (presigned PUT; not covered by R2 bindings alone)
+- Never commit `.dev.vars` or R2 S3 API keys. Use `.dev.vars.example` as the inventory template.
+- Copy `.dev.vars.example` → `.dev.vars` for local.
+- Required config (see [docs/DEPLOY.md](docs/DEPLOY.md)):
+  - `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD` — plain **vars** in `wrangler.jsonc` (identifiers, not credentials)
+  - `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` — production via `npx wrangler secret put <NAME>` (presigned PUT; not covered by R2 bindings alone)
   - D1 + R2 resource names are wired in `wrangler.jsonc` (`photography`, `photography-portfolio`, `photography-review`)
- - Configure R2 CORS on both buckets: `npm run r2:cors:apply` ([docs/DEPLOY.md](docs/DEPLOY.md))
- - Cloudflare Access application on `photography.chrislawson.dev` path `/admin*` ([docs/DEPLOY.md](docs/DEPLOY.md))
+  - Configure R2 CORS on both buckets: `npm run r2:cors:apply`
+  - Cloudflare Access **Public DNS** app on `photography.chrislawson.dev` path `/admin*` (not Workers destination)
 - Admin mutations live only under `/admin/api/*` and must call `verifyAccessJwt` ([HLD Admin auth](docs/HLD.md#admin-auth)).
 
 ## Commit and PR guidelines

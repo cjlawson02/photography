@@ -18,10 +18,10 @@
 			"custom_domain": true
 		}
 	],
-	// Non-secret Access config placeholders — set real values in dashboard / .dev.vars (do not invent).
+	// Access JWT config — not credentials; set via vars (see docs/DEPLOY.md).
 	"vars": {
-		"CF_ACCESS_TEAM_DOMAIN": "",
-		"CF_ACCESS_AUD": ""
+		"CF_ACCESS_TEAM_DOMAIN": "https://chrislawson.cloudflareaccess.com",
+		"CF_ACCESS_AUD": "7e0315ba56e4516f80e07ae1b2343c0ec4fbc1c0b32b42848c657b7bc7ba09f4"
 	},
 	"d1_databases": [
 		{
