@@ -2,11 +2,11 @@
 
 Move production traffic from the legacy WordPress site to the Workers deployment. Architecture and delivery constraints live in [HLD.md](HLD.md); phase checklist in [IMPLEMENTATION.md](IMPLEMENTATION.md#phase-5--cutover).
 
-**Status:** **cutover complete** (Chris, 2026-09-26) — see [Current truth](#current-truth-2026-09-26). Finish **post-cutover monitoring** setup ([§6](#6-post-cutover-monitoring)). Picu/review import _TBD_ only if needed later.
+**Status:** **Phase 5 complete** (Chris, 2026-09-26) — see [Current truth](#current-truth-2026-09-26). Post-cutover monitoring setup is done; ongoing error/latency scans are BAU. Picu/review import _TBD_ only if needed later.
 
 ## Sequencing
 
-Order: **T7 migration** → **T6 cutover sequence** → **post-cutover monitoring** (in progress).
+Order: **T7 migration** → **T6 cutover sequence** → **post-cutover monitoring** (done).
 
 **Chris (2026-09-26):** Phase 5 **cutover** steps in [Cutover sequence (after migration)](#cutover-sequence-after-migration) run **only after** [T7 bulk migration](#content-and-asset-migration-t7) is complete and signed off. Do not treat remote promote + production smoke as the formal cutover gate until imported content is on production.
 
@@ -16,22 +16,21 @@ Order: **T7 migration** → **T6 cutover sequence** → **post-cutover monitorin
 | --- | --- |
 | Workers production host `https://photography.chrislawson.dev` | **Live** — custom domain + SSL on Workers ([DEPLOY.md](DEPLOY.md)) |
 | Legacy public site `lawsonphotography.me` (+ `www`) | **301** → `https://photography.chrislawson.dev` — verified (Chris, 2026-09-26) |
-| Admin Access on `/admin*` | **Verified** on production smoke (Chris, 2026-09-26); re-check after Access or DNS changes ([DEPLOY.md](DEPLOY.md)) |
+| Admin Access on `/admin*` | **Verified** on production smoke (Chris, 2026-09-26); re-verified 2026-09-26 (`/admin` → Access login); re-check after Access or DNS changes ([DEPLOY.md](DEPLOY.md)) |
 | Production smoke | **Pass** — [SMOKE.md](SMOKE.md) on `photography.chrislawson.dev` (Chris, 2026-09-26) |
 | Remote D1 migrations on production | **Applied** — production `d1_migrations` matches repo (**5/5**); latest `main` deploy reported no pending migrations (2026-09-26) |
 | Bulk legacy WordPress → D1/R2 **portfolio** import | **Done** — source, counts, NAS path: [migration/legacy-bulk-import.md](migration/legacy-bulk-import.md) |
 | Legacy WordPress hosting | **Decommissioned** (Chris, 2026-09-26) |
 | Path-specific legacy redirect map | **Not needed** — zone **301** sufficient (Chris, 2026-09-26) |
+| Post-cutover monitoring setup | **Done** — Observability + Sentry DSN/CI maps ([§6](#6-post-cutover-monitoring)) |
 
 ## Chris input needed
 
 Resolved for T7 portfolio import — details in [migration/legacy-bulk-import.md](migration/legacy-bulk-import.md) (export, metadata mapping, Picu out of scope, remote sign-off).
 
-Still open:
+Resolved for rollback / RTO / RPO — see [Rollback](#rollback). Redirect map: **not needed** (see [Current truth](#current-truth-2026-09-26)).
 
-1. **RTO/RPO and rollback owner** — who flips DNS/redirects and whether Workers rollback (`wrangler rollback` / redeploy prior SHA) is in scope.
-
-Redirect map: **not needed** (see [Current truth](#current-truth-2026-09-26)).
+No open Chris-input items for Phase 5.
 
 ## Preconditions
 
@@ -65,7 +64,7 @@ Execute in order for formal cutover completion. **Do not** run remote migrations
 
 ### 1. Freeze (optional)
 
-- [ ] Pause legacy WordPress edits if they would diverge from the import snapshot (_TBD_ — Chris; typically **before** the migration snapshot, not after).
+- [x] Pause legacy WordPress edits — **N/A** (legacy hosting decommissioned; see Current truth)
 
 ### 2. Database
 
@@ -97,36 +96,37 @@ Confirm `SENTRY_RELEASE` / source maps if Sentry vars are set ([DEPLOY.md](DEPLO
 
 ### 6. Post-cutover monitoring
 
-Watch **24–48h** after cutover sign-off (from 2026-09-26). Code already enables Workers Observability ([`wrangler.jsonc`](../wrangler.jsonc) `observability.enabled: true`).
+**Setup complete** (2026-09-26). Ongoing error / p99 scans are BAU (not a Phase 5 gate). Code enables Workers Observability ([`wrangler.jsonc`](../wrangler.jsonc) `observability.enabled: true`).
 
 **Setup checklist**
 
 - [x] Workers Observability enabled on `lawson-photography` (repo config)
-- [ ] **Dashboard** — Workers & Pages → `lawson-photography` → Observability: scan errors and p99 latency daily during the watch window
-- [ ] **Sentry** (recommended) — production Worker secret + CI source maps ([DEPLOY.md](DEPLOY.md#3a-sentry-optional-worker-errors)):
-  ```bash
-  npx wrangler secret put SENTRY_DSN   # if not already set on production
-  ```
-  GitHub (deploy job): `SENTRY_AUTH_TOKEN` secret; `SENTRY_ORG` + `SENTRY_PROJECT` repo variables. In Sentry: alert on **new issues** or error-rate spike for this project.
-- [ ] **Optional** — Cloudflare **Notifications** on the account: Worker script errors / elevated 5xx (dashboard → Notifications)
-
-**Chris verify Sentry is live:** trigger a test error in staging _or_ confirm issues appear in Sentry after deploy; if DSN unset, Worker errors only appear in Cloudflare Observability.
+- [x] **Dashboard** — Workers & Pages → `lawson-photography` → Observability available; scan errors and p99 latency as BAU
+- [x] **Sentry** — production Worker secret `SENTRY_DSN` set; GitHub deploy has `SENTRY_AUTH_TOKEN` + `SENTRY_ORG` / `SENTRY_PROJECT` ([DEPLOY.md](DEPLOY.md#3a-sentry-optional-worker-errors)). Intended alert: **new issues** or error-rate spike for this project.
+- [ ] **Optional / deferred** — Cloudflare **Notifications** on the account: Worker script errors / elevated 5xx (dashboard → Notifications)
 
 Legacy hosting decommission: see [Current truth](#current-truth-2026-09-26).
 
 ## Rollback
 
+**Owner:** Chris.
+
 | Trigger | Action |
 | --- | --- |
 | Critical regression on new host | Redeploy previous Worker version (`wrangler rollback` or redeploy prior `main` SHA); **do not** remove new host DNS |
 | Legacy redirect wrong | Adjust Redirect Rules on **legacy zone** only |
-| Bad D1 migration | _TBD_ — restore from D1 backup / point-in-time if available (Chris) |
+| Bad D1 migration | Restore via D1 Time Travel / backup if available; otherwise accept last good migrate + redeploy |
 
-Document RTO/RPO: _TBD_ (Chris).
+**Out of scope:** flipping public traffic back to WordPress (hosting decommissioned).
+
+| Metric | Target |
+| --- | --- |
+| **RTO** | ~15–30 minutes for Worker version rollback |
+| **RPO** | Last successful D1 write; no formal PITR SLA |
 
 ## Post-cutover
 
-- [ ] Monitor Workers analytics / errors — use [§6 setup checklist](#6-post-cutover-monitoring) (watch window active from 2026-09-26)
+- [x] Monitoring setup — [§6](#6-post-cutover-monitoring); ongoing scans are BAU
 - [x] Decommission legacy hosting — see [Current truth](#current-truth-2026-09-26)
 - [x] Track phase status in [PROGRESS.md](PROGRESS.md)
 

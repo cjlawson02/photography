@@ -15,7 +15,7 @@
 | Phase 3 — Public site | Done (MVP) | Home + React islands, SEO meta on home; extra public routes + brand tokens `_TBD_` |
 | Phase 4 — Client review | Done (phase 1) | `/review/{slug}`, React gallery, selection API, admin revoke, `noindex` + robots |
 | Post-MVP hardening | In progress | O1 Sentry, security audit ([#51](https://github.com/cjlawson02/photography/pull/51)–[#52](https://github.com/cjlawson02/photography/pull/52)); open backlog Phase 2.5 |
-| Phase 5 — Cutover | Monitoring | **Cutover complete**; legacy host decommissioned; finish observability + Sentry checklist ([CUTOVER.md](CUTOVER.md#6-post-cutover-monitoring)) |
+| Phase 5 — Cutover | Done | Traffic cutover, legacy decommission, monitoring setup, rollback/RTO-RPO ([CUTOVER.md](CUTOVER.md)); Picu/review import _TBD_ if needed |
 
 Production host live (`photography.chrislawson.dev`): Access `/admin*`, D1 remote migrations, R2 CORS, Access vars + R2 secrets — [DEPLOY.md](DEPLOY.md).
 
@@ -45,15 +45,17 @@ gantt
   Phase 2 Admin             :done,    p2, after p1, 2d
   Phase 3 Public site       :done,    p3, after p1, 2d
   Phase 4 Client review     :done,    p4, after p2, 1d
-  Phase 5 Cutover           :         p5, after p3, 1d
+  Phase 5 Cutover           :done,    p5, after p3, 1d
   Post-MVP backlog          :active,  p25, after p4, 2d
   Admin UX v2               :         p26, after p25, 2d
 ```
+
 
 ## Changelog
 
 | Date | Update |
 | --- | --- |
+| 2026-09-26 | Phase 5 **Done**: monitoring setup + rollback/RTO-RPO in [CUTOVER.md](CUTOVER.md); IMPLEMENTATION T6–T7 closed |
 | 2026-09-25 | Admin UX v2 spec: [ADMIN-UX.md](ADMIN-UX.md); Phase 2.6 planned in [IMPLEMENTATION.md](IMPLEMENTATION.md#phase-26--admin-ux-v2) |
 | 2026-09-26 | Docs sync: PROGRESS status/Gantt; [SMOKE.md](SMOKE.md) admin SSR; audit backlog in IMPLEMENTATION S7–R2 |
 | 2026-09-26 | [#50](https://github.com/cjlawson02/photography/pull/50) M6 admin SSR initial reads; [#51](https://github.com/cjlawson02/photography/pull/51)–[#52](https://github.com/cjlawson02/photography/pull/52) security audit fixes |
