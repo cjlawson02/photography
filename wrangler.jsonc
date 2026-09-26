@@ -11,6 +11,8 @@
   "observability": {
     "enabled": true,
   },
+  // Generate worker source maps on deploy for Cloudflare + Sentry upload (see docs/DEPLOY.md).
+  "upload_source_maps": true,
   // Custom domain — DNS auto-provisioned when chrislawson.dev is on the same account (see docs/DEPLOY.md).
   "routes": [
     {

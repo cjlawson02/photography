@@ -147,7 +147,7 @@ Hardening and polish after MVP ([#21](https://github.com/cjlawson02/photography/
 | T4 | D1 migrations in CI | **Done** on `main` deploy ([#28](https://github.com/cjlawson02/photography/pull/28)); PR dry-run gate `_TBD_` |
 | T5 | Indexes | **Done** ([#25](https://github.com/cjlawson02/photography/pull/25)) |
 | T6–T7 | Cutover + bulk migration | _Open_ — [CUTOVER.md](CUTOVER.md); legacy 301 via Cloudflare Redirect Rules |
-| O1 | Sentry | **Partial** ([#32](https://github.com/cjlawson02/photography/pull/32), [#35](https://github.com/cjlawson02/photography/pull/35)). **Decision:** stay on `@sentry/cloudflare` SDK (worker `withSentry` + targeted `captureWorkerException`); skip [Workers OTEL→Sentry](https://developers.cloudflare.com/workers/observability/exporting-opentelemetry-data/sentry/) unless we need automatic D1/R2 traces later. _Open:_ admin browser SDK; source maps in CI |
+| O1 | Sentry | **Done** — Worker (`@sentry/cloudflare` + `sentry.server.config.ts`), admin browser (`@sentry/react` via `AdminSentryBootstrap`), `SENTRY_DSN` + `SENTRY_RELEASE`; CI deploy uploads client (Vite plugin) and Worker (`.worker-sentry-out`) source maps when `SENTRY_AUTH_TOKEN` + org/project vars are set ([DEPLOY.md](DEPLOY.md)) |
 
 ## Dependencies
 
