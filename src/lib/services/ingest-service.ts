@@ -9,6 +9,7 @@ import {
 } from '../ingest/schemas.ts';
 import type { PurposeBucket } from '../dao/r2-dao.ts';
 import type { PhotoStatus } from '../../db/schema/photo-status.ts';
+import { findMatchedPickId } from '../review/match-final-to-pick.ts';
 
 export type PresignResult = {
   id: string;
@@ -59,6 +60,7 @@ export class IngestService {
             status: 'pending',
             mimeType: input.contentType,
             originalFilename: input.filename ?? null,
+            round: input.round ?? 'proof',
           });
 
     const key = originalKey(photo.id);
@@ -149,6 +151,9 @@ export class IngestService {
 
       const dimensions = await this.app.images.readDimensions(new Blob([source]).stream());
       await this.markReady(bucket, id, dimensions, priorStatus, written);
+      if (bucket === 'review') {
+        await this.tryAutoMatchFinalReviewPhoto(id);
+      }
       return { id, bucket, status: 'ready', variants: written };
     } catch (error) {
       if (error instanceof AppError) throw error;
@@ -161,6 +166,19 @@ export class IngestService {
       }
       throw new AppError('INTERNAL_SERVER_ERROR', message);
     }
+  }
+
+  private async tryAutoMatchFinalReviewPhoto(finalPhotoId: string): Promise<void> {
+    const finalPhoto = await this.app.d1.reviewPhotos.getById(finalPhotoId);
+    if (!finalPhoto || finalPhoto.round !== 'final' || finalPhoto.matchedPickId) {
+      return;
+    }
+    const rows = await this.app.d1.reviewPhotos.listByCollectionId(finalPhoto.collectionId);
+    const matchedPickId = findMatchedPickId(finalPhoto, rows);
+    if (!matchedPickId) {
+      return;
+    }
+    await this.app.d1.reviewPhotos.update(finalPhotoId, { matchedPickId });
   }
 
   private async markReady(

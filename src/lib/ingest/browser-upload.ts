@@ -53,6 +53,7 @@ type ReviewUpload = {
   bucket: 'review';
   /** Required for review — FK to ReviewCollections. */
   collectionId: string;
+  round?: 'proof' | 'final';
   onProgress?: UploadProgressHandler;
 };
 
@@ -85,6 +86,7 @@ export async function uploadPhoto(options: PortfolioUpload | ReviewUpload): Prom
     contentType,
     filename: options.file.name,
     collectionId: options.bucket === 'review' ? options.collectionId : undefined,
+    round: options.bucket === 'review' ? options.round : undefined,
   });
 
   await putFileWithProgress(presign.uploadUrl, options.file, contentType, options.onProgress);
@@ -108,6 +110,7 @@ export async function requestPresign(input: {
   filename?: string;
   /** Required when `bucket` is `review`. */
   collectionId?: string;
+  round?: 'proof' | 'final';
 }): Promise<PresignResponse> {
   try {
     const body: PresignBody =
@@ -117,6 +120,7 @@ export async function requestPresign(input: {
             contentType: input.contentType,
             collectionId: requireReviewCollectionId(input.collectionId),
             ...(input.filename ? { filename: input.filename } : {}),
+            ...(input.round ? { round: input.round } : {}),
           }
         : {
             bucket: 'portfolio',

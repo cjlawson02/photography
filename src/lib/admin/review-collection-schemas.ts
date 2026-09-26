@@ -54,3 +54,13 @@ export const reviewCollectionDeletePhotoInputSchema = z.object({
   photoId: idSchema,
   cleanupR2: cleanupR2Field,
 });
+
+export const reviewLinkFinalToPickInputSchema = z.object({
+  collectionId: idSchema,
+  finalPhotoId: idSchema,
+  pickPhotoId: idSchema,
+});
+
+export const reviewMarkDeliveredInputSchema = z.object({
+  id: idSchema,
+});

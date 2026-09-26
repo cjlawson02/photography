@@ -14,8 +14,14 @@ describe('parseMediaPath', () => {
     }
   });
 
-  it('rejects original and unknown suffixes', () => {
+  it('rejects original unless allowOriginal is set', () => {
     expect(parseMediaPath('id/original').ok).toBe(false);
+    const allowed = parseMediaPath('id/original', { allowOriginal: true });
+    expect(allowed.ok).toBe(true);
+    if (allowed.ok) {
+      expect(allowed.isOriginal).toBe(true);
+      expect(allowed.r2Key).toBe('id/original');
+    }
     expect(parseMediaPath('id/hero.jpg').ok).toBe(false);
   });
 
