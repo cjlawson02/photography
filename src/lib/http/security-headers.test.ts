@@ -9,7 +9,8 @@ describe('applySecurityHeaders', () => {
     applySecurityHeaders(headers);
 
     const csp = headers.get('Content-Security-Policy');
-    assert.ok(csp?.includes("script-src 'self'"));
+    assert.ok(csp?.includes("script-src 'self' 'unsafe-inline'"));
+    assert.ok(csp?.includes('https://static.cloudflareinsights.com'));
     assert.ok(csp?.includes("style-src 'self' 'unsafe-inline'"));
     assert.ok(csp?.includes("frame-ancestors 'none'"));
     assert.equal(headers.get('X-Content-Type-Options'), 'nosniff');
@@ -25,6 +26,7 @@ describe('applySecurityHeaders', () => {
     assert.ok(csp.includes('https://fonts.googleapis.com'));
     assert.ok(csp.includes('https://fonts.gstatic.com'));
     assert.ok(csp.includes("connect-src 'self'"));
+    assert.ok(csp.includes('https://cloudflareinsights.com'));
     assert.ok(csp.includes("img-src 'self' data: blob:"));
   });
 });

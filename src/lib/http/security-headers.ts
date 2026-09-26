@@ -1,7 +1,7 @@
 /**
  * Baseline security headers for HTML and API responses.
- * CSP is pragmatic: bundled scripts from `'self'`, inline styles for Tailwind/Astro,
- * Google Fonts from layout; no script nonces (not used today).
+ * CSP is pragmatic: bundled scripts from `'self'`, inline scripts for Astro island
+ * hydration (no nonce pipeline yet), optional Cloudflare Web Analytics beacon.
  */
 export function applySecurityHeaders(headers: Headers): void {
   headers.set('Content-Security-Policy', buildContentSecurityPolicy());
@@ -17,11 +17,11 @@ function buildContentSecurityPolicy(): string {
     "form-action 'self'",
     "frame-ancestors 'none'",
     "object-src 'none'",
-    "script-src 'self'",
+    "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob:",
-    "connect-src 'self'",
+    "connect-src 'self' https://cloudflareinsights.com",
   ];
   return directives.join('; ');
 }
