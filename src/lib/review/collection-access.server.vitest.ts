@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  isReviewDownloadMode,
-  resolveReviewCollectionAccess,
-} from './collection-access.ts';
+import { isReviewDownloadMode, resolveReviewCollectionAccess } from './collection-access.ts';
 
 describe('resolveReviewCollectionAccess', () => {
   const base = {
