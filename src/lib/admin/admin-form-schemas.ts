@@ -113,6 +113,43 @@ export type PortfolioInspectorFormValues = z.infer<typeof portfolioInspectorForm
 
 export type PortfolioInspectorTextField = keyof PortfolioInspectorFormValues;
 
+/**
+ * Close-out retention purge form → `review.collections.purgeRounds` body fields
+ * (caller supplies `collectionId`). Requires the exact shoot slug and at least one round.
+ */
+export function reviewPurgeRoundsFormSchema(expectedSlug: string) {
+  return z
+    .object({
+      purgeProofs: z.boolean(),
+      purgeFinals: z.boolean(),
+      confirmSlug: z.string(),
+    })
+    .superRefine((data, ctx) => {
+      if (!data.purgeProofs && !data.purgeFinals) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Choose proofs and/or finals to purge.',
+          path: ['purgeProofs'],
+        });
+      }
+      if (data.confirmSlug.trim() !== expectedSlug) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Type the shoot slug exactly to confirm.',
+          path: ['confirmSlug'],
+        });
+      }
+    })
+    .transform((data) => ({
+      proofs: data.purgeProofs,
+      finals: data.purgeFinals,
+      cleanupR2: true as const,
+      confirmSlug: data.confirmSlug.trim(),
+    }));
+}
+
+export type ReviewPurgeRoundsFormValues = z.input<ReturnType<typeof reviewPurgeRoundsFormSchema>>;
+
 /** Validated field value → PATCH fragment (empty → null). */
 export function portfolioInspectorPatchFromField(
   field: PortfolioInspectorTextField,

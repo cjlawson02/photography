@@ -11,7 +11,7 @@
 | Phase 0 — Foundation | Done | Astro Workers scaffold ([PR #3](https://github.com/cjlawson02/photography/pull/3)); data layer ([PR #6](https://github.com/cjlawson02/photography/pull/6)) |
 | Phase 1 — Ingest | Done | Presign + complete + reprocess ([PR #7](https://github.com/cjlawson02/photography/pull/7)) |
 | Phase 2 — Admin | Done | Portfolio/review admin, tRPC, inline upload, M3 primitives, M6 SSR initial reads; post-MVP in [IMPLEMENTATION.md](IMPLEMENTATION.md#phase-25--post-mvp-backlog) |
-| Admin UX v2 | Planned | Workflows/patterns in [ADMIN-UX.md](ADMIN-UX.md); build sequence [IMPLEMENTATION.md](IMPLEMENTATION.md#phase-26--admin-ux-v2) |
+| Admin UX v2 | Done | A1–A7 + RHF/zod forms; [ADMIN-UX.md](ADMIN-UX.md); open product decisions D1/D3–D6 remain `_TBD_` there |
 | Phase 3 — Public site | Done (MVP) | Home + React islands, SEO meta on home; extra public routes + brand tokens `_TBD_` |
 | Phase 4 — Client review | Done (phase 1) | `/review/{slug}`, React gallery, selection API, admin revoke, `noindex` + robots |
 | Post-MVP hardening | In progress | O1 Sentry, security audit ([#51](https://github.com/cjlawson02/photography/pull/51)–[#52](https://github.com/cjlawson02/photography/pull/52)); open backlog Phase 2.5 |
@@ -47,7 +47,7 @@ gantt
   Phase 4 Client review     :done,    p4, after p2, 1d
   Phase 5 Cutover           :done,    p5, after p3, 1d
   Post-MVP backlog          :active,  p25, after p4, 2d
-  Admin UX v2               :         p26, after p25, 2d
+  Admin UX v2               :done,    p26, after p25, 2d
 ```
 
 
@@ -55,6 +55,7 @@ gantt
 
 | Date | Update |
 | --- | --- |
+| 2026-09-26 | Phase 2.6 **Done**: A1–A7 + RHF/zod on v2 surfaces (incl. close-out purge); open decisions stay in [ADMIN-UX.md](ADMIN-UX.md#open-decisions) |
 | 2026-09-26 | Phase 5 **Done**: monitoring setup + rollback/RTO-RPO in [CUTOVER.md](CUTOVER.md); IMPLEMENTATION T6–T7 closed |
 | 2026-09-25 | Admin UX v2 spec: [ADMIN-UX.md](ADMIN-UX.md); Phase 2.6 planned in [IMPLEMENTATION.md](IMPLEMENTATION.md#phase-26--admin-ux-v2) |
 | 2026-09-26 | Docs sync: PROGRESS status/Gantt; [SMOKE.md](SMOKE.md) admin SSR; audit backlog in IMPLEMENTATION S7–R2 |

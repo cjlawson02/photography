@@ -93,4 +93,36 @@ describe('ShootJobAdmin SSR seed', () => {
     expect(personInput).toHaveFocus();
     expect(personInput).toHaveValue('Jordan');
   });
+
+  it('validates the close-out purge form before calling purgeRounds', async () => {
+    const user = userEvent.setup();
+    const detail = makeAdminReviewCollectionDetail({ status: 'closed', slug: 'proof-abc' });
+    const fetchSpy = vi.fn(async () => {
+      return new Response(JSON.stringify([{ result: { data: detail } }]), {
+        headers: { 'content-type': 'application/json' },
+      });
+    });
+    vi.stubGlobal('fetch', fetchSpy);
+    try {
+      render(<ShootJobAdmin collectionId={detail.collection.id} initialDetail={detail} />);
+      await user.click(screen.getByRole('button', { name: 'Purge selected' }));
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'Choose proofs and/or finals to purge.',
+      );
+      expect(
+        (fetchSpy.mock.calls as unknown as [string][]).filter(([url]) =>
+          String(url).includes('review.collections.purgeRounds'),
+        ),
+      ).toHaveLength(0);
+
+      await user.click(screen.getByRole('checkbox', { name: 'Purge proofs' }));
+      await user.type(screen.getByRole('textbox', { name: 'Confirm shoot slug' }), 'wrong-slug');
+      await user.click(screen.getByRole('button', { name: 'Purge selected' }));
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'Type the shoot slug exactly to confirm.',
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });

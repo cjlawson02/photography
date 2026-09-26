@@ -4,6 +4,7 @@ import {
   portfolioInspectorFormSchema,
   portfolioInspectorPatchFromField,
   reviewCollectionCreateFormSchema,
+  reviewPurgeRoundsFormSchema,
 } from './admin-form-schemas.ts';
 
 describe('reviewCollectionCreateFormSchema', () => {
@@ -28,6 +29,35 @@ describe('reviewCollectionCreateFormSchema', () => {
       notes: '',
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe('reviewPurgeRoundsFormSchema', () => {
+  const schema = reviewPurgeRoundsFormSchema('alex-wedding-x7k2');
+
+  it('requires at least one round and the exact slug', () => {
+    expect(
+      schema.safeParse({ purgeProofs: false, purgeFinals: false, confirmSlug: 'alex-wedding-x7k2' })
+        .success,
+    ).toBe(false);
+    expect(
+      schema.safeParse({ purgeProofs: true, purgeFinals: false, confirmSlug: 'wrong' }).success,
+    ).toBe(false);
+  });
+
+  it('maps checked rounds to the purgeRounds mutation body', () => {
+    expect(
+      schema.parse({
+        purgeProofs: true,
+        purgeFinals: false,
+        confirmSlug: '  alex-wedding-x7k2  ',
+      }),
+    ).toEqual({
+      proofs: true,
+      finals: false,
+      cleanupR2: true,
+      confirmSlug: 'alex-wedding-x7k2',
+    });
   });
 });
 

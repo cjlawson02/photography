@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import type { z } from 'zod/v4';
 
 import { expiresAtToDatetimeLocal } from '../../lib/admin/admin-form-datetime.ts';
 import {
@@ -9,6 +10,8 @@ import {
   reviewCollectionNotesFieldSchema,
   reviewCollectionPersonNameFieldSchema,
   reviewCollectionTitleFieldSchema,
+  reviewPurgeRoundsFormSchema,
+  type ReviewPurgeRoundsFormValues,
 } from '../../lib/admin/admin-form-schemas.ts';
 import type { ReviewCollectionAdminUpdateBody } from '../../lib/admin/review-collection-schemas.ts';
 import type {
@@ -18,6 +21,7 @@ import type {
 import { requestReprocess } from '../../lib/ingest/browser-upload.ts';
 import { canUploadFinals, jobStepPrimaryAction } from '../../lib/review/job-steps.ts';
 import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
+import AdminFieldLabel from './AdminFieldLabel.tsx';
 import AdminJobStepRail, { AdminJobStatusBadge } from './AdminJobStepRail.tsx';
 import {
   errorMessage,
@@ -787,47 +791,11 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
           ) : null}
 
           {collection.status === 'closed' ? (
-            <section className={`mt-8 rounded border p-4 ${adminClass.uploadSection}`}>
-              <AdminSectionHeading>Retention</AdminSectionHeading>
-              <p className={`mt-2 text-sm ${adminClass.fgMuted}`}>
-                Purge deletes rows and R2 objects for the selected rounds. Type the shoot slug{' '}
-                <code className="admin-code">{collection.slug}</code> to confirm.
-              </p>
-              <form
-                className="mt-4 flex flex-wrap items-end gap-4"
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  const data = new FormData(event.currentTarget);
-                  const confirmSlug = String(data.get('confirmSlug') ?? '');
-                  void purgeRoundsMutation.mutateAsync({
-                    collectionId,
-                    proofs: data.get('purgeProofs') === 'on',
-                    finals: data.get('purgeFinals') === 'on',
-                    cleanupR2: true,
-                    confirmSlug,
-                  });
-                }}
-              >
-                <label className={`flex items-center gap-2 text-sm ${adminClass.fg}`}>
-                  <input type="checkbox" name="purgeProofs" />
-                  Purge proofs
-                </label>
-                <label className={`flex items-center gap-2 text-sm ${adminClass.fg}`}>
-                  <input type="checkbox" name="purgeFinals" />
-                  Purge finals
-                </label>
-                <input
-                  type="text"
-                  name="confirmSlug"
-                  placeholder="Shoot slug"
-                  className={`max-w-xs text-sm ${adminClass.field}`}
-                  aria-label="Confirm shoot slug"
-                />
-                <button type="submit" className={adminClass.btnPrimary} disabled={photoActionsBusy}>
-                  Purge selected
-                </button>
-              </form>
-            </section>
+            <RetentionPurgeForm
+              slug={collection.slug}
+              busy={photoActionsBusy}
+              onPurge={(data) => void purgeRoundsMutation.mutateAsync({ collectionId, ...data })}
+            />
           ) : null}
         </>
       ) : null}
@@ -839,6 +807,82 @@ type ShootJobAdminProps = {
   collectionId: string;
   initialDetail?: AdminReviewCollectionDetail;
 };
+
+type RetentionPurgeFormProps = {
+  slug: string;
+  busy: boolean;
+  onPurge: (data: {
+    proofs: boolean;
+    finals: boolean;
+    cleanupR2: true;
+    confirmSlug: string;
+  }) => void;
+};
+
+function RetentionPurgeForm({ slug, busy, onPurge }: RetentionPurgeFormProps) {
+  type PurgePayload = z.output<ReturnType<typeof reviewPurgeRoundsFormSchema>>;
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ReviewPurgeRoundsFormValues, unknown, PurgePayload>({
+    resolver: zodResolver(reviewPurgeRoundsFormSchema(slug)),
+    defaultValues: { purgeProofs: false, purgeFinals: false, confirmSlug: '' },
+  });
+
+  return (
+    <section className={`mt-8 rounded border p-4 ${adminClass.uploadSection}`}>
+      <AdminSectionHeading>Retention</AdminSectionHeading>
+      <p className={`mt-2 text-sm ${adminClass.fgMuted}`}>
+        Purge deletes rows and R2 objects for the selected rounds. Type the shoot slug{' '}
+        <code className="admin-code">{slug}</code> to confirm.
+      </p>
+      <form
+        className="mt-4 flex flex-wrap items-end gap-4"
+        onSubmit={(event) => {
+          void handleSubmit((data) => {
+            onPurge(data);
+          })(event);
+        }}
+        noValidate
+      >
+        <label className={`flex items-center gap-2 text-sm ${adminClass.fg}`}>
+          <input type="checkbox" {...register('purgeProofs')} />
+          Purge proofs
+        </label>
+        <label className={`flex items-center gap-2 text-sm ${adminClass.fg}`}>
+          <input type="checkbox" {...register('purgeFinals')} />
+          Purge finals
+        </label>
+        <AdminFieldLabel label="Confirm shoot slug" className="block text-sm">
+          <input
+            type="text"
+            placeholder="Shoot slug"
+            className={`mt-1 block max-w-xs text-sm ${adminClass.field}`}
+            autoComplete="off"
+            aria-invalid={errors.confirmSlug ? true : undefined}
+            aria-describedby={
+              errors.confirmSlug || errors.purgeProofs ? 'purge-form-errors' : undefined
+            }
+            {...register('confirmSlug')}
+          />
+        </AdminFieldLabel>
+        <button type="submit" className={adminClass.btnPrimary} disabled={busy}>
+          Purge selected
+        </button>
+        {errors.purgeProofs || errors.confirmSlug ? (
+          <p
+            id="purge-form-errors"
+            role="alert"
+            className={`basis-full text-xs ${adminClass.accent}`}
+          >
+            {errors.purgeProofs?.message ?? errors.confirmSlug?.message}
+          </p>
+        ) : null}
+      </form>
+    </section>
+  );
+}
 
 export default function ShootJobAdmin({ collectionId, initialDetail }: ShootJobAdminProps) {
   return (

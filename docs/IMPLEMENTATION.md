@@ -165,7 +165,7 @@ Hardening and polish after MVP ([#21](https://github.com/cjlawson02/photography/
 
 Guided, low-frequency admin: client-shoot step rail (proof → picks → deliver finals) and front-page curation. **Canonical product/UX:** [ADMIN-UX.md](ADMIN-UX.md). Do not restate workflows here — task IDs point at that doc. Estimates: [LOE.md](LOE.md) (`_TBD_` until sized).
 
-**Tasks** (planned)
+**Tasks** (done)
 
 - [x] **A1** Shoot job page + step rail — [ADMIN-UX § Lifecycles / Workflows 1–2](ADMIN-UX.md#lifecycles)
 - [x] **A2** Client “Submit picks” + lock / reopen + filename export for Lightroom — [Workflow 2](ADMIN-UX.md#2-receive-picks); persist `originalFilename`
@@ -174,7 +174,7 @@ Guided, low-frequency admin: client-shoot step rail (proof → picks → deliver
 - [x] **A5** Home (active shoot cards + attention banners) — [IA](ADMIN-UX.md#information-architecture)
 - [x] **A6** Close-out, retention, promote-to-portfolio — [Workflow 4](ADMIN-UX.md#4-close-out); HLD promote-as-copy
 - [x] **A7** Ingest recovery parity (retry/remove) on proofs and finals — [Workflow 6](ADMIN-UX.md#6-recover-failed--stale-ingest)
-- [ ] Forms on new surfaces: react-hook-form + zod (same as M5 / [FRONTEND.md](FRONTEND.md))
+- [x] Forms on new surfaces: react-hook-form + zod (same as M5 / [FRONTEND.md](FRONTEND.md))
 
 ## Dependencies
 
