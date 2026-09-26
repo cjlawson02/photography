@@ -30,4 +30,4 @@ Interactive UI uses **React** via `@astrojs/react`. Astro pages own layout and S
 
 ## Tests (Vitest + RTL)
 
-Admin UI tests live in `src/**/*.vitest.{ts,tsx}` (`npm run test:vitest`; `npm test` also runs node:test). Prefer **`@testing-library/user-event`** (`await userEvent.click()`, `type()`, etc.) over `fireEvent` from `@testing-library/react`; use `fireEvent` only when user-event cannot cover the case and leave a brief comment explaining why.
+Admin UI tests live in `src/**/*.vitest.{ts,tsx}` (`npm run test:vitest`; `npm test` also runs node:test). Prefer **`@testing-library/user-event`** (`await userEvent.click()`, `type()`, etc.) over `fireEvent` from `@testing-library/react`; use `fireEvent` only when user-event cannot cover the case and leave a brief comment explaining why. Admin Sentry init is covered in `sentry-browser.vitest.ts`; production client source maps upload only on deploy when Sentry env vars are set ([DEPLOY.md](DEPLOY.md#3a-sentry-optional-worker-errors)).

@@ -88,8 +88,8 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # Plain var (not secret) — consumed by sentryOptionsFromEnv in sentry.server.config.ts
-          command: deploy --var SENTRY_RELEASE:${{ github.sha }} --outdir .worker-sentry-out --upload-source-maps
+          # SENTRY_RELEASE → sentryOptionsFromEnv; dist-worker → npm run sentry:sourcemaps (not Astro dist/)
+          command: deploy --var SENTRY_RELEASE:${{ github.sha }} --outdir dist-worker --upload-source-maps
 
       - name: Upload Worker source maps to Sentry
         env:
@@ -97,5 +97,4 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ vars.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
-          WRANGLER_OUTDIR: .worker-sentry-out
-        run: npm run sentry:upload-worker-sourcemaps
+        run: npm run sentry:sourcemaps

@@ -19,7 +19,7 @@
     "test": "node --experimental-strip-types --test 'src/**/*.test.ts' && vitest run",
     "test:node": "node --experimental-strip-types --test 'src/**/*.test.ts'",
     "test:vitest": "vitest run",
-    "sentry:upload-worker-sourcemaps": "node scripts/sentry-upload-worker-sourcemaps.mjs",
+    "sentry:sourcemaps": "node scripts/sentry-worker-sourcemaps.mjs",
     "ci": "npm run lint && npm run format:check && npm test && npm run typecheck && npm run build && npx wrangler deploy --dry-run",
     "r2:cors:apply": "wrangler r2 bucket cors set photography-portfolio --file infra/r2-cors/photography-portfolio.json -y && wrangler r2 bucket cors set photography-review --file infra/r2-cors/photography-review.json -y",
     "r2:cors:list": "wrangler r2 bucket cors list photography-portfolio && wrangler r2 bucket cors list photography-review",
