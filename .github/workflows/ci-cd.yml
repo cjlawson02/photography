@@ -82,4 +82,5 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy
+          # Plain var (not secret) — consumed by sentryOptionsFromEnv in sentry.server.config.ts
+          command: deploy --var SENTRY_RELEASE:${{ github.sha }}
