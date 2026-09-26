@@ -8,7 +8,7 @@ export async function fetchReviewCollections(): Promise<AdminReviewCollection[]>
 }
 
 export async function createReviewCollection(input: {
-  slug: string;
+  slugPrefix?: string;
   title?: string;
   expiresAt?: number;
 }): Promise<AdminReviewCollection> {

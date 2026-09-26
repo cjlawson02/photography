@@ -64,16 +64,12 @@ export default function ReviewCollectionsAdmin() {
             event.preventDefault();
             const form = event.currentTarget;
             const data = new FormData(form);
-            const slug = String(data.get('slug') ?? '').trim();
+            const slugPrefixRaw = String(data.get('slugPrefix') ?? '').trim();
             const titleRaw = String(data.get('title') ?? '').trim();
             const expiresRaw = String(data.get('expiresAt') ?? '').trim();
 
-            if (!slug) {
-              setCreateStatus('Slug is required.');
-              return;
-            }
-
-            const payload: { slug: string; title?: string; expiresAt?: number } = { slug };
+            const payload: { slugPrefix?: string; title?: string; expiresAt?: number } = {};
+            if (slugPrefixRaw) payload.slugPrefix = slugPrefixRaw;
             if (titleRaw) payload.title = titleRaw;
             if (expiresRaw) {
               const ms = new Date(expiresRaw).getTime();
@@ -96,17 +92,20 @@ export default function ReviewCollectionsAdmin() {
           }}
         >
           <label className="block text-sm sm:col-span-2" style={{ color: 'var(--color-fg)' }}>
-            Slug (URL segment)
+            Slug prefix (optional)
             <input
               type="text"
-              name="slug"
-              required
-              pattern="[^\s]+"
-              placeholder="smith-wedding-2026"
+              name="slugPrefix"
+              pattern="[a-zA-Z0-9][a-zA-Z0-9-]*"
+              placeholder="smith-wedding"
               className="mt-1 block w-full border px-3 py-2 text-sm"
               style={fieldStyle}
               autoComplete="off"
             />
+            <span className="mt-1 block text-xs" style={{ color: 'var(--color-fg-muted)' }}>
+              The review URL slug is generated on the server; an optional prefix is added before a
+              secret segment.
+            </span>
           </label>
           <label className="block text-sm" style={{ color: 'var(--color-fg)' }}>
             Title (optional)
