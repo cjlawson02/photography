@@ -127,6 +127,7 @@ export const reviewPhotoSelectSchema = createSelectSchema(ReviewPhotos, {
   selectionStatus: selectionStatusSchema,
   width: z.number().int().nullable(),
   height: z.number().int().nullable(),
+  originalFilename: z.string().nullable(),
 });
 
 export const reviewPhotoInsertSchema = createInsertSchema(ReviewPhotos, {
@@ -136,6 +137,7 @@ export const reviewPhotoInsertSchema = createInsertSchema(ReviewPhotos, {
   selectionStatus: selectionStatusSchema.optional(),
   width: z.number().int().nullable().optional(),
   height: z.number().int().nullable().optional(),
+  originalFilename: optionalTrimmedString.nullable().optional(),
 }).omit(immutableTimestamps);
 
 export const reviewPhotoUpdateSchema = createUpdateSchema(ReviewPhotos, {
@@ -145,6 +147,7 @@ export const reviewPhotoUpdateSchema = createUpdateSchema(ReviewPhotos, {
   selectionStatus: selectionStatusSchema.optional(),
   width: z.number().int().nullable().optional(),
   height: z.number().int().nullable().optional(),
+  originalFilename: optionalTrimmedString.nullable().optional(),
 }).omit(updateOmitImmutable);
 
 export type PortfolioPhotoSelect = z.infer<typeof portfolioPhotoSelectSchema>;

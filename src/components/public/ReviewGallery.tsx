@@ -14,7 +14,20 @@ type ReviewPhotoState = PublicReviewPhoto;
 type Props = {
   slug: string;
   photos: ReviewPhotoState[];
+  picksLocked?: boolean;
 };
+
+async function postSubmitPicks(slug: string) {
+  const res = await fetch('/review/api/submit-picks', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ slug }),
+  });
+  const json = (await res.json()) as { ok?: boolean; error?: string };
+  if (!res.ok || !json.ok) {
+    throw new Error(json.error ?? 'Could not submit picks');
+  }
+}
 
 type OptimisticAction = {
   photoId: string;
@@ -45,10 +58,16 @@ function applyOptimistic(photos: ReviewPhotoState[], action: OptimisticAction): 
   );
 }
 
-export default function ReviewGallery({ slug, photos: initialPhotos }: Props) {
+export default function ReviewGallery({
+  slug,
+  photos: initialPhotos,
+  picksLocked: initialPicksLocked = false,
+}: Props) {
   const [photos, setPhotos] = useState(initialPhotos);
+  const [picksLocked, setPicksLocked] = useState(initialPicksLocked);
   const [optimisticPhotos, setOptimisticPhotos] = useOptimistic(photos, applyOptimistic);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [submittingPicks, setSubmittingPicks] = useState(false);
   const [pendingIds, setPendingIds] = useState<Set<string>>(() => new Set());
   const [, startTransition] = useTransition();
 
@@ -87,13 +106,46 @@ export default function ReviewGallery({ slug, photos: initialPhotos }: Props) {
   };
 
   const onToggleSelect = (photoId: string, current: SelectionStatus) => {
+    if (picksLocked) return;
     const next: SelectionStatus = current === 'none' ? 'selected' : 'none';
     saveSelection(photoId, next, 'Could not save selection');
   };
 
   const onToggleApprove = (photoId: string, current: SelectionStatus) => {
+    if (picksLocked) return;
     const next: SelectionStatus = current === 'approved' ? 'selected' : 'approved';
     saveSelection(photoId, next, 'Could not save approval');
+  };
+
+  const pickCount = optimisticPhotos.filter(
+    (photo) => photo.selectionStatus === 'selected' || photo.selectionStatus === 'approved',
+  ).length;
+
+  const onSubmitPicks = () => {
+    if (picksLocked || submittingPicks) return;
+    if (pickCount === 0) {
+      if (
+        !confirm(
+          "You haven't selected any photos. Submit anyway? Your photographer will follow up.",
+        )
+      ) {
+        return;
+      }
+    } else if (!confirm("I'm done choosing — lock my picks and notify my photographer?")) {
+      return;
+    }
+    setSubmittingPicks(true);
+    void (async () => {
+      try {
+        await postSubmitPicks(slug);
+        setPicksLocked(true);
+        setStatusMessage('Thanks — your picks are submitted.');
+      } catch (error) {
+        showError(error instanceof Error ? error.message : 'Could not submit picks');
+      } finally {
+        setSubmittingPicks(false);
+      }
+    })();
   };
 
   return (
@@ -107,6 +159,23 @@ export default function ReviewGallery({ slug, photos: initialPhotos }: Props) {
           {statusMessage}
         </output>
       ) : null}
+
+      {picksLocked ? (
+        <p className="mb-4 text-center text-sm" style={{ color: 'var(--color-fg-muted)' }}>
+          Your picks are submitted — thank you. Contact Lawson Photography if you need changes.
+        </p>
+      ) : (
+        <div className="mb-6 flex justify-center">
+          <button
+            type="button"
+            className="public-action-btn"
+            disabled={submittingPicks || optimisticPhotos.length === 0}
+            onClick={onSubmitPicks}
+          >
+            {submittingPicks ? 'Submitting…' : "I'm done choosing"}
+          </button>
+        </div>
+      )}
 
       {optimisticPhotos.length === 0 ? (
         <p className="text-center text-sm" style={{ color: 'var(--color-fg-muted)' }}>
@@ -144,7 +213,7 @@ export default function ReviewGallery({ slug, photos: initialPhotos }: Props) {
                     type="button"
                     className="public-action-btn"
                     aria-pressed={selected}
-                    disabled={busy}
+                    disabled={busy || picksLocked}
                     onClick={() => onToggleSelect(photo.id, photo.selectionStatus)}
                   >
                     {selectButtonLabel(photo.selectionStatus)}
@@ -152,7 +221,7 @@ export default function ReviewGallery({ slug, photos: initialPhotos }: Props) {
                   <button
                     type="button"
                     className="public-action-btn"
-                    disabled={busy}
+                    disabled={busy || picksLocked}
                     onClick={() => onToggleApprove(photo.id, photo.selectionStatus)}
                   >
                     {photo.selectionStatus === 'approved' ? 'Unapprove' : 'Approve'}

@@ -1,6 +1,6 @@
 import { z } from 'zod/v4';
 
-import { idSchema, optionalTrimmedString } from '../../db/schema/types.ts';
+import { idSchema } from '../../db/schema/types.ts';
 import { PURPOSE_BUCKETS, type PurposeBucket } from '../dao/r2-dao.ts';
 
 export type { PurposeBucket };
@@ -18,6 +18,11 @@ export const INGEST_CONTENT_TYPES = [
 
 export const ingestContentTypeSchema = z.enum(INGEST_CONTENT_TYPES);
 
+/** Presign `filename` hint — original basename only (storage keys use photo id). */
+export const INGEST_FILENAME_MAX_LENGTH = 255;
+
+const ingestFilenameSchema = z.string().trim().min(1).max(INGEST_FILENAME_MAX_LENGTH).optional();
+
 /** Soft cap before `arrayBuffer()` during ingest (availability). */
 export const INGEST_MAX_ORIGINAL_BYTES = 40 * 1024 * 1024;
 
@@ -29,13 +34,13 @@ export const presignBodySchema = z.discriminatedUnion('bucket', [
   z.object({
     bucket: z.literal('portfolio'),
     contentType: ingestContentTypeSchema,
-    filename: optionalTrimmedString,
+    filename: ingestFilenameSchema,
   }),
   z.object({
     bucket: z.literal('review'),
     contentType: ingestContentTypeSchema,
     collectionId: idSchema,
-    filename: optionalTrimmedString,
+    filename: ingestFilenameSchema,
   }),
 ]);
 

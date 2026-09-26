@@ -28,6 +28,7 @@ import { adminClass } from './admin-styles.ts';
 import AdminPhotoUpload from './AdminPhotoUpload.tsx';
 import AdminSectionHeading from './AdminSectionHeading.tsx';
 import AdminStatusLine from './AdminStatusLine.tsx';
+import { useAdminToast } from './AdminToast.tsx';
 import { AdminTable, AdminTableHead, AdminTableHeaderCell, AdminTableRow } from './AdminTable.tsx';
 
 function selectionLabel(status: AdminReviewCollectionDetailPhoto['selectionStatus']): string {
@@ -169,6 +170,7 @@ type ShootJobAdminInnerProps = {
 function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
+  const { pushToast } = useAdminToast();
   const [editStatus, setEditStatus] = useState<string | null>(null);
   const [busyPhotoId, setBusyPhotoId] = useState<string | null>(null);
   const [initialDataUpdatedAt] = useState(() => Date.now());
@@ -177,10 +179,15 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
     ...(initialDetail !== undefined ? { initialData: initialDetail, initialDataUpdatedAt } : {}),
   });
 
+  const exportPickFilenamesMutation = useMutation(
+    trpc.review.collections.exportPickFilenames.mutationOptions(),
+  );
+
   const updateMutation = useMutation(
     trpc.review.collections.update.mutationOptions({
       onSuccess: async () => {
-        setEditStatus('Saved.');
+        setEditStatus(null);
+        pushToast('Saved.');
         await queryClient.invalidateQueries(trpc.review.collections.detail.queryFilter());
         await queryClient.invalidateQueries(trpc.review.collections.list.queryFilter());
       },
@@ -193,7 +200,22 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
   const transitionMutation = useMutation(
     trpc.review.collections.transition.mutationOptions({
       onSuccess: async () => {
-        setEditStatus('Job step updated.');
+        setEditStatus(null);
+        pushToast('Job step updated.');
+        await queryClient.invalidateQueries(trpc.review.collections.detail.queryFilter());
+        await queryClient.invalidateQueries(trpc.review.collections.list.queryFilter());
+      },
+      onError: (error) => {
+        setEditStatus(errorMessage(error));
+      },
+    }),
+  );
+
+  const reopenPicksMutation = useMutation(
+    trpc.review.collections.reopenPicks.mutationOptions({
+      onSuccess: async () => {
+        setEditStatus(null);
+        pushToast('Picks reopened — client can change selections again.');
         await queryClient.invalidateQueries(trpc.review.collections.detail.queryFilter());
         await queryClient.invalidateQueries(trpc.review.collections.list.queryFilter());
       },
@@ -206,7 +228,8 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
   const deletePhotoMutation = useMutation(
     trpc.review.collections.deletePhoto.mutationOptions({
       onSuccess: async () => {
-        setEditStatus('Photo deleted.');
+        setEditStatus(null);
+        pushToast('Photo deleted.');
         await queryClient.invalidateQueries(trpc.review.collections.detail.queryFilter());
       },
       onError: (error) => {
@@ -241,7 +264,27 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
     updateMutation.isPending ||
     deletePhotoMutation.isPending ||
     transitionMutation.isPending ||
+    reopenPicksMutation.isPending ||
+    exportPickFilenamesMutation.isPending ||
     busyPhotoId !== null;
+
+  const copyFilenames = async () => {
+    setEditStatus('Preparing filenames…');
+    try {
+      const result = await exportPickFilenamesMutation.mutateAsync({ id: collectionId });
+      await navigator.clipboard.writeText(result.text);
+      setEditStatus(null);
+      pushToast(
+        result.filenames.length === 0
+          ? 'No picks to export yet.'
+          : `Copied ${result.filenames.length} filename(s) for Lightroom.`,
+      );
+      await queryClient.invalidateQueries(trpc.review.collections.detail.queryFilter());
+      await queryClient.invalidateQueries(trpc.review.collections.list.queryFilter());
+    } catch (error) {
+      setEditStatus(errorMessage(error));
+    }
+  };
 
   const statusMessage = detailQuery.isPending
     ? 'Loading…'
@@ -289,6 +332,22 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
               id: collectionId,
               to: primaryAction.targetStatus,
             });
+          }}
+          copyFilenamesPending={exportPickFilenamesMutation.isPending}
+          onCopyFilenames={() => {
+            void copyFilenames();
+          }}
+          reopenPicksPending={reopenPicksMutation.isPending}
+          onReopenPicks={() => {
+            if (
+              !confirm(
+                'Reopen picks? The client will be able to change selections on the review link again.',
+              )
+            ) {
+              return;
+            }
+            setEditStatus('Reopening picks…');
+            void reopenPicksMutation.mutateAsync({ id: collectionId });
           }}
         />
       ) : null}

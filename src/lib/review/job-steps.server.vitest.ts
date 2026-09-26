@@ -12,6 +12,7 @@ describe('job-steps', () => {
 
   it('allows mark shared from proofs uploaded only', () => {
     expect(isTransitionAllowed('proofs_uploaded', 'shared')).toBe(true);
+    expect(isTransitionAllowed('picks_submitted', 'editing')).toBe(true);
     expect(isTransitionAllowed('setup', 'shared')).toBe(false);
   });
 

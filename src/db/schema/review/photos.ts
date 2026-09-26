@@ -35,6 +35,8 @@ export const ReviewPhotos = sqliteTable(
     width: integer('width', { mode: 'number' }),
     /** Natural pixel height from ingest (Images `info()` on original). */
     height: integer('height', { mode: 'number' }),
+    /** Original upload basename for Lightroom export / final matching (A2). */
+    originalFilename: text('originalFilename'),
   },
   (table) => [index('ReviewPhotos_collectionId_idx').on(table.collectionId)],
 );

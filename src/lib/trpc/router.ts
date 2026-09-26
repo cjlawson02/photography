@@ -9,6 +9,7 @@ import {
   reviewCollectionCreateBodySchema,
   reviewCollectionDeletePhotoInputSchema,
   reviewCollectionDetailInputSchema,
+  reviewCollectionIdInputSchema,
   reviewCollectionTransitionInputSchema,
   reviewCollectionUpdateInputSchema,
 } from '../admin/review-collection-schemas.ts';
@@ -87,6 +88,16 @@ export const appRouter = createTRPCRouter({
         .mutation(async ({ ctx, input }) =>
           ReviewService.from(ctx.getAppEnv()).transitionJobStatus(input.id, input.to),
         ),
+      exportPickFilenames: adminProcedure
+        .input(reviewCollectionIdInputSchema)
+        .mutation(async ({ ctx, input }) =>
+          ReviewService.from(ctx.getAppEnv()).exportPickFilenames(input.id),
+        ),
+      reopenPicks: adminProcedure
+        .input(reviewCollectionIdInputSchema)
+        .mutation(async ({ ctx, input }) =>
+          ReviewService.from(ctx.getAppEnv()).reopenPicks(input.id),
+        ),
       deletePhoto: adminProcedure
         .input(reviewCollectionDeletePhotoInputSchema)
         .mutation(async ({ ctx, input }) =>
@@ -106,9 +117,18 @@ export const appRouter = createTRPCRouter({
       ),
     complete: rateLimitedAdminProcedure
       .input(completeBodySchema)
-      .mutation(async ({ ctx, input }) =>
-        IngestService.from(ctx.getIngestAppEnv()).completeIngest(input),
-      ),
+      .mutation(async ({ ctx, input }) => {
+        const result = await IngestService.from(ctx.getIngestAppEnv()).completeIngest(input);
+        if (input.bucket === 'review' && result.status === 'ready') {
+          const photo = await ctx.getAppEnv().d1.reviewPhotos.getById(input.id);
+          if (photo?.collectionId) {
+            await ReviewService.from(ctx.getAppEnv()).maybeAdvanceProofsUploadedAfterIngest(
+              photo.collectionId,
+            );
+          }
+        }
+        return result;
+      }),
     reprocess: rateLimitedAdminProcedure
       .input(reprocessBodySchema)
       .mutation(async ({ ctx, input }) =>

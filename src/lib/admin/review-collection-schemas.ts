@@ -39,6 +39,10 @@ export const reviewCollectionDetailInputSchema = z.object({
   id: idSchema,
 });
 
+export const reviewCollectionIdInputSchema = z.object({
+  id: idSchema,
+});
+
 export const reviewCollectionUpdateInputSchema = z.object({
   id: idSchema,
   data: reviewCollectionAdminUpdateBodySchema,
