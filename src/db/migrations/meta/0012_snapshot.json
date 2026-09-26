@@ -144,10 +144,7 @@
       "indexes": {
         "PortfolioPhotos_published_status_idx": {
           "name": "PortfolioPhotos_published_status_idx",
-          "columns": [
-            "published",
-            "status"
-          ],
+          "columns": ["published", "status"],
           "isUnique": false
         }
       },
@@ -257,9 +254,7 @@
       "indexes": {
         "ReviewCollections_slug_uidx": {
           "name": "ReviewCollections_slug_uidx",
-          "columns": [
-            "slug"
-          ],
+          "columns": ["slug"],
           "isUnique": true
         }
       },
@@ -363,9 +358,7 @@
       "indexes": {
         "ReviewPhotos_collectionId_idx": {
           "name": "ReviewPhotos_collectionId_idx",
-          "columns": [
-            "collectionId"
-          ],
+          "columns": ["collectionId"],
           "isUnique": false
         }
       },
@@ -374,12 +367,8 @@
           "name": "ReviewPhotos_collectionId_ReviewCollections_id_fk",
           "tableFrom": "ReviewPhotos",
           "tableTo": "ReviewCollections",
-          "columnsFrom": [
-            "collectionId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["collectionId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
