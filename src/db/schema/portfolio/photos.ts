@@ -31,6 +31,10 @@ export const PortfolioPhotos = sqliteTable(
     sortOrder: integer('sortOrder', { mode: 'number' }),
     /** Future hero carousel — nullable intent; defaults false for new rows. */
     hero: integer('hero', { mode: 'boolean' }).notNull().default(false),
+    /** Natural pixel width from ingest (Images `info()` on original). */
+    width: integer('width', { mode: 'number' }),
+    /** Natural pixel height from ingest (Images `info()` on original). */
+    height: integer('height', { mode: 'number' }),
   },
   (table) => [index('PortfolioPhotos_published_status_idx').on(table.published, table.status)],
 );

@@ -31,6 +31,10 @@ export const ReviewPhotos = sqliteTable(
     mimeType: text('mimeType'),
     /** Client select/approve — independent of ingest `status`. */
     selectionStatus: text('selectionStatus').$type<SelectionStatus>().notNull().default('none'),
+    /** Natural pixel width from ingest (Images `info()` on original). */
+    width: integer('width', { mode: 'number' }),
+    /** Natural pixel height from ingest (Images `info()` on original). */
+    height: integer('height', { mode: 'number' }),
   },
   (table) => [index('ReviewPhotos_collectionId_idx').on(table.collectionId)],
 );

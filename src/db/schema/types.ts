@@ -43,6 +43,8 @@ export const portfolioPhotoSelectSchema = createSelectSchema(PortfolioPhotos, {
   category: portfolioCategorySchema.nullable(),
   sortOrder: z.number().int().nullable(),
   hero: z.boolean(),
+  width: z.number().int().nullable(),
+  height: z.number().int().nullable(),
 });
 
 export const portfolioPhotoInsertSchema = createInsertSchema(PortfolioPhotos, {
@@ -52,6 +54,8 @@ export const portfolioPhotoInsertSchema = createInsertSchema(PortfolioPhotos, {
   category: portfolioCategorySchema.nullable().optional(),
   sortOrder: z.number().int().nullable().optional(),
   hero: z.boolean().optional(),
+  width: z.number().int().nullable().optional(),
+  height: z.number().int().nullable().optional(),
 }).omit(immutableTimestamps);
 
 export const portfolioPhotoUpdateSchema = createUpdateSchema(PortfolioPhotos, {
@@ -61,6 +65,8 @@ export const portfolioPhotoUpdateSchema = createUpdateSchema(PortfolioPhotos, {
   category: portfolioCategorySchema.nullable().optional(),
   sortOrder: z.number().int().nullable().optional(),
   hero: z.boolean().optional(),
+  width: z.number().int().nullable().optional(),
+  height: z.number().int().nullable().optional(),
 }).omit(updateOmitImmutable);
 
 export const reviewCollectionSelectSchema = createSelectSchema(ReviewCollections, {
@@ -86,6 +92,8 @@ export const reviewPhotoSelectSchema = createSelectSchema(ReviewPhotos, {
   status: photoStatusSchema,
   mimeType: z.string().nullable(),
   selectionStatus: selectionStatusSchema,
+  width: z.number().int().nullable(),
+  height: z.number().int().nullable(),
 });
 
 export const reviewPhotoInsertSchema = createInsertSchema(ReviewPhotos, {
@@ -93,6 +101,8 @@ export const reviewPhotoInsertSchema = createInsertSchema(ReviewPhotos, {
   status: photoStatusSchema,
   mimeType: optionalTrimmedString.nullable().optional(),
   selectionStatus: selectionStatusSchema.optional(),
+  width: z.number().int().nullable().optional(),
+  height: z.number().int().nullable().optional(),
 }).omit(immutableTimestamps);
 
 export const reviewPhotoUpdateSchema = createUpdateSchema(ReviewPhotos, {
@@ -100,6 +110,8 @@ export const reviewPhotoUpdateSchema = createUpdateSchema(ReviewPhotos, {
   status: photoStatusSchema.optional(),
   mimeType: optionalTrimmedString.nullable().optional(),
   selectionStatus: selectionStatusSchema.optional(),
+  width: z.number().int().nullable().optional(),
+  height: z.number().int().nullable().optional(),
 }).omit(updateOmitImmutable);
 
 export type PortfolioPhotoSelect = z.infer<typeof portfolioPhotoSelectSchema>;

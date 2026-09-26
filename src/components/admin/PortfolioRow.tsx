@@ -21,6 +21,14 @@ function formatTime(ms: number | null | undefined): string {
   return new Date(ms).toLocaleString();
 }
 
+function formatDimensions(
+  width: number | null | undefined,
+  height: number | null | undefined,
+): string {
+  if (width == null || height == null) return '—';
+  return `${width}×${height}`;
+}
+
 type Props = {
   photo: AdminPortfolioPhoto;
   busy: boolean;
@@ -73,6 +81,12 @@ export default function PortfolioRow({ photo, busy, onPatch, onDelete, onReproce
       </td>
       <td className="py-3 pr-4 align-middle">
         <code className="text-xs">{photo.status}</code>
+      </td>
+      <td
+        className="py-3 pr-4 align-middle text-xs tabular-nums"
+        style={{ color: 'var(--color-fg-muted)' }}
+      >
+        {formatDimensions(photo.width, photo.height)}
       </td>
       <td className="py-3 pr-4 align-middle">
         <label className="inline-flex items-center gap-2 text-xs">

@@ -10,6 +10,14 @@ function formatTime(ms: number | null | undefined): string {
   return new Date(ms).toLocaleString();
 }
 
+function formatDimensions(
+  width: number | null | undefined,
+  height: number | null | undefined,
+): string {
+  if (width == null || height == null) return '—';
+  return `${width}×${height}`;
+}
+
 function selectionLabel(status: AdminReviewCollectionDetailPhoto['selectionStatus']): string {
   switch (status) {
     case 'none':
@@ -110,6 +118,7 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
                 >
                   <th className="py-2 pr-4 font-normal">Preview</th>
                   <th className="py-2 pr-4 font-normal">Ingest</th>
+                  <th className="py-2 pr-4 font-normal">Size</th>
                   <th className="py-2 pr-4 font-normal">Selection</th>
                   <th className="py-2 pr-4 font-normal">Updated</th>
                   <th className="py-2 font-normal">Id</th>
@@ -146,6 +155,12 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
                       )}
                     </td>
                     <td className="py-2 pr-4 align-middle font-mono text-xs">{photo.status}</td>
+                    <td
+                      className="py-2 pr-4 align-middle text-xs tabular-nums"
+                      style={{ color: 'var(--color-fg-muted)' }}
+                    >
+                      {formatDimensions(photo.width, photo.height)}
+                    </td>
                     <td className="py-2 pr-4 align-middle text-xs">
                       {selectionLabel(photo.selectionStatus)}
                     </td>
