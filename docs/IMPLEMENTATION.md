@@ -131,7 +131,7 @@ Tracked after [#21](https://github.com/cjlawson02/photography/pull/21)–[#23](h
 | S2 | Rate-limit `/review/api/selection` | Workers rate-limit binding |
 | S4 | Delete / revoke ordering | Done — R2 `deleteObjects` batch; revoke `db.batch`; portfolio/review R2-before-D1 |
 | S6 | Security headers | Done — Astro `src/middleware.ts` + `src/lib/http/security-headers.ts` |
-| P1 | Ingest dimensions | **Partial** — `width`/`height` on `PortfolioPhotos` / `ReviewPhotos` via Images `info()` at ingest complete; admin portfolio + review detail list; public gallery aspect ratio still uses placeholders |
+| P1 | Ingest dimensions | **Done** — `width`/`height` on `PortfolioPhotos` / `ReviewPhotos` via Images `info()` at ingest complete; admin portfolio + review detail; public home masonry + review gallery (`aspect-ratio`, PhotoSwipe) with 1600×1200 fallback when null. Alt/title → P2 |
 | P2–P7 | Product polish | Alt/title, empty states, review lifecycle, upload hardening, pending TTL, admin pagination — see [HLD](HLD.md) `_TBD_` |
 | M1–M4 | Frontend islands + primitives | Query islands on admin portfolio/review/ingest; **M2** — removed `lib/admin/portfolio-api.ts` and `review-collections-api.ts` (router output types in `trpc-types.ts`); shared UI primitives + optional `embla-carousel-react` `_TBD_` |
 | T1 | Test suite | Vitest + RTL; selection route + middleware |

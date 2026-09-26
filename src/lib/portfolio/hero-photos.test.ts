@@ -11,6 +11,8 @@ describe('selectHeroPhotos', () => {
     sortOrder: null,
     hero: false,
     galleryUrl: '/media/portfolio/a/gallery.webp',
+    width: null,
+    height: null,
     ...overrides,
   });
 

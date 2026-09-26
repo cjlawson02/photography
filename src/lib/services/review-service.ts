@@ -15,6 +15,8 @@ export type PublicReviewPhoto = {
   id: string;
   galleryUrl: string;
   selectionStatus: SelectionStatus;
+  width: number | null;
+  height: number | null;
 };
 
 export type PublicReviewCollection = {
@@ -181,6 +183,8 @@ export async function resolveReviewPageState(
         id: photo.id,
         galleryUrl: `/media/review/${photo.id}/gallery.webp`,
         selectionStatus: photo.selectionStatus,
+        width: photo.width,
+        height: photo.height,
       })),
     },
   };
