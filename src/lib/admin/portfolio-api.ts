@@ -1,15 +1,8 @@
 import type { PortfolioPhotoAdminUpdateBody } from './portfolio-schemas.ts';
+import type { AdminPortfolioPhoto } from './trpc-types.ts';
 import { adminTrpc } from '../trpc/client.ts';
 
-export type AdminPortfolioPhoto = {
-	id: string;
-	status: string;
-	published: boolean;
-	category: string | null;
-	sortOrder: number | null;
-	hero: boolean;
-	updatedAt: number;
-};
+export type { AdminPortfolioPhoto } from './trpc-types.ts';
 
 export async function fetchPortfolioPhotos(): Promise<AdminPortfolioPhoto[]> {
 	return adminTrpc.portfolio.list.query();

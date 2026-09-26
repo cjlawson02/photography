@@ -1,22 +1,16 @@
 import { createTRPCClient, httpBatchLink } from '@trpc/client';
 
 import type { AppRouter } from './router.ts';
+import { adminTrpcFetch, TRPC_URL } from './admin-fetch.ts';
 
-const TRPC_URL = '/admin/api/trpc';
+export { TRPC_URL };
 
-/** Browser admin islands — same-origin + Access cookie on `/admin*`. */
+/** Imperative tRPC client (ingest upload, legacy api helpers). */
 export const adminTrpc = createTRPCClient<AppRouter>({
 	links: [
 		httpBatchLink({
 			url: TRPC_URL,
-			fetch(url, options) {
-				return fetch(url, {
-					...options,
-					credentials: 'same-origin',
-				});
-			},
+			fetch: adminTrpcFetch,
 		}),
 	],
 });
-
-export { TRPC_URL };

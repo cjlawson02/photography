@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useOptimistic, useState, useTransition } from 'react';
 
 import type { SelectionStatus } from '../../db/schema/review/selection-status.ts';
 import {
@@ -14,6 +14,11 @@ type ReviewPhotoState = PublicReviewPhoto;
 type Props = {
 	slug: string;
 	photos: ReviewPhotoState[];
+};
+
+type OptimisticAction = {
+	photoId: string;
+	selectionStatus: SelectionStatus;
 };
 
 async function postSelection(slug: string, photoId: string, selectionStatus: SelectionStatus) {
@@ -34,61 +39,83 @@ function selectButtonLabel(status: SelectionStatus): string {
 	return 'Select';
 }
 
+function applyOptimistic(
+	photos: ReviewPhotoState[],
+	action: OptimisticAction,
+): ReviewPhotoState[] {
+	return photos.map((photo) =>
+		photo.id === action.photoId
+			? { ...photo, selectionStatus: action.selectionStatus }
+			: photo,
+	);
+}
+
+function addPendingId(set: Set<string>, id: string): Set<string> {
+	const next = new Set(set);
+	next.add(id);
+	return next;
+}
+
+function removePendingId(set: Set<string>, id: string): Set<string> {
+	const next = new Set(set);
+	next.delete(id);
+	return next;
+}
+
 export default function ReviewGallery({ slug, photos: initialPhotos }: Props) {
 	const [photos, setPhotos] = useState(initialPhotos);
+	const [optimisticPhotos, setOptimisticPhotos] = useOptimistic(
+		photos,
+		applyOptimistic,
+	);
 	const [statusMessage, setStatusMessage] = useState<string | null>(null);
-	const [pendingId, setPendingId] = useState<string | null>(null);
+	const [pendingIds, setPendingIds] = useState<Set<string>>(() => new Set());
+	const [, startTransition] = useTransition();
 
 	const showError = useCallback((message: string) => {
 		setStatusMessage(message);
 	}, []);
 
 	const openLightbox = (photoId: string) => {
-		const items = photos.map((photo) =>
+		const items = optimisticPhotos.map((photo) =>
 			galleryItemFromPhoto({
 				galleryUrl: photo.galleryUrl,
 				width: DEFAULT_GALLERY_WIDTH,
 				height: DEFAULT_GALLERY_HEIGHT,
 			}),
 		);
-		const index = photos.findIndex((p) => p.id === photoId);
+		const index = optimisticPhotos.findIndex((p) => p.id === photoId);
 		if (index >= 0) openGalleryLightbox(items, index);
 	};
 
-	const updatePhotoStatus = (photoId: string, selectionStatus: SelectionStatus) => {
-		setPhotos((prev) =>
-			prev.map((photo) =>
-				photo.id === photoId ? { ...photo, selectionStatus } : photo,
-			),
-		);
+	const saveSelection = (photoId: string, next: SelectionStatus, errorLabel: string) => {
+		setPendingIds((prev) => addPendingId(prev, photoId));
+		startTransition(async () => {
+			setOptimisticPhotos({ photoId, selectionStatus: next });
+			try {
+				await postSelection(slug, photoId, next);
+				setPhotos((prev) =>
+					prev.map((photo) =>
+						photo.id === photoId ? { ...photo, selectionStatus: next } : photo,
+					),
+				);
+				setStatusMessage(null);
+			} catch (error) {
+				showError(error instanceof Error ? error.message : errorLabel);
+			} finally {
+				setPendingIds((prev) => removePendingId(prev, photoId));
+			}
+		});
 	};
 
-	const onToggleSelect = async (photoId: string, current: SelectionStatus) => {
+	const onToggleSelect = (photoId: string, current: SelectionStatus) => {
 		const next: SelectionStatus = current === 'none' ? 'selected' : 'none';
-		setPendingId(photoId);
-		try {
-			await postSelection(slug, photoId, next);
-			updatePhotoStatus(photoId, next);
-			setStatusMessage(null);
-		} catch (error) {
-			showError(error instanceof Error ? error.message : 'Could not save selection');
-		} finally {
-			setPendingId(null);
-		}
+		saveSelection(photoId, next, 'Could not save selection');
 	};
 
-	const onToggleApprove = async (photoId: string, current: SelectionStatus) => {
+	const onToggleApprove = (photoId: string, current: SelectionStatus) => {
 		const next: SelectionStatus = current === 'approved' ? 'selected' : 'approved';
-		setPendingId(photoId);
-		try {
-			await postSelection(slug, photoId, next);
-			updatePhotoStatus(photoId, next);
-			setStatusMessage(null);
-		} catch (error) {
-			showError(error instanceof Error ? error.message : 'Could not save approval');
-		} finally {
-			setPendingId(null);
-		}
+		saveSelection(photoId, next, 'Could not save approval');
 	};
 
 	return (
@@ -107,14 +134,14 @@ export default function ReviewGallery({ slug, photos: initialPhotos }: Props) {
 				</p>
 			) : null}
 
-			{photos.length === 0 ? (
+			{optimisticPhotos.length === 0 ? (
 				<p className="text-center text-sm" style={{ color: 'var(--color-fg-muted)' }}>
 					No photos are ready in this collection yet.
 				</p>
 			) : (
 				<ul className="public-masonry-grid columns-2 sm:columns-3 lg:columns-4">
-					{photos.map((photo) => {
-						const busy = pendingId === photo.id;
+					{optimisticPhotos.map((photo) => {
+						const busy = pendingIds.has(photo.id);
 						const selected =
 							photo.selectionStatus === 'selected' || photo.selectionStatus === 'approved';
 						return (
