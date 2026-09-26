@@ -2,7 +2,7 @@ import type { AppEnv } from '../env.ts';
 import { createDb } from '../../db/client.ts';
 import { PortfolioPhotosDAO } from '../dao/portfolio-photos-dao.ts';
 import { AppError } from '../http/app-error.ts';
-import { originalKey, VARIANT_SPECS, variantKey } from '../ingest/keys.ts';
+import { photoIngestObjectKeys } from '../ingest/keys.ts';
 import { portfolioVariantPublicUrl } from '../media/portfolio-public-url.ts';
 import type { PortfolioPhotoAdminUpdateBody } from '../admin/portfolio-schemas.ts';
 
@@ -48,14 +48,13 @@ export class PortfolioService {
     return updated;
   }
 
+  /**
+   * Remove catalog row; optional R2 purge runs before D1 so live `/media/portfolio` URLs
+   * are not left pointing at deleted rows (orphan R2 only if D1 delete fails after purge).
+   */
   async deletePhoto(id: string, options: { cleanupR2: boolean }) {
     const existing = await this.app.d1.portfolioPhotos.getById(id);
     if (!existing) {
-      throw new AppError('NOT_FOUND', `Portfolio photo not found: ${id}`);
-    }
-
-    const deleted = await this.app.d1.portfolioPhotos.deleteById(id);
-    if (!deleted) {
       throw new AppError('NOT_FOUND', `Portfolio photo not found: ${id}`);
     }
 
@@ -63,17 +62,24 @@ export class PortfolioService {
       await this.cleanupR2Objects(id);
     }
 
+    const deleted = await this.app.d1.portfolioPhotos.deleteById(id);
+    if (!deleted) {
+      throw new AppError('NOT_FOUND', `Portfolio photo not found: ${id}`);
+    }
+
     return deleted;
   }
 
   private async cleanupR2Objects(id: string): Promise<void> {
-    const keys = [originalKey(id), ...VARIANT_SPECS.map((spec) => variantKey(id, spec.suffix))];
-    for (const key of keys) {
-      try {
-        await this.app.r2.deleteObject('portfolio', key);
-      } catch (error) {
-        console.error('[portfolio-delete] R2 delete failed', { id, key, error });
-      }
+    const keys = photoIngestObjectKeys(id);
+    try {
+      await this.app.r2.deleteObjects('portfolio', keys);
+    } catch (error) {
+      console.error('[portfolio-delete] R2 batch delete failed', { id, keys, error });
+      throw new AppError(
+        'INTERNAL_SERVER_ERROR',
+        'Failed to delete portfolio objects from storage',
+      );
     }
   }
 }

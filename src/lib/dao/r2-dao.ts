@@ -120,9 +120,21 @@ export class R2DAO {
     return this.bucket(purpose).put(key, value, options);
   }
 
-  /** Worker binding delete — best-effort cleanup when removing catalog rows. */
+  /** Worker binding delete — single key. */
   async deleteObject(purpose: PurposeBucket, key: string): Promise<void> {
     await this.bucket(purpose).delete(key);
+  }
+
+  /** Worker binding batch delete — up to 1000 keys per R2 call. */
+  async deleteObjects(purpose: PurposeBucket, keys: string[]): Promise<void> {
+    if (keys.length === 0) {
+      return;
+    }
+    const bucket = this.bucket(purpose);
+    const chunkSize = 1000;
+    for (let i = 0; i < keys.length; i += chunkSize) {
+      await bucket.delete(keys.slice(i, i + chunkSize));
+    }
   }
 
   /**

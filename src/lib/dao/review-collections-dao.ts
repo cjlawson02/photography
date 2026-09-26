@@ -3,6 +3,7 @@ import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
 import * as schema from '../../db/schema/index.ts';
 import { ReviewCollections } from '../../db/schema/review/collections.ts';
+import { ReviewPhotos } from '../../db/schema/review/photos.ts';
 import { mergeDefined } from '../utils/merge-defined.ts';
 
 type Db = DrizzleD1Database<typeof schema>;
@@ -59,6 +60,14 @@ export class ReviewCollectionsDAO {
       .where(eq(ReviewCollections.id, id))
       .returning();
     return deleted[0] ?? null;
+  }
+
+  /** Atomic revoke — child photos first, then collection (D1 batch). */
+  async deleteWithPhotos(collectionId: string): Promise<void> {
+    await this.db.batch([
+      this.db.delete(ReviewPhotos).where(eq(ReviewPhotos.collectionId, collectionId)),
+      this.db.delete(ReviewCollections).where(eq(ReviewCollections.id, collectionId)),
+    ]);
   }
 
   async update(
