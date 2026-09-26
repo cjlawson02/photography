@@ -1,6 +1,10 @@
 import { z } from 'zod/v4';
 
-import { idSchema, reviewCollectionInsertSchema } from '../../db/schema/types.ts';
+import {
+  idSchema,
+  reviewCollectionInsertSchema,
+  reviewCollectionUpdateSchema,
+} from '../../db/schema/types.ts';
 import { reviewSlugPrefixSchema } from '../review/slug.ts';
 
 /** `review.collections.create` — server assigns slug; optional prefix + title/expiry only. */
@@ -17,4 +21,16 @@ export const reviewCollectionCreateBodySchema = reviewCollectionInsertSchema
 /** `review.collections.detail` input — collection id (cuid2). */
 export const reviewCollectionDetailInputSchema = z.object({
   id: idSchema,
+});
+
+/** `review.collections.update` body — title and expiry only (slug is immutable). */
+export const reviewCollectionAdminUpdateBodySchema = reviewCollectionUpdateSchema
+  .pick({ title: true, expiresAt: true })
+  .refine((value) => Object.keys(value).length > 0, 'At least one field required');
+
+export type ReviewCollectionAdminUpdateBody = z.infer<typeof reviewCollectionAdminUpdateBodySchema>;
+
+export const reviewCollectionUpdateInputSchema = z.object({
+  id: idSchema,
+  data: reviewCollectionAdminUpdateBodySchema,
 });

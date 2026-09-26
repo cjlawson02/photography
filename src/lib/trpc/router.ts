@@ -7,6 +7,7 @@ import {
 import {
   reviewCollectionCreateBodySchema,
   reviewCollectionDetailInputSchema,
+  reviewCollectionUpdateInputSchema,
 } from '../admin/review-collection-schemas.ts';
 import { idSchema } from '../../db/schema/types.ts';
 import { completeBodySchema, presignBodySchema, reprocessBodySchema } from '../ingest/schemas.ts';
@@ -70,6 +71,11 @@ export const appRouter = createTRPCRouter({
         .input(reviewCollectionDetailInputSchema)
         .query(async ({ ctx, input }) =>
           ReviewService.from(ctx.getAppEnv()).getCollectionDetailForAdmin(input.id),
+        ),
+      update: adminProcedure
+        .input(reviewCollectionUpdateInputSchema)
+        .mutation(async ({ ctx, input }) =>
+          ReviewService.from(ctx.getAppEnv()).updateCollection(input.id, input.data),
         ),
     }),
   }),

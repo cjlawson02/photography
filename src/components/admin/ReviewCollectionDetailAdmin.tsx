@@ -1,9 +1,38 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 
+import type { ReviewCollectionAdminUpdateBody } from '../../lib/admin/review-collection-schemas.ts';
 import type { AdminReviewCollectionDetailPhoto } from '../../lib/admin/trpc-types.ts';
 import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
 
 const borderStyle = { borderColor: 'var(--color-border)' };
+const fieldStyle = {
+  borderColor: 'var(--color-border)',
+  background: 'var(--color-bg)',
+  color: 'var(--color-fg)',
+};
+
+function normalizeNullableText(value: string | null | undefined): string | null {
+  const trimmed = value?.trim() ?? '';
+  return trimmed === '' ? null : trimmed;
+}
+
+function expiresAtToDatetimeLocal(ms: number | null | undefined): string {
+  if (ms == null) return '';
+  const date = new Date(ms);
+  const pad = (part: number) => String(part).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function parseDatetimeLocal(value: string): number | null {
+  const trimmed = value.trim();
+  if (trimmed === '') return null;
+  const ms = new Date(trimmed).getTime();
+  if (Number.isNaN(ms)) {
+    throw new Error('Invalid expiry date.');
+  }
+  return ms;
+}
 
 function formatTime(ms: number | null | undefined): string {
   if (!ms) return '—';
@@ -31,13 +60,110 @@ function selectionLabel(status: AdminReviewCollectionDetailPhoto['selectionStatu
   }
 }
 
+type CollectionTitleInputProps = {
+  value: string | null;
+  busy: boolean;
+  onSave: (title: string | null) => void;
+};
+
+function CollectionTitleInput({ value, busy, onSave }: CollectionTitleInputProps) {
+  const [draft, setDraft] = useState(() => value ?? '');
+  const [syncedValue, setSyncedValue] = useState(value);
+
+  if (value !== syncedValue) {
+    setSyncedValue(value);
+    setDraft(value ?? '');
+  }
+
+  return (
+    <input
+      type="text"
+      className="block w-full max-w-md border px-3 py-2 text-sm"
+      style={fieldStyle}
+      aria-label="Collection title"
+      value={draft}
+      placeholder="—"
+      disabled={busy}
+      onChange={(event) => setDraft(event.target.value)}
+      onBlur={() => {
+        const next = normalizeNullableText(draft);
+        if (next === normalizeNullableText(value)) return;
+        onSave(next);
+      }}
+    />
+  );
+}
+
+type CollectionExpiresInputProps = {
+  value: number | null;
+  busy: boolean;
+  onSave: (expiresAt: number | null) => void;
+  onInvalid: (message: string) => void;
+};
+
+function CollectionExpiresInput({ value, busy, onSave, onInvalid }: CollectionExpiresInputProps) {
+  const [draft, setDraft] = useState(() => expiresAtToDatetimeLocal(value));
+  const [syncedValue, setSyncedValue] = useState(value);
+
+  if (value !== syncedValue) {
+    setSyncedValue(value);
+    setDraft(expiresAtToDatetimeLocal(value));
+  }
+
+  return (
+    <input
+      type="datetime-local"
+      className="block w-full max-w-md border px-3 py-2 text-sm"
+      style={fieldStyle}
+      aria-label="Collection expiry"
+      value={draft}
+      disabled={busy}
+      onChange={(event) => setDraft(event.target.value)}
+      onBlur={() => {
+        try {
+          const next = parseDatetimeLocal(draft);
+          if (next === value) return;
+          onSave(next);
+        } catch (error) {
+          setDraft(expiresAtToDatetimeLocal(value));
+          onInvalid(error instanceof Error ? error.message : String(error));
+        }
+      }}
+    />
+  );
+}
+
 type ReviewCollectionDetailAdminInnerProps = {
   collectionId: string;
 };
 
 function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDetailAdminInnerProps) {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const [editStatus, setEditStatus] = useState<string | null>(null);
   const detailQuery = useQuery(trpc.review.collections.detail.queryOptions({ id: collectionId }));
+
+  const updateMutation = useMutation(
+    trpc.review.collections.update.mutationOptions({
+      onSuccess: async () => {
+        setEditStatus('Saved.');
+        await queryClient.invalidateQueries(trpc.review.collections.detail.queryFilter());
+        await queryClient.invalidateQueries(trpc.review.collections.list.queryFilter());
+      },
+      onError: (error) => {
+        setEditStatus(error instanceof Error ? error.message : String(error));
+      },
+    }),
+  );
+
+  const patchCollection = async (data: ReviewCollectionAdminUpdateBody) => {
+    setEditStatus('Saving…');
+    try {
+      await updateMutation.mutateAsync({ id: collectionId, data });
+    } catch {
+      /* onError sets editStatus */
+    }
+  };
 
   const statusMessage = detailQuery.isPending
     ? 'Loading…'
@@ -81,11 +207,29 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
             </div>
             <div>
               <dt style={{ color: 'var(--color-fg-muted)' }}>Title</dt>
-              <dd className="mt-0.5">{detail.collection.title ?? '—'}</dd>
+              <dd className="mt-0.5">
+                <CollectionTitleInput
+                  value={detail.collection.title}
+                  busy={updateMutation.isPending}
+                  onSave={(title) => patchCollection({ title })}
+                />
+              </dd>
             </div>
             <div>
               <dt style={{ color: 'var(--color-fg-muted)' }}>Expires</dt>
-              <dd className="mt-0.5 text-xs">{formatTime(detail.collection.expiresAt)}</dd>
+              <dd className="mt-0.5 text-xs">
+                <CollectionExpiresInput
+                  value={detail.collection.expiresAt}
+                  busy={updateMutation.isPending}
+                  onSave={(expiresAt) => patchCollection({ expiresAt })}
+                  onInvalid={(message) => setEditStatus(message)}
+                />
+                <span className="mt-1 block" style={{ color: 'var(--color-fg-muted)' }}>
+                  {detail.collection.expiresAt == null
+                    ? 'No expiry — link stays active until revoked.'
+                    : `Shown: ${formatTime(detail.collection.expiresAt)}`}
+                </span>
+              </dd>
             </div>
             <div>
               <dt style={{ color: 'var(--color-fg-muted)' }}>Client link</dt>
@@ -106,6 +250,15 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
               </dd>
             </div>
           </dl>
+          {editStatus ? (
+            <p
+              className="mt-2 text-xs"
+              style={{ color: 'var(--color-fg-muted)' }}
+              aria-live="polite"
+            >
+              {editStatus}
+            </p>
+          ) : null}
 
           <div className="mt-8 overflow-x-auto">
             <table className="w-full text-left text-sm" style={{ color: 'var(--color-fg)' }}>
