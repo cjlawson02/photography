@@ -59,7 +59,8 @@ export function jobStepLabel(status: ReviewJobStatus): string {
 export const ADMIN_JOB_TRANSITION_TARGETS: Partial<Record<ReviewJobStatus, ReviewJobStatus[]>> = {
   proofs_uploaded: ['shared'],
   picks_submitted: ['editing', 'shared'],
-  editing: ['shared'],
+  editing: ['shared', 'finals_delivered'],
+  finals_delivered: ['editing'],
 };
 
 export function isTransitionAllowed(from: ReviewJobStatus, to: ReviewJobStatus): boolean {
@@ -82,9 +83,13 @@ export function buildJobStepRail(current: ReviewJobStatus): JobStepRailItem[] {
 
 export type JobStepPrimaryAction =
   | { kind: 'upload_proofs'; label: string; href: string }
+  | { kind: 'upload_finals'; label: string; href: string }
   | { kind: 'mark_shared'; label: string; targetStatus: 'shared' }
   | { kind: 'preview_client'; label: string; href: string }
+  | { kind: 'preview_download'; label: string; href: string }
   | { kind: 'copy_filenames'; label: string }
+  | { kind: 'mark_delivered'; label: string; targetStatus: 'finals_delivered' }
+  | { kind: 'copy_delivery_message'; label: string }
   | { kind: 'reopen_picks'; label: string; targetStatus: 'shared' }
   | { kind: 'none'; label: string };
 
@@ -92,8 +97,10 @@ export function jobStepPrimaryAction(input: {
   status: ReviewJobStatus;
   reviewPath: string;
   uploadAnchor: string;
+  finalsUploadAnchor: string;
+  hasReadyFinals: boolean;
 }): JobStepPrimaryAction {
-  const { status, reviewPath, uploadAnchor } = input;
+  const { status, reviewPath, uploadAnchor, finalsUploadAnchor, hasReadyFinals } = input;
   switch (status) {
     case 'setup':
       return { kind: 'upload_proofs', label: 'Upload proofs', href: uploadAnchor };
@@ -108,10 +115,17 @@ export function jobStepPrimaryAction(input: {
     case 'picks_submitted':
       return { kind: 'copy_filenames', label: 'Copy filenames for Lightroom' };
     case 'editing':
-      return { kind: 'copy_filenames', label: 'Copy filenames for Lightroom' };
+      return hasReadyFinals
+        ? {
+            kind: 'mark_delivered',
+            label: 'Mark finals delivered',
+            targetStatus: 'finals_delivered',
+          }
+        : { kind: 'upload_finals', label: 'Upload finals', href: finalsUploadAnchor };
     case 'finals_delivered':
+      return { kind: 'preview_download', label: 'Preview download mode', href: reviewPath };
     case 'closed':
-      return { kind: 'none', label: 'Next actions arrive in a later admin phase.' };
+      return { kind: 'none', label: 'Job closed.' };
     default:
       return { kind: 'none', label: '—' };
   }
@@ -121,6 +135,9 @@ export function jobStepPrimaryAction(input: {
 export function jobStepSecondaryAction(status: ReviewJobStatus): JobStepPrimaryAction | null {
   if (status === 'picks_submitted' || status === 'editing') {
     return { kind: 'reopen_picks', label: 'Reopen picks', targetStatus: 'shared' };
+  }
+  if (status === 'finals_delivered') {
+    return { kind: 'copy_delivery_message', label: 'Copy notify message' };
   }
   return null;
 }

@@ -30,6 +30,12 @@ export function makeAdminReviewCollectionDetail(
       updatedAt: overrides.updatedAt ?? now,
     },
     photos: [],
+    finals: {
+      readyCount: 0,
+      unmatchedCount: 0,
+      unmatched: [],
+      photos: [],
+    },
   };
 }
 

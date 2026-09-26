@@ -17,6 +17,10 @@ type AdminJobStepRailProps = {
   copyFilenamesPending?: boolean;
   onReopenPicks?: () => void;
   reopenPicksPending?: boolean;
+  onMarkDelivered?: () => void;
+  markDeliveredPending?: boolean;
+  onCopyDeliveryMessage?: () => void;
+  copyDeliveryMessagePending?: boolean;
 };
 
 export function AdminJobStatusBadge({ status }: { status: ReviewJobStatus }) {
@@ -34,6 +38,10 @@ export default function AdminJobStepRail({
   copyFilenamesPending,
   onReopenPicks,
   reopenPicksPending,
+  onMarkDelivered,
+  markDeliveredPending,
+  onCopyDeliveryMessage,
+  copyDeliveryMessagePending,
 }: AdminJobStepRailProps) {
   const steps = buildJobStepRail(status);
   const secondaryAction = jobStepSecondaryAction(status);
@@ -60,7 +68,7 @@ export default function AdminJobStepRail({
       </ol>
 
       <div className="admin-job-rail__action">
-        {primaryAction.kind === 'upload_proofs' ? (
+        {primaryAction.kind === 'upload_proofs' || primaryAction.kind === 'upload_finals' ? (
           <a className={adminClass.btnPrimary} href={primaryAction.href}>
             {primaryAction.label}
           </a>
@@ -74,7 +82,7 @@ export default function AdminJobStepRail({
             {primaryAction.label}
           </AdminPrimaryButton>
         ) : null}
-        {primaryAction.kind === 'preview_client' ? (
+        {primaryAction.kind === 'preview_client' || primaryAction.kind === 'preview_download' ? (
           <a
             className={adminClass.btnPrimary}
             href={primaryAction.href}
@@ -83,6 +91,24 @@ export default function AdminJobStepRail({
           >
             {primaryAction.label}
           </a>
+        ) : null}
+        {primaryAction.kind === 'mark_delivered' ? (
+          <AdminPrimaryButton
+            type="button"
+            disabled={markDeliveredPending}
+            onClick={() => onMarkDelivered?.()}
+          >
+            {primaryAction.label}
+          </AdminPrimaryButton>
+        ) : null}
+        {primaryAction.kind === 'copy_delivery_message' ? (
+          <AdminPrimaryButton
+            type="button"
+            disabled={copyDeliveryMessagePending}
+            onClick={() => onCopyDeliveryMessage?.()}
+          >
+            {primaryAction.label}
+          </AdminPrimaryButton>
         ) : null}
         {primaryAction.kind === 'copy_filenames' ? (
           <AdminPrimaryButton
@@ -96,12 +122,22 @@ export default function AdminJobStepRail({
         {primaryAction.kind === 'none' ? (
           <p className={`text-sm ${adminClass.fgMuted}`}>{primaryAction.label}</p>
         ) : null}
-        {secondaryAction ? (
+        {secondaryAction?.kind === 'reopen_picks' ? (
           <AdminPrimaryButton
             type="button"
             className="ml-3"
             disabled={reopenPicksPending}
             onClick={() => onReopenPicks?.()}
+          >
+            {secondaryAction.label}
+          </AdminPrimaryButton>
+        ) : null}
+        {secondaryAction?.kind === 'copy_delivery_message' ? (
+          <AdminPrimaryButton
+            type="button"
+            className="ml-3"
+            disabled={copyDeliveryMessagePending}
+            onClick={() => onCopyDeliveryMessage?.()}
           >
             {secondaryAction.label}
           </AdminPrimaryButton>
