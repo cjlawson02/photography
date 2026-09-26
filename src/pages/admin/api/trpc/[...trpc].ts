@@ -10,12 +10,14 @@ import { appRouter } from '../../../../lib/trpc/router.ts';
  * Admin tRPC (fetch adapter). Cloudflare Access + JWT middleware on every procedure.
  * Legacy REST admin routes removed — mutations are tRPC-only (`/admin/api/trpc`).
  */
-export const ALL: APIRoute = ({ request }) =>
-  fetchRequestHandler({
+export const ALL: APIRoute = ({ request, locals }) => {
+  const waitUntil = locals.cfContext?.waitUntil.bind(locals.cfContext);
+
+  return fetchRequestHandler({
     endpoint: '/admin/api/trpc',
     req: request,
     router: appRouter,
-    createContext: ({ req }: { req: Request }) => createTrpcContext({ request: req }),
+    createContext: ({ req }: { req: Request }) => createTrpcContext({ request: req, waitUntil }),
     onError({ error, path, type }) {
       const status = getHTTPStatusCodeFromError(error);
       if (status >= 500) {
@@ -24,5 +26,6 @@ export const ALL: APIRoute = ({ request }) =>
       reportTrpcErrorIfServer(error, { path, type });
     },
   });
+};
 
 export const prerender = false;

@@ -158,6 +158,47 @@ export class ReviewService {
     await this.app.d1.reviewCollections.deleteWithPhotos(id);
     return existing;
   }
+
+  /**
+   * Remove one review photo from a collection; optional R2 purge before D1 (S4 ordering).
+   */
+  async deleteCollectionPhoto(
+    collectionId: string,
+    photoId: string,
+    options: { cleanupR2: boolean },
+  ) {
+    const collection = await this.app.d1.reviewCollections.getById(collectionId);
+    if (!collection) {
+      throw new AppError('NOT_FOUND', `Review collection not found: ${collectionId}`);
+    }
+
+    const existing = await this.app.d1.reviewPhotos.getById(photoId);
+    if (!existing || existing.collectionId !== collectionId) {
+      throw new AppError('NOT_FOUND', `Review photo not found: ${photoId}`);
+    }
+
+    if (options.cleanupR2) {
+      const keys = photoIngestObjectKeys(photoId);
+      try {
+        await this.app.r2.deleteObjects('review', keys);
+      } catch (error) {
+        console.error('[review-photo-delete] R2 batch delete failed', {
+          collectionId,
+          photoId,
+          keyCount: keys.length,
+          error,
+        });
+        throw new AppError('INTERNAL_SERVER_ERROR', 'Failed to delete review objects from storage');
+      }
+    }
+
+    const deleted = await this.app.d1.reviewPhotos.deleteById(photoId);
+    if (!deleted) {
+      throw new AppError('NOT_FOUND', `Review photo not found: ${photoId}`);
+    }
+
+    return deleted;
+  }
 }
 
 export type ReviewPageState =

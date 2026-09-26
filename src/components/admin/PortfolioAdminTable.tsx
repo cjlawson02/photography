@@ -6,10 +6,11 @@ import type { AdminPortfolioListPage } from '../../lib/admin/trpc-types.ts';
 import { requestReprocess } from '../../lib/ingest/browser-upload.ts';
 import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
 import { errorMessage } from './admin-format.ts';
+import { adminBorderStyle, adminFgMutedStyle, adminFgStyle } from './admin-styles.ts';
 import AdminEmptyState from './AdminEmptyState.tsx';
+import AdminPhotoUpload from './AdminPhotoUpload.tsx';
 import AdminStatusLine from './AdminStatusLine.tsx';
 import { AdminTable, AdminTableHead, AdminTableHeaderCell } from './AdminTable.tsx';
-import { adminAccentStyle } from './admin-styles.ts';
 import PortfolioRow from './PortfolioRow.tsx';
 
 const portfolioListInfiniteQueryConfig = {
@@ -34,9 +35,10 @@ function PortfolioAdminTableInner() {
   const queryClient = useQueryClient();
   const [actionStatus, setActionStatus] = useState<string | null>(null);
   const [busyIds, setBusyIds] = useState<Set<string>>(() => new Set());
+  const [stalePendingOnly, setStalePendingOnly] = useState(false);
 
   const listInfiniteQueryOptions = trpc.portfolio.list.infiniteQueryOptions(
-    {},
+    { stalePendingOnly },
     portfolioListInfiniteQueryConfig,
   );
 
@@ -96,6 +98,23 @@ function PortfolioAdminTableInner() {
     }),
   );
 
+  const cleanupStaleMutation = useMutation(
+    trpc.ingest.cleanupStalePending.mutationOptions({
+      onSuccess: (result) => {
+        const total = result.portfolioRemoved.length + result.reviewRemoved.length;
+        setActionStatus(
+          total === 0
+            ? 'No stale pending ingest rows to remove.'
+            : `Removed ${total} stale pending row(s) (portfolio ${result.portfolioRemoved.length}, review ${result.reviewRemoved.length}).`,
+        );
+        void queryClient.invalidateQueries(trpc.portfolio.list.queryFilter());
+      },
+      onError: (error) => {
+        setActionStatus(errorMessage(error));
+      },
+    }),
+  );
+
   const runForPhoto = async (photoId: string, statusLabel: string, action: () => Promise<void>) => {
     setBusyIds((prev) => addBusyId(prev, photoId));
     setActionStatus(statusLabel);
@@ -134,17 +153,59 @@ function PortfolioAdminTableInner() {
 
   return (
     <>
-      <AdminStatusLine>{statusMessage}</AdminStatusLine>
+      <section
+        className="mt-4 rounded border p-4"
+        style={adminBorderStyle}
+        aria-label="Upload portfolio photo"
+      >
+        <AdminPhotoUpload
+          bucket="portfolio"
+          compact
+          onSuccess={async () => {
+            setActionStatus('Upload complete — refresh list if the new row is not visible yet.');
+            await queryClient.invalidateQueries(trpc.portfolio.list.queryFilter());
+          }}
+        />
+      </section>
+
+      <div className="mt-4 flex flex-wrap items-center gap-4 text-xs" style={adminFgMutedStyle}>
+        <label className="inline-flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={stalePendingOnly}
+            onChange={(event) => {
+              setStalePendingOnly(event.target.checked);
+            }}
+          />
+          Stale pending only
+        </label>
+        <button
+          type="button"
+          className="underline"
+          style={adminFgStyle}
+          disabled={cleanupStaleMutation.isPending || busyIds.size > 0}
+          onClick={() => {
+            if (
+              !confirm(
+                'Remove all stale pending ingest rows (portfolio + review) and best-effort R2 keys?',
+              )
+            ) {
+              return;
+            }
+            cleanupStaleMutation.mutate();
+          }}
+        >
+          {cleanupStaleMutation.isPending ? 'Cleaning…' : 'Clean up stale pending'}
+        </button>
+      </div>
+
+      <AdminStatusLine className="mt-2">{statusMessage}</AdminStatusLine>
 
       {showEmptyState ? (
         <AdminEmptyState title="No portfolio photos yet">
           <p>
-            Upload originals on{' '}
-            <a href="/admin/ingest" style={adminAccentStyle}>
-              Upload
-            </a>
-            . When ingest status is <strong>ready</strong>, publish photos here for the public home
-            grid and hero.
+            Use the upload form above to add originals. When ingest status is <strong>ready</strong>
+            , publish photos here for the public home grid and hero.
           </p>
         </AdminEmptyState>
       ) : (
@@ -182,7 +243,7 @@ function PortfolioAdminTableInner() {
             <button
               type="button"
               className="mt-4 text-xs underline"
-              style={{ color: 'var(--color-fg)' }}
+              style={adminFgStyle}
               disabled={listQuery.isFetchingNextPage || busyIds.size > 0}
               onClick={() => {
                 void listQuery.fetchNextPage();

@@ -17,6 +17,8 @@ import {
   adminFgMutedStyle,
   adminFgStyle,
 } from './admin-styles.ts';
+import AdminPhotoUpload from './AdminPhotoUpload.tsx';
+import AdminSectionHeading from './AdminSectionHeading.tsx';
 import AdminStatusLine from './AdminStatusLine.tsx';
 import { AdminTable, AdminTableHead, AdminTableHeaderCell, AdminTableRow } from './AdminTable.tsx';
 
@@ -131,6 +133,7 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [editStatus, setEditStatus] = useState<string | null>(null);
+  const [busyPhotoId, setBusyPhotoId] = useState<string | null>(null);
   const detailQuery = useQuery(trpc.review.collections.detail.queryOptions({ id: collectionId }));
 
   const updateMutation = useMutation(
@@ -146,6 +149,18 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
     }),
   );
 
+  const deletePhotoMutation = useMutation(
+    trpc.review.collections.deletePhoto.mutationOptions({
+      onSuccess: async () => {
+        setEditStatus('Photo deleted.');
+        await queryClient.invalidateQueries(trpc.review.collections.detail.queryFilter());
+      },
+      onError: (error) => {
+        setEditStatus(errorMessage(error));
+      },
+    }),
+  );
+
   const patchCollection = async (data: ReviewCollectionAdminUpdateBody) => {
     setEditStatus('Saving…');
     try {
@@ -154,6 +169,22 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
       /* onError sets editStatus */
     }
   };
+
+  const deletePhoto = async (photoId: string) => {
+    if (!confirm(`Delete review photo ${photoId}? Storage objects will be removed.`)) return;
+    setBusyPhotoId(photoId);
+    setEditStatus('Deleting…');
+    try {
+      await deletePhotoMutation.mutateAsync({ collectionId, photoId });
+    } catch {
+      /* onError sets editStatus */
+    } finally {
+      setBusyPhotoId(null);
+    }
+  };
+
+  const photoActionsBusy =
+    updateMutation.isPending || deletePhotoMutation.isPending || busyPhotoId !== null;
 
   const statusMessage = detailQuery.isPending
     ? 'Loading…'
@@ -179,7 +210,7 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
       <AdminStatusLine>
         {statusMessage ??
           (photos.length === 0
-            ? 'No photos in this collection yet — upload via Upload with this collection id.'
+            ? 'No photos in this collection yet — upload below.'
             : `${photos.length} photo(s) · ${selectionCounts.selected} selected · ${selectionCounts.approved} approved`)}
       </AdminStatusLine>
 
@@ -237,6 +268,26 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
           </dl>
           {editStatus ? <AdminStatusLine className="mt-2">{editStatus}</AdminStatusLine> : null}
 
+          <section
+            id="upload"
+            className="mt-8 scroll-mt-8 rounded border p-4"
+            style={adminBorderStyle}
+            aria-label="Upload review photo"
+          >
+            <AdminSectionHeading>Upload</AdminSectionHeading>
+            <div className="mt-3">
+              <AdminPhotoUpload
+                bucket="review"
+                collectionId={collectionId}
+                compact
+                onSuccess={async () => {
+                  setEditStatus('Upload complete.');
+                  await queryClient.invalidateQueries(trpc.review.collections.detail.queryFilter());
+                }}
+              />
+            </div>
+          </section>
+
           <AdminTable className="mt-8">
             <AdminTableHead>
               <AdminTableHeaderCell>Preview</AdminTableHeaderCell>
@@ -244,7 +295,8 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
               <AdminTableHeaderCell>Size</AdminTableHeaderCell>
               <AdminTableHeaderCell>Selection</AdminTableHeaderCell>
               <AdminTableHeaderCell>Updated</AdminTableHeaderCell>
-              <AdminTableHeaderCell className="py-2">Id</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Id</AdminTableHeaderCell>
+              <AdminTableHeaderCell className="py-2">Actions</AdminTableHeaderCell>
             </AdminTableHead>
             <tbody>
               {photos.map((photo) => (
@@ -289,8 +341,24 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
                   <td className="py-2 pr-4 align-middle text-xs">
                     {formatAdminTime(photo.updatedAt)}
                   </td>
-                  <td className="py-2 align-middle font-mono text-xs" style={adminFgMutedStyle}>
+                  <td
+                    className="py-2 pr-4 align-middle font-mono text-xs"
+                    style={adminFgMutedStyle}
+                  >
                     {photo.id}
+                  </td>
+                  <td className="py-2 align-middle">
+                    <button
+                      type="button"
+                      className="text-xs underline"
+                      style={adminAccentStyle}
+                      disabled={photoActionsBusy}
+                      onClick={() => {
+                        void deletePhoto(photo.id);
+                      }}
+                    >
+                      Delete
+                    </button>
                   </td>
                 </AdminTableRow>
               ))}

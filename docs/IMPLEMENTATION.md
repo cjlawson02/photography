@@ -77,8 +77,8 @@ Access-gated admin UI and mutations for managing portfolio and (as review lands)
 
 - [x] Admin shell/layout behind Access ([PR #8](https://github.com/cjlawson02/photography/pull/8))
 - [x] Portfolio CRUD/list/publish/hero/sort flows — `/admin/portfolio` + tRPC `portfolio.*`
-- [x] Trigger/monitor ingest from admin — `/admin/ingest` smoke UI ([PR #8](https://github.com/cjlawson02/photography/pull/8)); reprocess also on portfolio admin for failed rows
-- [x] Review-collection management (create/list/revoke; attach uploads via ingest `collectionId`) — API + admin UI ([PR #8](https://github.com/cjlawson02/photography/pull/8)); revoke in Phase 4
+- [x] Trigger/monitor ingest from admin — inline upload on portfolio + review collection detail (`AdminPhotoUpload`); `/admin/ingest` redirects to portfolio; reprocess on portfolio admin for failed rows
+- [x] Review-collection management (create/list/revoke; attach uploads via ingest `collectionId`) — API + admin UI ([PR #8](https://github.com/cjlawson02/photography/pull/8)); revoke in Phase 4; list row **Upload** → detail `#upload`
 - [x] Confirm no admin mutations exist outside `/admin/*`
 
 ### Phase 3 — Public site
@@ -108,6 +108,7 @@ Shareable review links protected by secrecy only. Media via Worker `/media/revie
 - [x] `noindex` meta + `robots.txt` Disallow for review surfaces
 - [x] On review revoke: optional R2 cleanup + shorter `/media/review` cache TTL than portfolio
 - [x] Extension point for future password gate — `resolveReviewCollectionAccess` in `src/lib/review/collection-access.ts`
+- [x] Inline review upload on collection detail (`#upload`); list **Upload** links to detail anchor
 
 ### Phase 5 — Cutover
 
@@ -122,24 +123,31 @@ Move traffic/content from the current site to the new Workers deployment. Runboo
 
 ### Phase 2.5 — Post-MVP backlog
 
-Tracked after [#21](https://github.com/cjlawson02/photography/pull/21)–[#23](https://github.com/cjlawson02/photography/pull/23) reviews. Not blocking cutover; pick up in focused PRs.
+Hardening and polish after MVP ([#21](https://github.com/cjlawson02/photography/pull/21)–[#23](https://github.com/cjlawson02/photography/pull/23)). Most rows are **done**; open work is explicit.
 
 | ID | Item | Notes |
 | --- | --- | --- |
-| B3 | Admin review selections + photos view | tRPC/UI for `ReviewPhotos` / `selectionStatus`; `review.collections.detail` |
-| S1 | Review slug hardening | Server-generated or min-length URL-safe slugs |
-| S2 | Rate-limit `/review/api/selection` | Workers rate-limit binding |
-| S4 | Delete / revoke ordering | Done — R2 `deleteObjects` batch; revoke `db.batch`; portfolio/review R2-before-D1 |
-| S6 | Security headers | Done — Astro `src/middleware.ts` + `src/lib/http/security-headers.ts` |
-| P1 | Ingest dimensions | **Done** — `width`/`height` on `PortfolioPhotos` / `ReviewPhotos` via Images `info()` at ingest complete; admin portfolio + review detail; public home masonry + review gallery (`aspect-ratio`, PhotoSwipe) with 1600×1200 fallback when null |
-| P2 | Portfolio alt / title / caption | **Done (foundation)** — nullable `alt`, `title`, `caption` on `PortfolioPhotos` (migration `0004_*`); `portfolio.update` + admin `PortfolioRow`; public home gallery/hero pass `alt` to `<img>`; lightbox uses `alt` with `title` fallback (caption UI `_TBD_`) |
-| P3–P7 | Product polish | Empty states, review lifecycle, upload hardening, pending TTL, admin pagination — see [HLD](HLD.md) `_TBD_` |
-| M1–M4 | Frontend islands + primitives | **M1** Done — TanStack Query + tRPC on portfolio/review/ingest. **M2** Done — removed `lib/admin/portfolio-api.ts` and `review-collections-api.ts` (router output types in `trpc-types.ts`). **M3** Done — shared admin primitives under `src/components/admin/` (`admin-styles`, `admin-format`, `AdminTable`, `AdminStatusLine`, `AdminSectionHeading`, `AdminPrimaryButton`, `AdminFieldLabel`); fixed ingest form merge conflict + upload progress. **M4** N/A — hero keeps imperative `embla-carousel` per [FRONTEND.md](FRONTEND.md) (no `embla-carousel-react` migration). |
-| T1 | Test suite | **Partial** — node:test for `POST /review/api/selection` (`post-selection.ts`), security headers, tRPC rate-limit middleware; RTL + Vitest migration `_TBD_` |
-| T4 | D1 migrations in CI | Pre-deploy apply on `main` in [ci-cd.yml](../.github/workflows/ci-cd.yml); optional gate / PR dry-run `_TBD_` |
-| T5 | Indexes | Done — migration `0002_*`; `ReviewPhotos.collectionId`, `PortfolioPhotos(published, status)` |
-| T6–T7 | Cutover + bulk migration | [CUTOVER.md](CUTOVER.md); legacy WP migration deferred |
-| O1 | Sentry | **Partial** — Worker entry (`sentry.server.config.ts`), `SENTRY_DSN` secret + `SENTRY_RELEASE` from CI deploy ([DEPLOY.md](DEPLOY.md)); unhandled fetch errors + tRPC/HTTP 5xx capture. _Remaining:_ browser SDK; Sentry source-map upload for Worker bundles (optional `wrangler deploy --upload-source-maps` / release artifacts — not wired in CI yet) |
+| B3 | Admin review selections + photos view | **Done** — `review.collections.detail`, `ReviewCollectionDetailAdmin` ([#26](https://github.com/cjlawson02/photography/pull/26)) |
+| S1 | Review slug hardening | **Done** — server-generated slugs + optional prefix ([#27](https://github.com/cjlawson02/photography/pull/27)) |
+| S2 | Rate-limit `/review/api/selection` | **Done** — `REVIEW_SELECTION_RATE_LIMITER`; hashed IP; `ADMIN_TRPC_RATE_LIMITER` on `ingest.*` ([#27](https://github.com/cjlawson02/photography/pull/27)) |
+| S4 | Delete / revoke ordering | **Done** — R2 batch delete; R2-before-D1 ([#30](https://github.com/cjlawson02/photography/pull/30)) |
+| S6 | Security headers | **Done** — middleware + CSP (Astro inline + Cloudflare beacon) ([#25](https://github.com/cjlawson02/photography/pull/25), [#43](https://github.com/cjlawson02/photography/pull/43)) |
+| P1 | Ingest dimensions | **Done** — ingest + public galleries ([#31](https://github.com/cjlawson02/photography/pull/31), [#34](https://github.com/cjlawson02/photography/pull/34)) |
+| P2 | Portfolio alt / title / caption | **Done (foundation)** — migration `0004_*` ([#36](https://github.com/cjlawson02/photography/pull/36)). _Open:_ lightbox caption UI |
+| P3 | Admin empty states | **Done** ([#39](https://github.com/cjlawson02/photography/pull/39)) |
+| P4 | Upload UX | **Done** — progress bar ([#40](https://github.com/cjlawson02/photography/pull/40)); inline upload ([#45](https://github.com/cjlawson02/photography/pull/45)) |
+| P5 | Review lifecycle | **Done (partial)** — collection update ([#41](https://github.com/cjlawson02/photography/pull/41)); delete review photo ([#42](https://github.com/cjlawson02/photography/pull/42)) |
+| P6 | Stale pending ingest | **Done** — lazy cleanup on admin lists; no Cron ([#44](https://github.com/cjlawson02/photography/pull/44), [#45](https://github.com/cjlawson02/photography/pull/45)) |
+| P7 | Admin pagination | **Done (partial)** — `portfolio.list` cursor ([#38](https://github.com/cjlawson02/photography/pull/38)) |
+| M1 | Admin Query islands | **Done** — TanStack + tRPC on portfolio/review |
+| M2 | Dead admin fetch helpers | **Done** ([#29](https://github.com/cjlawson02/photography/pull/29)) |
+| M3–M4 | UI primitives / Embla | **M3 Done** ([#46](https://github.com/cjlawson02/photography/pull/46)) — `admin-styles`, `admin-format`, table/status/form primitives + `AdminPhotoUpload`. **M4 N/A** — imperative `embla-carousel` per [FRONTEND.md](FRONTEND.md). |
+| M5 | Admin forms | _Open_ — pivot admin forms to [react-hook-form](https://react-hook-form.com/) with `@hookform/resolvers/zod` (reuse existing Zod schemas where possible) |
+| T1 | Test suite | **Partial** ([#33](https://github.com/cjlawson02/photography/pull/33), [#47](https://github.com/cjlawson02/photography/pull/47)). Vitest + RTL on [#47](https://github.com/cjlawson02/photography/pull/47). **RTL:** prefer `@testing-library/user-event` over `fireEvent` (almost always) |
+| T4 | D1 migrations in CI | **Done** on `main` deploy ([#28](https://github.com/cjlawson02/photography/pull/28)); PR dry-run gate `_TBD_` |
+| T5 | Indexes | **Done** ([#25](https://github.com/cjlawson02/photography/pull/25)) |
+| T6–T7 | Cutover + bulk migration | _Open_ — [CUTOVER.md](CUTOVER.md); legacy 301 via Cloudflare Redirect Rules |
+| O1 | Sentry | **Partial** ([#32](https://github.com/cjlawson02/photography/pull/32), [#35](https://github.com/cjlawson02/photography/pull/35)). **Decision:** stay on `@sentry/cloudflare` SDK (worker `withSentry` + targeted `captureWorkerException`); skip [Workers OTEL→Sentry](https://developers.cloudflare.com/workers/observability/exporting-opentelemetry-data/sentry/) unless we need automatic D1/R2 traces later. _Open:_ admin browser SDK; source maps in CI |
 
 ## Dependencies
 

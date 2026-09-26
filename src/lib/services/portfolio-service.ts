@@ -44,6 +44,7 @@ export class PortfolioService {
     const rows = await this.app.d1.portfolioPhotos.listForAdminPage({
       limit: input.limit,
       cursor,
+      stalePendingOnly: input.stalePendingOnly,
     });
     const hasMore = rows.length > input.limit;
     const items = hasMore ? rows.slice(0, input.limit) : rows;

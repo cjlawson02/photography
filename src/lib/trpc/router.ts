@@ -6,16 +6,19 @@ import {
 } from '../admin/portfolio-schemas.ts';
 import {
   reviewCollectionCreateBodySchema,
+  reviewCollectionDeletePhotoInputSchema,
   reviewCollectionDetailInputSchema,
   reviewCollectionUpdateInputSchema,
 } from '../admin/review-collection-schemas.ts';
 import { idSchema } from '../../db/schema/types.ts';
 import { completeBodySchema, presignBodySchema, reprocessBodySchema } from '../ingest/schemas.ts';
+import { IngestMaintenanceService } from '../services/ingest-maintenance-service.ts';
 import { IngestService } from '../services/ingest-service.ts';
 import { PortfolioService } from '../services/portfolio-service.ts';
 import { ReviewService } from '../services/review-service.ts';
 import { createTRPCRouter } from './init.ts';
 import { adminProcedure, rateLimitedAdminProcedure } from './middleware.ts';
+import { scheduleStalePendingCleanup } from './schedule-stale-pending-cleanup.ts';
 
 const portfolioUpdateInputSchema = z.object({
   id: idSchema,
@@ -34,11 +37,10 @@ const reviewRevokeInputSchema = z.object({
 
 export const appRouter = createTRPCRouter({
   portfolio: createTRPCRouter({
-    list: adminProcedure
-      .input(portfolioListInputSchema)
-      .query(async ({ ctx, input }) =>
-        PortfolioService.from(ctx.getAppEnv()).listForAdminPage(input),
-      ),
+    list: adminProcedure.input(portfolioListInputSchema).query(async ({ ctx, input }) => {
+      scheduleStalePendingCleanup(ctx);
+      return PortfolioService.from(ctx.getAppEnv()).listForAdminPage(input);
+    }),
     update: adminProcedure
       .input(portfolioUpdateInputSchema)
       .mutation(async ({ ctx, input }) =>
@@ -54,9 +56,10 @@ export const appRouter = createTRPCRouter({
   }),
   review: createTRPCRouter({
     collections: createTRPCRouter({
-      list: adminProcedure.query(async ({ ctx }) =>
-        ctx.getAppEnv().d1.reviewCollections.listRecent(),
-      ),
+      list: adminProcedure.query(async ({ ctx }) => {
+        scheduleStalePendingCleanup(ctx);
+        return ctx.getAppEnv().d1.reviewCollections.listRecent();
+      }),
       create: adminProcedure
         .input(reviewCollectionCreateBodySchema)
         .mutation(async ({ ctx, input }) =>
@@ -77,6 +80,15 @@ export const appRouter = createTRPCRouter({
         .mutation(async ({ ctx, input }) =>
           ReviewService.from(ctx.getAppEnv()).updateCollection(input.id, input.data),
         ),
+      deletePhoto: adminProcedure
+        .input(reviewCollectionDeletePhotoInputSchema)
+        .mutation(async ({ ctx, input }) =>
+          ReviewService.from(ctx.getAppEnv())
+            .deleteCollectionPhoto(input.collectionId, input.photoId, {
+              cleanupR2: input.cleanupR2,
+            })
+            .then(() => ({ id: input.photoId })),
+        ),
     }),
   }),
   ingest: createTRPCRouter({
@@ -95,6 +107,9 @@ export const appRouter = createTRPCRouter({
       .mutation(async ({ ctx, input }) =>
         IngestService.from(ctx.getIngestAppEnv()).reprocess(input),
       ),
+    cleanupStalePending: adminProcedure.mutation(async ({ ctx }) =>
+      IngestMaintenanceService.fromAppEnv(ctx.getAppEnv()).cleanupStalePending(),
+    ),
   }),
 });
 

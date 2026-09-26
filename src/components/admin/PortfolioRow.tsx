@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import type { PortfolioPhotoAdminUpdateBody } from '../../lib/admin/portfolio-schemas.ts';
 import type { AdminPortfolioPhoto } from '../../lib/admin/trpc-types.ts';
+import { isStalePendingIngest } from '../../lib/ingest/stale-pending.ts';
 import { portfolioVariantPublicUrl } from '../../lib/media/portfolio-public-url.ts';
 import { isPortfolioCategory, PORTFOLIO_CATEGORIES } from '../../lib/portfolio/categories.ts';
 import { formatAdminDimensions, formatAdminTime, normalizeNullableText } from './admin-format.ts';
@@ -81,6 +82,7 @@ export default function PortfolioRow({ photo, busy, onPatch, onDelete, onReproce
       : null;
   const canPublish = photo.status === 'ready';
   const canReprocess = photo.status === 'failed' || photo.status === 'pending';
+  const stalePending = photo.status === 'pending' && isStalePendingIngest(photo.createdAt);
 
   return (
     <tr style={adminTableRowStyle}>
@@ -106,6 +108,15 @@ export default function PortfolioRow({ photo, busy, onPatch, onDelete, onReproce
       </td>
       <td className="py-3 pr-4 align-middle">
         <code className="text-xs">{photo.status}</code>
+        {stalePending ? (
+          <span
+            className="ml-2 text-xs"
+            style={{ color: 'var(--color-accent)' }}
+            title="Pending longer than presign TTL + grace — safe to delete or run cleanup"
+          >
+            stale
+          </span>
+        ) : null}
       </td>
       <td className="py-3 pr-4 align-middle text-xs tabular-nums" style={adminFgMutedStyle}>
         {formatAdminDimensions(photo.width, photo.height)}

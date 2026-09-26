@@ -148,12 +148,9 @@ function ReviewCollectionsAdminInner() {
         {showCollectionsEmpty ? (
           <AdminEmptyState title="No review collections yet">
             <p>
-              Use the form above to create a collection, then upload review photos on{' '}
-              <a href="/admin/ingest" style={adminAccentStyle}>
-                Upload
-              </a>{' '}
-              (choose the <strong>review</strong> bucket and pick this collection). Share the client
-              link from the table once rows appear here.
+              Use the form above to create a collection, then open <strong>Inspect</strong> and
+              upload photos on the collection detail page. Share the client link from the table once
+              rows appear here.
             </p>
           </AdminEmptyState>
         ) : (
@@ -200,6 +197,9 @@ function ReviewCollectionsAdminInner() {
                     <td className="py-2 pr-4 text-xs">
                       <a href={detailPath} className="mr-3" style={adminAccentStyle}>
                         Inspect
+                      </a>
+                      <a href={`${detailPath}#upload`} className="mr-3" style={adminAccentStyle}>
+                        Upload
                       </a>
                       <button
                         type="button"
