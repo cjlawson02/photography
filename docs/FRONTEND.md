@@ -18,6 +18,7 @@ Interactive UI uses **React** via `@astrojs/react`. Astro pages own layout and S
 | Home hero carousel | `client:load` | Above the fold; autoplay and keyboard nav should work immediately. |
 | Home masonry gallery | `client:visible` | Below hero; defer JS until the gallery scrolls into view. |
 | Review gallery | `client:load` | Primary task on the page; selection + lightbox need JS on arrival. |
+| Admin portfolio table | `client:load` | Access-gated; table edits need JS on arrival. |
 
 ## Libraries
 
