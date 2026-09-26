@@ -17,6 +17,14 @@
       "pattern": "photography.chrislawson.dev",
       "custom_domain": true,
     },
+    {
+      "pattern": "lawsonphotography.me",
+      "custom_domain": true,
+    },
+    {
+      "pattern": "www.lawsonphotography.me",
+      "custom_domain": true,
+    },
   ],
   // Access JWT config — not credentials; set via vars (see docs/DEPLOY.md).
   "vars": {

@@ -20,7 +20,8 @@ Move production traffic from the legacy WordPress site to the Workers deployment
 | Workers custom domain + SSL for `photography.chrislawson.dev` | Done | Live on Workers (Chris, 2026-09-26) |
 | Access application covers `/admin*` on `photography.chrislawson.dev` | _TBD_ | Re-verify after DNS or Access changes |
 | Lower TTL on **legacy** DNS (`lawsonphotography.me`) | _TBD_ | Before pointing legacy host at Workers or redirects |
-| **301 redirect** `lawsonphotography.me` (+ `www`) → `photography.chrislawson.dev` | Chris / Cloudflare | Preferred cutover: Redirect Rules (or Bulk Redirects) on the **legacy zone**, preserve path/query where sensible (`$1`). No code change required in this Worker unless we later host the legacy zone on the same script. |
+| Route **apex + www** (`lawsonphotography.me`, `www.lawsonphotography.me`) to this Worker | Chris / Cloudflare | **DNS prerequisite:** custom domains in `wrangler.jsonc` (same pattern as `photography.chrislawson.dev` in [DEPLOY.md](DEPLOY.md)); zone must be on the Cloudflare account so SSL + records provision on deploy |
+| **301 redirect** `lawsonphotography.me` (+ `www`) → `photography.chrislawson.dev` | Deployed in Worker | `src/middleware.ts` + `src/lib/http/legacy-redirect.ts` — path and query preserved. Alternative: Redirect Rules on the legacy zone if legacy traffic must not hit this script |
 
 ## Content and asset migration
 
@@ -34,14 +35,16 @@ Bulk migration from legacy WordPress/R2 is **deferred** to a separate effort ([I
 
 Until migration completes, new portfolio work uses admin ingest on the Workers host; bulk legacy import remains _TBD_.
 
-### Legacy 301 (recommended)
+### Legacy 301 (Worker)
 
 When ready to retire the WordPress site publicly:
 
 1. Ensure `photography.chrislawson.dev` passes [SMOKE.md](SMOKE.md).
-2. In Cloudflare **lawsonphotography.me** zone: **Rules → Redirect Rules** (or Bulk Redirects).
-3. Match `http*://lawsonphotography.me/*` and `http*://www.lawsonphotography.me/*` → **301** to `https://photography.chrislawson.dev/${uri.path}` (adjust if path mapping differs; add query passthrough if needed).
+2. **DNS:** lower TTL on the legacy zone, then deploy so `lawsonphotography.me` and `www.lawsonphotography.me` are Workers custom domains on this script (see table above).
+3. Deploy `main` (or promote CI) — middleware issues **301** to `https://photography.chrislawson.dev` with the same path and query string.
 4. Spot-check home, deep links, and that review URLs on the new host still use `/review/{slug}` (not legacy Picu paths).
+
+**Alternative (no Worker on legacy host):** Cloudflare **lawsonphotography.me** zone → **Rules → Redirect Rules** — match apex + `www` → **301** to `https://photography.chrislawson.dev/${uri.path}` with query passthrough.
 
 WordPress-specific URLs may need a small redirect map table later — _TBD_.
 
@@ -51,7 +54,7 @@ WordPress-specific URLs may need a small redirect map table later — _TBD_.
 2. _TBD_ — apply remote D1 migrations: `npx wrangler d1 migrations apply photography --remote`
 3. _TBD_ — deploy: `npx wrangler deploy` (or CI promote)
 4. _TBD_ — run [SMOKE.md](SMOKE.md) against production host
-5. _TBD_ — enable **301** from `lawsonphotography.me` → `photography.chrislawson.dev` (see above); new host already live
+5. _TBD_ — point legacy DNS at this Worker and deploy **301** middleware (see above); new host already live
 6. _TBD_ — post-cutover smoke + spot-check public home, media URLs, admin ingest
 
 ## Rollback
