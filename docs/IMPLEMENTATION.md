@@ -123,25 +123,30 @@ Move traffic/content from the current site to the new Workers deployment. Runboo
 
 ### Phase 2.5 — Post-MVP backlog
 
-Tracked after [#21](https://github.com/cjlawson02/photography/pull/21)–[#23](https://github.com/cjlawson02/photography/pull/23) reviews. Not blocking cutover; pick up in focused PRs.
+Hardening and polish after MVP ([#21](https://github.com/cjlawson02/photography/pull/21)–[#23](https://github.com/cjlawson02/photography/pull/23)). Most rows are **done**; open work is explicit.
 
 | ID | Item | Notes |
 | --- | --- | --- |
-| B3 | Admin review selections + photos view | tRPC/UI for `ReviewPhotos` / `selectionStatus`; `review.collections.detail` |
-| S1 | Review slug hardening | Server-generated or min-length URL-safe slugs |
-| S2 | Rate-limit `/review/api/selection` | Workers rate-limit binding |
-| S4 | Delete / revoke ordering | Done — R2 `deleteObjects` batch; revoke `db.batch`; portfolio/review R2-before-D1 |
-| S6 | Security headers | Done — Astro `src/middleware.ts` + `src/lib/http/security-headers.ts` |
-| P1 | Ingest dimensions | **Done** — `width`/`height` on `PortfolioPhotos` / `ReviewPhotos` via Images `info()` at ingest complete; admin portfolio + review detail; public home masonry + review gallery (`aspect-ratio`, PhotoSwipe) with 1600×1200 fallback when null |
-| P2 | Portfolio alt / title / caption | **Done (foundation)** — nullable `alt`, `title`, `caption` on `PortfolioPhotos` (migration `0004_*`); `portfolio.update` + admin `PortfolioRow`; public home gallery/hero pass `alt` to `<img>`; lightbox uses `alt` with `title` fallback (caption UI `_TBD_`) |
-| P6 | Pending ingest TTL | **Done** — `PENDING_INGEST_STALE_MS` in `stale-pending.ts`; lazy `waitUntil` cleanup on admin `portfolio.list` / `review.collections.list`; portfolio stale filter + manual `ingest.cleanupStalePending` (no Cron) |
-| P3–P5, P7 | Product polish | Empty states, review lifecycle, upload hardening, admin pagination — see [HLD](HLD.md) `_TBD_` |
-| M1–M4 | Frontend islands + primitives | Query islands on admin portfolio/review/ingest; **M2** — removed `lib/admin/portfolio-api.ts` and `review-collections-api.ts` (router output types in `trpc-types.ts`); shared UI primitives + optional `embla-carousel-react` `_TBD_` |
-| T1 | Test suite | **Partial** — node:test for `POST /review/api/selection` (`post-selection.ts`), security headers, tRPC rate-limit middleware; RTL + Vitest migration `_TBD_` |
-| T4 | D1 migrations in CI | Pre-deploy apply on `main` in [ci-cd.yml](../.github/workflows/ci-cd.yml); optional gate / PR dry-run `_TBD_` |
-| T5 | Indexes | Done — migration `0002_*`; `ReviewPhotos.collectionId`, `PortfolioPhotos(published, status)` |
-| T6–T7 | Cutover + bulk migration | [CUTOVER.md](CUTOVER.md); legacy WP migration deferred |
-| O1 | Sentry | **Partial** — Worker entry (`sentry.server.config.ts`), `SENTRY_DSN` secret + `SENTRY_RELEASE` from CI deploy ([DEPLOY.md](DEPLOY.md)); unhandled fetch errors + tRPC/HTTP 5xx capture. _Remaining:_ browser SDK; Sentry source-map upload for Worker bundles (optional `wrangler deploy --upload-source-maps` / release artifacts — not wired in CI yet) |
+| B3 | Admin review selections + photos view | **Done** — `review.collections.detail`, `ReviewCollectionDetailAdmin` ([#26](https://github.com/cjlawson02/photography/pull/26)) |
+| S1 | Review slug hardening | **Done** — server-generated slugs + optional prefix ([#27](https://github.com/cjlawson02/photography/pull/27)) |
+| S2 | Rate-limit `/review/api/selection` | **Done** — `REVIEW_SELECTION_RATE_LIMITER`; hashed IP; `ADMIN_TRPC_RATE_LIMITER` on `ingest.*` ([#27](https://github.com/cjlawson02/photography/pull/27)) |
+| S4 | Delete / revoke ordering | **Done** — R2 batch delete; R2-before-D1 ([#30](https://github.com/cjlawson02/photography/pull/30)) |
+| S6 | Security headers | **Done** — middleware + CSP (Astro inline + Cloudflare beacon) ([#25](https://github.com/cjlawson02/photography/pull/25), [#43](https://github.com/cjlawson02/photography/pull/43)) |
+| P1 | Ingest dimensions | **Done** — ingest + public galleries ([#31](https://github.com/cjlawson02/photography/pull/31), [#34](https://github.com/cjlawson02/photography/pull/34)) |
+| P2 | Portfolio alt / title / caption | **Done (foundation)** — migration `0004_*` ([#36](https://github.com/cjlawson02/photography/pull/36)). _Open:_ lightbox caption UI |
+| P3 | Admin empty states | **Done** ([#39](https://github.com/cjlawson02/photography/pull/39)) |
+| P4 | Upload UX | **Done** — progress bar ([#40](https://github.com/cjlawson02/photography/pull/40)); inline upload ([#45](https://github.com/cjlawson02/photography/pull/45)) |
+| P5 | Review lifecycle | **Done (partial)** — collection update ([#41](https://github.com/cjlawson02/photography/pull/41)); delete review photo ([#42](https://github.com/cjlawson02/photography/pull/42)) |
+| P6 | Stale pending ingest | **Done** — lazy cleanup on admin lists; no Cron ([#44](https://github.com/cjlawson02/photography/pull/44), [#45](https://github.com/cjlawson02/photography/pull/45)) |
+| P7 | Admin pagination | **Done (partial)** — `portfolio.list` cursor ([#38](https://github.com/cjlawson02/photography/pull/38)) |
+| M1 | Admin Query islands | **Done** — TanStack + tRPC on portfolio/review |
+| M2 | Dead admin fetch helpers | **Done** ([#29](https://github.com/cjlawson02/photography/pull/29)) |
+| M3–M4 | UI primitives / Embla | _Open_ — shared admin components; optional `embla-carousel-react` |
+| T1 | Test suite | **Partial** ([#33](https://github.com/cjlawson02/photography/pull/33)); Vitest + RTL `_TBD_` |
+| T4 | D1 migrations in CI | **Done** on `main` deploy ([#28](https://github.com/cjlawson02/photography/pull/28)); PR dry-run gate `_TBD_` |
+| T5 | Indexes | **Done** ([#25](https://github.com/cjlawson02/photography/pull/25)) |
+| T6–T7 | Cutover + bulk migration | _Open_ — [CUTOVER.md](CUTOVER.md); legacy 301 via Cloudflare Redirect Rules |
+| O1 | Sentry | **Partial** ([#32](https://github.com/cjlawson02/photography/pull/32), [#35](https://github.com/cjlawson02/photography/pull/35)). _Open:_ browser SDK; source maps in CI |
 
 ## Dependencies
 
