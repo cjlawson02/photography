@@ -61,9 +61,18 @@ Create a Sentry project (Cloudflare / JavaScript) and copy the DSN. **Do not com
 npx wrangler secret put SENTRY_DSN
 ```
 
-**Release:** GitHub Actions sets Worker var `SENTRY_RELEASE` to `${{ github.sha }}` on each production deploy (`wrangler deploy --var SENTRY_RELEASE:<sha>`). That value is passed to Sentry as `release` when the DSN is configured ([`sentryOptionsFromEnv`](../src/lib/observability/sentry.ts)). Do not store release as a secret.
+**Release:** GitHub Actions sets Worker var `SENTRY_RELEASE` to `${{ github.sha }}` on each production deploy (`wrangler deploy --var SENTRY_RELEASE:<sha>`). That value is passed to Sentry as `release` when the DSN is configured ([`sentryOptionsFromEnv`](../src/lib/observability/sentry.ts)). The admin React shell uses the same DSN and release via [`AdminSentryBootstrap`](../src/components/admin/AdminSentryBootstrap.tsx) on `/admin*` pages. Do not store release as a secret.
 
-Local: add `SENTRY_DSN=` to `.dev.vars`; optionally set `SENTRY_RELEASE=` (e.g. `photography@local`) for release grouping in dev. Browser / admin client SDK and CI source-map upload are deferred (see [IMPLEMENTATION.md](IMPLEMENTATION.md) Phase 2.5 **O1**).
+**Source maps (production deploy):** When `SENTRY_AUTH_TOKEN` plus `SENTRY_ORG` / `SENTRY_PROJECT` repo variables are set, the deploy job uploads maps to Sentry (same `SENTRY_RELEASE` as the Worker var, `${{ github.sha }}` in CI):
+
+| Artifact | Mechanism |
+| --- | --- |
+| **Client** (Astro / Vite `dist/`) | [`@sentry/vite-plugin`](../astro.config.mjs) during `npm run build` — `build.sourcemap: "hidden"`, plugin last in `vite.plugins`, deletes client `.map` files after upload |
+| **Worker** bundle | `wrangler deploy --outdir dist-worker --upload-source-maps --var SENTRY_RELEASE:<sha>` then `npm run sentry:sourcemaps` ([`scripts/sentry-worker-sourcemaps.mjs`](../scripts/sentry-worker-sourcemaps.mjs) — `sentry-cli releases new` + `sourcemaps upload` for `dist-worker/`) |
+
+`upload_source_maps` in [`wrangler.jsonc`](../wrangler.jsonc) uploads maps to **Cloudflare** Workers observability only; that path is independent of Sentry. PR CI omits secrets, so client maps stay off (`sourcemap: false`) and `sentry:sourcemaps` no-ops.
+
+Local: add `SENTRY_DSN=` to `.dev.vars`; optionally set `SENTRY_RELEASE=` (e.g. `photography@local`) for release grouping in dev. Admin browser Sentry is a no-op without DSN.
 
 ## 4. R2 CORS (IaC)
 
@@ -111,6 +120,14 @@ Workflow: [`.github/workflows/ci-cd.yml`](../.github/workflows/ci-cd.yml).
 | --- | --- |
 | `CLOUDFLARE_API_TOKEN` | API token with **Workers Scripts Edit**, **D1 Edit** (or permission to apply migrations on `photography`), and account access to D1/R2 bindings used by the Worker |
 | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account id (R2 / Workers overview) |
+| `SENTRY_AUTH_TOKEN` | Sentry org auth token with `project:releases` and `org:read` — optional; deploy skips source-map upload when unset |
+
+**Repository variables** (Settings → Secrets and variables → Actions → Variables):
+
+| Variable | Purpose |
+| --- | --- |
+| `SENTRY_ORG` | Sentry organization slug (required with `SENTRY_AUTH_TOKEN` for upload) |
+| `SENTRY_PROJECT` | Sentry project slug (same project as Worker DSN) |
 
 Worker **secrets** (`R2_*`, optional `SENTRY_DSN`) stay on Cloudflare; CI does not upload them. **Vars:** `CF_ACCESS_*` in [`wrangler.jsonc`](../wrangler.jsonc); deploy also sets `SENTRY_RELEASE` to the commit SHA (`github.sha`) via `wrangler deploy --var`. **Push to `main`** runs remote D1 migrations in the deploy job before the Worker deploy. For local or emergency apply without deploy: `npx wrangler d1 migrations apply photography --remote`.
 

@@ -1,5 +1,6 @@
 # CI on every PR and push; deploy Worker to Cloudflare on push to main only.
 # Required repo secrets (deploy job): CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+# Optional Sentry source maps (deploy): SENTRY_AUTH_TOKEN secret; SENTRY_ORG + SENTRY_PROJECT repo variables
 # See docs/DEPLOY.md — deploy job applies D1 remote migrations before Worker deploy.
 #
 # Action versions (2026-09): checkout/setup-node v7; wrangler-action v4 (Wrangler from package-lock after npm ci).
@@ -68,6 +69,11 @@ jobs:
         run: npm ci
 
       - name: Production build
+        env:
+          SENTRY_RELEASE: ${{ github.sha }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
         run: npm run build
 
       - name: Apply D1 migrations (remote)
@@ -82,5 +88,13 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # Plain var (not secret) — consumed by sentryOptionsFromEnv in sentry.server.config.ts
-          command: deploy --var SENTRY_RELEASE:${{ github.sha }}
+          # SENTRY_RELEASE → sentryOptionsFromEnv; dist-worker → npm run sentry:sourcemaps (not Astro dist/)
+          command: deploy --var SENTRY_RELEASE:${{ github.sha }} --outdir dist-worker --upload-source-maps
+
+      - name: Upload Worker source maps to Sentry
+        env:
+          SENTRY_RELEASE: ${{ github.sha }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+        run: npm run sentry:sourcemaps

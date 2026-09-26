@@ -1,21 +1,16 @@
 import * as Sentry from '@sentry/cloudflare';
 import type { CloudflareOptions } from '@sentry/cloudflare';
 
-function configuredSecret(value: string | undefined): string | undefined {
-  if (typeof value !== 'string') return undefined;
-  const trimmed = value.trim();
-  return trimmed === '' ? undefined : trimmed;
-}
+import { sentryClientConfigFromEnv } from './sentry-config.ts';
 
 /** Worker `withSentry` options — returns `undefined` when DSN unset (dev no-op). */
 export function sentryOptionsFromEnv(env: Env): CloudflareOptions | undefined {
-  const dsn = configuredSecret(env.SENTRY_DSN);
-  if (!dsn) return undefined;
+  const client = sentryClientConfigFromEnv(env);
+  if (!client) return undefined;
 
-  const release = configuredSecret(env.SENTRY_RELEASE);
   return {
-    dsn,
-    ...(release ? { release } : {}),
+    dsn: client.dsn,
+    ...(client.release ? { release: client.release } : {}),
   };
 }
 

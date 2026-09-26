@@ -1,4 +1,8 @@
 ---
+import { env } from 'cloudflare:workers';
+
+import AdminSentryBootstrap from '../components/admin/AdminSentryBootstrap.tsx';
+import { sentryClientConfigFromEnv } from '../lib/observability/sentry-config.ts';
 import BaseLayout from './BaseLayout.astro';
 
 export type AdminNavId = 'dashboard' | 'portfolio' | 'review';
@@ -9,6 +13,8 @@ interface Props {
 }
 
 const { title = 'Admin — Lawson Photography', current = 'dashboard' } = Astro.props;
+
+const adminSentry = sentryClientConfigFromEnv(env);
 
 const nav: { id: AdminNavId; href: string; label: string }[] = [
 	{ id: 'dashboard', href: '/admin', label: 'Dashboard' },
@@ -24,6 +30,11 @@ function navLinkStyle(active: boolean): string {
 ---
 
 <BaseLayout title={title}>
+	{
+		adminSentry ? (
+			<AdminSentryBootstrap client:load dsn={adminSentry.dsn} release={adminSentry.release} />
+		) : null
+	}
 	<div class="flex min-h-dvh flex-col">
 		<header
 			class="border-b px-4 py-4"
