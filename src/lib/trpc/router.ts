@@ -21,6 +21,7 @@ import { idSchema } from '../../db/schema/types.ts';
 import { completeBodySchema, presignBodySchema, reprocessBodySchema } from '../ingest/schemas.ts';
 import { IngestMaintenanceService } from '../services/ingest-maintenance-service.ts';
 import { IngestService } from '../services/ingest-service.ts';
+import { DashboardService } from '../services/dashboard-service.ts';
 import { PortfolioService } from '../services/portfolio-service.ts';
 import { ReviewService } from '../services/review-service.ts';
 import { createTRPCRouter } from './init.ts';
@@ -43,6 +44,11 @@ const reviewRevokeInputSchema = z.object({
 });
 
 export const appRouter = createTRPCRouter({
+  dashboard: createTRPCRouter({
+    summary: adminProcedure.query(async ({ ctx }) =>
+      DashboardService.from(ctx.getAppEnv()).getSummary(),
+    ),
+  }),
   portfolio: createTRPCRouter({
     list: adminProcedure.input(portfolioListInputSchema).query(async ({ ctx, input }) => {
       scheduleStalePendingCleanup(ctx);
