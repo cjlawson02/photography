@@ -1,11 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 
-import {
-  createReviewCollection,
-  fetchReviewCollections,
-  revokeReviewCollection,
-  type AdminReviewCollection,
-} from '../../lib/admin/review-collections-api.ts';
+import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
 
 const fieldStyle = {
   borderColor: 'var(--color-border)',
@@ -27,27 +23,51 @@ async function copyText(label: string, text: string, onStatus: (message: string)
   }
 }
 
-export default function ReviewCollectionsAdmin() {
-  const [collections, setCollections] = useState<AdminReviewCollection[]>([]);
-  const [listStatus, setListStatus] = useState('Loading…');
+function ReviewCollectionsAdminInner() {
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const [actionStatus, setActionStatus] = useState<string | null>(null);
   const [createStatus, setCreateStatus] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  const reload = useCallback(async () => {
-    setListStatus('Loading…');
-    try {
-      const rows = await fetchReviewCollections();
-      setCollections(rows);
-      setListStatus(rows.length === 0 ? 'No collections yet.' : `${rows.length} collection(s).`);
-    } catch (error) {
-      setCollections([]);
-      setListStatus(error instanceof Error ? error.message : String(error));
-    }
-  }, []);
+  const listQuery = useQuery(trpc.review.collections.list.queryOptions());
+  const collections = listQuery.data ?? [];
 
-  useEffect(() => {
-    void reload();
-  }, [reload]);
+  const listStatus = listQuery.isPending
+    ? 'Loading…'
+    : listQuery.isError
+      ? listQuery.error instanceof Error
+        ? listQuery.error.message
+        : String(listQuery.error)
+      : collections.length === 0
+        ? 'No collections yet.'
+        : `${collections.length} collection(s).`;
+
+  const statusMessage = actionStatus !== null ? actionStatus : listStatus;
+
+  const createMutation = useMutation(
+    trpc.review.collections.create.mutationOptions({
+      onSuccess: async () => {
+        setCreateStatus('Created.');
+        await queryClient.invalidateQueries(trpc.review.collections.list.queryFilter());
+      },
+      onError: (error) => {
+        setCreateStatus(error instanceof Error ? error.message : String(error));
+      },
+    }),
+  );
+
+  const revokeMutation = useMutation(
+    trpc.review.collections.revoke.mutationOptions({
+      onSuccess: async () => {
+        setActionStatus('Revoked.');
+        await queryClient.invalidateQueries(trpc.review.collections.list.queryFilter());
+      },
+      onError: (error) => {
+        setActionStatus(error instanceof Error ? error.message : String(error));
+      },
+    }),
+  );
 
   return (
     <>
@@ -82,12 +102,10 @@ export default function ReviewCollectionsAdmin() {
 
             setCreateStatus('Creating…');
             try {
-              await createReviewCollection(payload);
-              setCreateStatus('Created.');
+              await createMutation.mutateAsync(payload);
               form.reset();
-              await reload();
-            } catch (error) {
-              setCreateStatus(error instanceof Error ? error.message : String(error));
+            } catch {
+              /* onError sets createStatus */
             }
           }}
         >
@@ -130,6 +148,7 @@ export default function ReviewCollectionsAdmin() {
               type="submit"
               className="px-4 py-2 text-sm"
               style={{ background: 'var(--color-accent)', color: 'var(--color-bg)' }}
+              disabled={createMutation.isPending}
             >
               Create collection
             </button>
@@ -148,7 +167,7 @@ export default function ReviewCollectionsAdmin() {
           Collections
         </h2>
         <p className="mt-2 text-xs" style={{ color: 'var(--color-fg-muted)' }} aria-live="polite">
-          {listStatus}
+          {statusMessage}
         </p>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full text-left text-sm" style={{ color: 'var(--color-fg)' }}>
@@ -170,6 +189,7 @@ export default function ReviewCollectionsAdmin() {
             <tbody>
               {collections.map((row) => {
                 const reviewPath = `/review/${encodeURIComponent(row.slug)}`;
+                const detailPath = `/admin/review/collections/${encodeURIComponent(row.id)}`;
                 const absoluteUrl =
                   typeof window !== 'undefined'
                     ? `${window.location.origin}${reviewPath}`
@@ -191,17 +211,24 @@ export default function ReviewCollectionsAdmin() {
                         style={{ color: 'var(--color-fg-muted)' }}
                         disabled={busy}
                         onClick={() => {
-                          void copyText('client link', absoluteUrl, setListStatus);
+                          void copyText('client link', absoluteUrl, setActionStatus);
                         }}
                       >
                         Copy
                       </button>
                     </td>
                     <td className="py-2 pr-4 text-xs">
+                      <a
+                        href={detailPath}
+                        className="mr-3"
+                        style={{ color: 'var(--color-accent)' }}
+                      >
+                        Inspect
+                      </a>
                       <button
                         type="button"
                         style={{ color: 'var(--color-fg-muted)' }}
-                        disabled={busy}
+                        disabled={busy || revokeMutation.isPending}
                         onClick={() => {
                           if (
                             !confirm(
@@ -213,11 +240,9 @@ export default function ReviewCollectionsAdmin() {
                           setBusyId(row.id);
                           void (async () => {
                             try {
-                              await revokeReviewCollection(row.id);
-                              setListStatus('Revoked.');
-                              await reload();
-                            } catch (error) {
-                              setListStatus(error instanceof Error ? error.message : String(error));
+                              await revokeMutation.mutateAsync({ id: row.id });
+                            } catch {
+                              /* onError sets actionStatus */
                             } finally {
                               setBusyId(null);
                             }
@@ -238,7 +263,7 @@ export default function ReviewCollectionsAdmin() {
                         style={{ color: 'var(--color-fg-muted)' }}
                         disabled={busy}
                         onClick={() => {
-                          void copyText('collection id', row.id, setListStatus);
+                          void copyText('collection id', row.id, setActionStatus);
                         }}
                       >
                         Copy
@@ -252,5 +277,13 @@ export default function ReviewCollectionsAdmin() {
         </div>
       </section>
     </>
+  );
+}
+
+export default function ReviewCollectionsAdmin() {
+  return (
+    <AdminTrpcProvider>
+      <ReviewCollectionsAdminInner />
+    </AdminTrpcProvider>
   );
 }

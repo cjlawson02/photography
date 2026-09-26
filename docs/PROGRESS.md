@@ -49,7 +49,10 @@ gantt
 
 | Date | Update |
 | --- | --- |
-| 2026-09-26 | [#27](https://github.com/cjlawson02/photography/pull/27) hashed-IP selection limits + `ADMIN_TRPC_RATE_LIMITER` on ingest tRPC |
+| 2026-09-26 | [#27](https://github.com/cjlawson02/photography/pull/27) Phase 2.5 S1 server review slugs + S2 selection rate limit; hashed-IP limits + `ADMIN_TRPC_RATE_LIMITER` on ingest tRPC |
+| 2026-09-26 | CD: `wrangler d1 migrations apply photography --remote` before Worker deploy on push to `main`; [DEPLOY.md](DEPLOY.md) |
+| 2026-09-26 | Phase 2.5 S6 security headers (CSP middleware) + T5 D1 indexes (`ReviewPhotos.collectionId`, `PortfolioPhotos` published/status) |
+| 2026-09-26 | B3: admin review collection detail — `review.collections.detail`, `/admin/review/collections/{id}` inspect UI |
 | 2026-09-26 | Post-MVP hardening PR: media D1 gate, portfolio cache-bust, hero pause, admin fetch/tRPC polish; [IMPLEMENTATION.md](IMPLEMENTATION.md) Phase 2.5 backlog |
 | 2026-09-26 | [#23](https://github.com/cjlawson02/photography/pull/23) Oxlint + oxfmt; [#22](https://github.com/cjlawson02/photography/pull/22) frontend P0 + portfolio Query; [#21](https://github.com/cjlawson02/photography/pull/21) tRPC hardening, REST removed |
 | 2026-09-26 | Open items batch: portfolio reprocess UX, home SEO meta, [SMOKE.md](SMOKE.md); IMPLEMENTATION checklist sync |

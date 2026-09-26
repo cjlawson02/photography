@@ -130,12 +130,12 @@ Tracked after [#21](https://github.com/cjlawson02/photography/pull/21)–[#23](h
 | S1 | Review slug hardening | Server-generated or min-length URL-safe slugs |
 | S2 | Rate-limit `/review/api/selection` | Workers rate-limit binding |
 | S4 | Delete / revoke ordering | R2 batch delete; `db.batch` on revoke; portfolio R2-before-D1 or orphan tolerance |
-| S6 | Security headers | CSP, `frame-ancestors`, `Referrer-Policy`, `nosniff` (Astro middleware) |
+| S6 | Security headers | Done — Astro `src/middleware.ts` + `src/lib/http/security-headers.ts` |
 | P1–P7 | Product polish | Ingest dimensions, alt/title, empty states, review lifecycle, upload hardening, pending TTL, admin pagination — see [HLD](HLD.md) `_TBD_` |
 | M1–M4 | Frontend islands + primitives | Query islands, remove dead `lib/admin/*-api.ts`, shared UI primitives, optional `embla-carousel-react` |
 | T1 | Test suite | Vitest + RTL; selection route + middleware |
-| T4 | D1 migrations in CI | Optional pre-deploy apply or gate |
-| T5 | Indexes | `ReviewPhotos.collectionId`, `PortfolioPhotos(published, status)` |
+| T4 | D1 migrations in CI | Pre-deploy apply on `main` in [ci-cd.yml](../.github/workflows/ci-cd.yml); optional gate / PR dry-run `_TBD_` |
+| T5 | Indexes | Done — migration `0002_*`; `ReviewPhotos.collectionId`, `PortfolioPhotos(published, status)` |
 | T6–T7 | Cutover + bulk migration | [CUTOVER.md](CUTOVER.md); legacy WP migration deferred |
 
 ## Dependencies
