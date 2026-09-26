@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
+import type { AdminReviewCollection } from '../../lib/admin/trpc-types.ts';
 import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
 import { errorMessage, formatAdminTime } from './admin-format.ts';
 import { adminAccentStyle, adminFieldStyle, adminFgMutedStyle } from './admin-styles.ts';
@@ -20,14 +21,24 @@ async function copyText(label: string, text: string, onStatus: (message: string)
   }
 }
 
-function ReviewCollectionsAdminInner() {
+type ReviewCollectionsAdminInnerProps = {
+  initialCollections?: AdminReviewCollection[];
+};
+
+function ReviewCollectionsAdminInner({ initialCollections }: ReviewCollectionsAdminInnerProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [actionStatus, setActionStatus] = useState<string | null>(null);
   const [createStatus, setCreateStatus] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [initialDataUpdatedAt] = useState(() => Date.now());
 
-  const listQuery = useQuery(trpc.review.collections.list.queryOptions());
+  const listQuery = useQuery({
+    ...trpc.review.collections.list.queryOptions(),
+    ...(initialCollections !== undefined
+      ? { initialData: initialCollections, initialDataUpdatedAt }
+      : {}),
+  });
   const collections = listQuery.data ?? [];
 
   const listStatus = listQuery.isPending
@@ -253,10 +264,16 @@ function ReviewCollectionsAdminInner() {
   );
 }
 
-export default function ReviewCollectionsAdmin() {
+type ReviewCollectionsAdminProps = {
+  initialCollections?: AdminReviewCollection[];
+};
+
+export default function ReviewCollectionsAdmin({
+  initialCollections,
+}: ReviewCollectionsAdminProps) {
   return (
     <AdminTrpcProvider>
-      <ReviewCollectionsAdminInner />
+      <ReviewCollectionsAdminInner initialCollections={initialCollections} />
     </AdminTrpcProvider>
   );
 }

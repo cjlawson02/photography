@@ -2,7 +2,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import type { ReviewCollectionAdminUpdateBody } from '../../lib/admin/review-collection-schemas.ts';
-import type { AdminReviewCollectionDetailPhoto } from '../../lib/admin/trpc-types.ts';
+import type {
+  AdminReviewCollectionDetail,
+  AdminReviewCollectionDetailPhoto,
+} from '../../lib/admin/trpc-types.ts';
 import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
 import {
   errorMessage,
@@ -127,14 +130,22 @@ function CollectionExpiresInput({ value, busy, onSave, onInvalid }: CollectionEx
 
 type ReviewCollectionDetailAdminInnerProps = {
   collectionId: string;
+  initialDetail?: AdminReviewCollectionDetail;
 };
 
-function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDetailAdminInnerProps) {
+function ReviewCollectionDetailAdminInner({
+  collectionId,
+  initialDetail,
+}: ReviewCollectionDetailAdminInnerProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [editStatus, setEditStatus] = useState<string | null>(null);
   const [busyPhotoId, setBusyPhotoId] = useState<string | null>(null);
-  const detailQuery = useQuery(trpc.review.collections.detail.queryOptions({ id: collectionId }));
+  const [initialDataUpdatedAt] = useState(() => Date.now());
+  const detailQuery = useQuery({
+    ...trpc.review.collections.detail.queryOptions({ id: collectionId }),
+    ...(initialDetail !== undefined ? { initialData: initialDetail, initialDataUpdatedAt } : {}),
+  });
 
   const updateMutation = useMutation(
     trpc.review.collections.update.mutationOptions({
@@ -372,14 +383,16 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
 
 type ReviewCollectionDetailAdminProps = {
   collectionId: string;
+  initialDetail?: AdminReviewCollectionDetail;
 };
 
 export default function ReviewCollectionDetailAdmin({
   collectionId,
+  initialDetail,
 }: ReviewCollectionDetailAdminProps) {
   return (
     <AdminTrpcProvider>
-      <ReviewCollectionDetailAdminInner collectionId={collectionId} />
+      <ReviewCollectionDetailAdminInner collectionId={collectionId} initialDetail={initialDetail} />
     </AdminTrpcProvider>
   );
 }

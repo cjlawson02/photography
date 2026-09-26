@@ -1,10 +1,21 @@
 ---
+import { env } from 'cloudflare:workers';
+
 import ReviewCollectionDetailAdmin from '../../../../components/admin/ReviewCollectionDetailAdmin.tsx';
+import { idSchema } from '../../../../db/schema/types.ts';
+import { loadReviewCollectionDetail } from '../../../../lib/admin/ssr-initial-reads.ts';
+import { AppEnv } from '../../../../lib/env.ts';
 import AdminLayout from '../../../../layouts/AdminLayout.astro';
 
 const { id } = Astro.params;
-if (!id) {
-  return Astro.redirect('/admin/review');
+if (!id || !idSchema.safeParse(id).success) {
+	return Astro.redirect('/admin/review');
+}
+
+const app = AppEnv.fromBindings(env);
+const initialDetail = await loadReviewCollectionDetail(app, id);
+if (!initialDetail) {
+	return Astro.redirect('/admin/review');
 }
 ---
 
@@ -19,5 +30,5 @@ if (!id) {
 		Client selections and ingest status for each photo in this proofing set.
 	</p>
 
-	<ReviewCollectionDetailAdmin client:load collectionId={id} />
+	<ReviewCollectionDetailAdmin client:load collectionId={id} initialDetail={initialDetail} />
 </AdminLayout>
