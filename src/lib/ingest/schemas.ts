@@ -21,12 +21,7 @@ export const ingestContentTypeSchema = z.enum(INGEST_CONTENT_TYPES);
 /** Presign `filename` hint — original basename only (storage keys use photo id). */
 export const INGEST_FILENAME_MAX_LENGTH = 255;
 
-const ingestFilenameSchema = z
-  .string()
-  .trim()
-  .min(1)
-  .max(INGEST_FILENAME_MAX_LENGTH)
-  .optional();
+const ingestFilenameSchema = z.string().trim().min(1).max(INGEST_FILENAME_MAX_LENGTH).optional();
 
 /** Soft cap before `arrayBuffer()` during ingest (availability). */
 export const INGEST_MAX_ORIGINAL_BYTES = 40 * 1024 * 1024;
