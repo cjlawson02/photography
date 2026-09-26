@@ -10,7 +10,7 @@ Photography website for Chris Lawson. Details live in docs; start from the point
 
 ## Build and test commands
 
-Requires Node `>=22.12.0` (Astro 7). Prefer a current Node 22 LTS if the environment’s default is older.
+Requires Node `>=24.0.0` (Astro 7). CI uses Node 24.
 
 ```bash
 npm install
@@ -18,6 +18,7 @@ npm run generate-types   # wrangler types → worker-configuration.d.ts (needs v
 npm run typecheck        # wrangler types && astro check
 npm run build            # astro build (Workers SSR bundle + static assets in dist/)
 npm run dev              # astro dev (workerd via @astrojs/cloudflare)
+npm run ci               # test + typecheck + build + wrangler deploy --dry-run
 ```
 
 ### D1 / Drizzle
@@ -94,7 +95,8 @@ Phase 1 ingest (JWT + Zod body → `IngestService`):
 
 ## Commit and PR guidelines
 
-_TBD_
+- CI must pass before merge ([`.github/workflows/ci-cd.yml`](../.github/workflows/ci-cd.yml)); local: `npm run ci`.
+- `main` deploys the Worker via GitHub Actions when Cloudflare secrets are configured ([DEPLOY.md](docs/DEPLOY.md#6-github-actions-cicd)).
 
 ## Documentation
 

@@ -81,6 +81,28 @@ npx wrangler d1 migrations apply photography --remote
 | R2 CORS | `npm run r2:cors:apply` (or dashboard JSON paste) |
 | Deploy | `npm run build && npx wrangler deploy` |
 
+## 6. GitHub Actions CI/CD
+
+Workflow: [`.github/workflows/ci-cd.yml`](../.github/workflows/ci-cd.yml).
+
+| Trigger | What runs |
+| --- | --- |
+| Pull request | Node 24 — `npm test`, `npm run typecheck`, `npm run build`, `wrangler deploy --dry-run` |
+| Push to `main` | Same checks, then `wrangler deploy` to production |
+
+**Repository secrets** (Settings → Secrets and variables → Actions):
+
+| Secret | Purpose |
+| --- | --- |
+| `CLOUDFLARE_API_TOKEN` | API token with **Workers Scripts Edit** (and account access to D1/R2 bindings used by the Worker) |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account id (R2 / Workers overview) |
+
+Worker **secrets** (`R2_*`) and **vars** (`CF_ACCESS_*` in `wrangler.jsonc`) stay on Cloudflare; CI does not upload them. Apply D1 migrations manually when schema changes (`wrangler d1 migrations apply photography --remote`).
+
+Local parity: `npm run ci`.
+
+Optional: create a GitHub **environment** named `production` on the repo if you want deployment approval gates; the deploy job references `environment: production`.
+
 ## Smoke checks
 
 - `GET /health` — public bindings JSON (no R2 S3 secrets required)
