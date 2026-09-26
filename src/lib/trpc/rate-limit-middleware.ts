@@ -4,10 +4,6 @@ import { hashString } from '../util/hash-string.ts';
 import type { TrpcContext } from './context.ts';
 import { trpc } from './init.ts';
 
-export type AdminTrpcRateLimiter = {
-  limit(options: { key: string }): Promise<{ success: boolean }>;
-};
-
 async function rateLimitIdentifier(ctx: TrpcContext): Promise<string> {
   const identity = ctx.accessIdentity;
   if (identity?.email?.trim()) {

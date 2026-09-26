@@ -1,17 +1,13 @@
 import { AppError } from '../http/app-error.ts';
 import { hashString } from '../util/hash-string.ts';
 
-export type ReviewSelectionRateLimiter = {
-  limit(options: { key: string }): Promise<{ success: boolean }>;
-};
-
 function clientIp(request: Request): string {
   return request.headers.get('CF-Connecting-IP')?.trim() || 'unknown';
 }
 
 /** Enforce per-IP limits on public selection updates (Workers rate-limit binding). */
 export async function assertReviewSelectionRateLimit(
-  limiter: ReviewSelectionRateLimiter | undefined,
+  limiter: Cloudflare.Env['REVIEW_SELECTION_RATE_LIMITER'] | undefined,
   request: Request,
 ): Promise<void> {
   if (!limiter) return;

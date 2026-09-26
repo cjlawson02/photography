@@ -6,7 +6,6 @@ import { verifyAccessJwt } from '../access/verify-jwt.ts';
 import type { AccessEnv } from '../access/verify-jwt.ts';
 import type { AppEnv } from '../env.ts';
 import { AppEnv as AppEnvFactory } from '../env.ts';
-import type { AdminTrpcRateLimiter } from './rate-limit-middleware.ts';
 
 export type TrpcContext = {
   request: Request;
@@ -16,7 +15,7 @@ export type TrpcContext = {
   ensureAccessIdentity: () => Promise<AccessIdentity>;
   getAppEnv: () => AppEnv;
   getIngestAppEnv: () => AppEnv;
-  getAdminTrpcRateLimiter: () => AdminTrpcRateLimiter | undefined;
+  getAdminTrpcRateLimiter: () => Cloudflare.Env['ADMIN_TRPC_RATE_LIMITER'] | undefined;
 };
 
 export function createTrpcContext(input: { request: Request }): TrpcContext {
