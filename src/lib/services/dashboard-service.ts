@@ -25,6 +25,7 @@ export type DashboardShootCard = {
 export type DashboardSummary = {
   activeShoots: DashboardShootCard[];
   frontPageCount: number;
+  portfolioFailedCount: number;
 };
 
 export class DashboardService {
@@ -37,33 +38,43 @@ export class DashboardService {
   async getSummary(): Promise<DashboardSummary> {
     const collections = await this.app.d1.reviewCollections.listRecent();
     const frontPage = await this.app.d1.portfolioPhotos.listFrontPageForAdmin();
+    const portfolioFailedCount = await this.app.d1.portfolioPhotos.countByStatus('failed');
     const now = Date.now();
     const soonMs = 7 * 24 * 60 * 60 * 1000;
 
-    const activeShoots = collections
-      .filter((row) => ACTIVE_STATUSES.includes(row.status))
-      .map((row) => {
-        let attention: string | null = null;
-        if (row.status === 'picks_submitted') {
-          attention = 'Picks in — copy filenames for Lightroom';
-        } else if (row.expiresAt != null && row.expiresAt > now && row.expiresAt - now < soonMs) {
-          attention = 'Link expiring soon';
-        }
-        return {
-          id: row.id,
-          slug: row.slug,
-          title: row.title,
-          personName: row.personName,
-          status: row.status,
-          statusLabel: jobStepLabel(row.status),
-          attention,
-          href: `/admin/shoots/${encodeURIComponent(row.id)}`,
-        };
-      });
+    const activeShoots = await Promise.all(
+      collections
+        .filter((row) => ACTIVE_STATUSES.includes(row.status))
+        .map(async (row) => {
+          let attention: string | null = null;
+          const shootPhotos = await this.app.d1.reviewPhotos.listByCollectionId(row.id);
+          const hasFailedIngest = shootPhotos.some(
+            (photo) => photo.status === 'failed' || photo.status === 'pending',
+          );
+          if (hasFailedIngest) {
+            attention = 'Failed or stuck uploads — open shoot to retry';
+          } else if (row.status === 'picks_submitted') {
+            attention = 'Picks in — copy filenames for Lightroom';
+          } else if (row.expiresAt != null && row.expiresAt > now && row.expiresAt - now < soonMs) {
+            attention = 'Link expiring soon';
+          }
+          return {
+            id: row.id,
+            slug: row.slug,
+            title: row.title,
+            personName: row.personName,
+            status: row.status,
+            statusLabel: jobStepLabel(row.status),
+            attention,
+            href: `/admin/shoots/${encodeURIComponent(row.id)}`,
+          };
+        }),
+    );
 
     return {
       activeShoots,
       frontPageCount: frontPage.length,
+      portfolioFailedCount,
     };
   }
 }

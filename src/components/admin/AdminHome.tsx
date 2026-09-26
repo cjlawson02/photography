@@ -15,6 +15,16 @@ function AdminHomeInner() {
   return (
     <>
       <AdminSectionHeading>Resume</AdminSectionHeading>
+      {summary && summary.portfolioFailedCount > 0 ? (
+        <output
+          className={`mt-4 block rounded border px-4 py-3 text-sm ${adminClass.uploadSection} ${adminClass.accent}`}
+        >
+          {summary.portfolioFailedCount} portfolio upload(s) failed or need attention.{' '}
+          <a className={adminClass.link} href="/admin/portfolio/library">
+            Open library
+          </a>
+        </output>
+      ) : null}
       <AdminStatusLine className="mt-4">
         {summaryQuery.isPending
           ? 'Loading…'
