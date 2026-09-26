@@ -1,10 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 
-import {
-  fetchReviewCollections,
-  type AdminReviewCollection,
-} from '../../lib/admin/review-collections-api.ts';
 import { uploadPhoto } from '../../lib/ingest/browser-upload.ts';
+import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
 
 const fieldStyle = {
   borderColor: 'var(--color-border)',
@@ -14,36 +12,34 @@ const fieldStyle = {
 
 type Bucket = 'portfolio' | 'review';
 
-export default function IngestSmokeForm() {
+function IngestSmokeFormInner() {
+  const trpc = useTRPC();
+  const collectionsQuery = useQuery(trpc.review.collections.list.queryOptions());
+  const collections = collectionsQuery.data ?? [];
+
+  const collectionsError = collectionsQuery.isError
+    ? collectionsQuery.error instanceof Error
+      ? collectionsQuery.error.message
+      : String(collectionsQuery.error)
+    : null;
+
   const [bucket, setBucket] = useState<Bucket>('portfolio');
-  const [collections, setCollections] = useState<AdminReviewCollection[]>([]);
-  const [collectionsError, setCollectionsError] = useState<string | null>(null);
   const [collectionId, setCollectionId] = useState('');
   const [statusText, setStatusText] = useState('Ready.');
   const [busy, setBusy] = useState(false);
 
-  const loadCollections = useCallback(async () => {
-    setCollectionsError(null);
-    try {
-      const rows = await fetchReviewCollections();
-      setCollections(rows);
-      setCollectionId((prev) => {
-        if (prev && rows.some((row) => row.id === prev)) return prev;
-        return rows[0]?.id ?? '';
-      });
-    } catch (error) {
-      setCollections([]);
-      setCollectionId('');
-      setCollectionsError(error instanceof Error ? error.message : String(error));
-    }
-  }, []);
-
   useEffect(() => {
-    void loadCollections();
-  }, [loadCollections]);
+    const rows = collectionsQuery.data;
+    if (!collectionsQuery.isSuccess || !rows) return;
+    setCollectionId((prev) => {
+      if (prev && rows.some((row) => row.id === prev)) return prev;
+      return rows[0]?.id ?? '';
+    });
+  }, [collectionsQuery.isSuccess, collectionsQuery.data]);
 
-  const collectionOptions =
-    collections.length === 0
+  const collectionOptions = collectionsQuery.isPending
+    ? [{ value: '', label: 'Loading collections…' }]
+    : collections.length === 0
       ? collectionsError
         ? [{ value: '', label: 'Could not load collections' }]
         : [{ value: '', label: 'No collections yet' }]
@@ -110,7 +106,7 @@ export default function IngestSmokeForm() {
             className="mt-1 block w-full border px-3 py-2 text-sm"
             style={fieldStyle}
             value={collectionId}
-            disabled={busy || collections.length === 0}
+            disabled={busy || collectionsQuery.isPending || collections.length === 0}
             onChange={(event) => setCollectionId(event.target.value)}
           >
             {collectionOptions.map((option) => (
@@ -161,5 +157,13 @@ export default function IngestSmokeForm() {
         {statusText}
       </pre>
     </form>
+  );
+}
+
+export default function IngestSmokeForm() {
+  return (
+    <AdminTrpcProvider>
+      <IngestSmokeFormInner />
+    </AdminTrpcProvider>
   );
 }
