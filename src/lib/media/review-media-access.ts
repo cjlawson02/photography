@@ -1,14 +1,11 @@
 import { createDb } from '../../db/client.ts';
 import { ReviewCollectionsDAO } from '../dao/review-collections-dao.ts';
 import { ReviewPhotosDAO } from '../dao/review-photos-dao.ts';
-import { resolveReviewCollectionAccess } from '../review/collection-access.ts';
-import type { ReviewJobStatus } from '../../db/schema/review/job-status.ts';
-
-const DOWNLOAD_JOB_STATUSES: ReviewJobStatus[] = ['finals_delivered', 'closed'];
-
-function isFinalRoundVisible(status: ReviewJobStatus): boolean {
-  return DOWNLOAD_JOB_STATUSES.includes(status);
-}
+import {
+  isReviewDownloadMode,
+  resolveReviewCollectionAccess,
+} from '../review/collection-access.ts';
+import { reviewDownloadFilename } from './review-download-filename.ts';
 
 /** Review delivery — ready photo in a non-expired collection (revoked = collection deleted). */
 export async function isReviewMediaAllowed(
@@ -27,19 +24,31 @@ export async function isReviewMediaAllowed(
     return false;
   }
   if (photo.round === 'final') {
-    if (!isFinalRoundVisible(access.collection.status)) {
-      return false;
-    }
-    return true;
+    return isReviewDownloadMode(access.collection.status);
   }
   return !options?.allowOriginal;
 }
 
-/** Admin delivery — ready photo only (collection may be expired; revoke still deletes the row). */
+/**
+ * Admin delivery — ready photo only (collection may be expired or not yet delivered; revoke still
+ * deletes the row). Originals are limited to final-round photos, matching what clients download.
+ */
 export async function isReviewMediaAllowedForAdmin(
   db: D1Database,
   photoId: string,
+  options?: { allowOriginal?: boolean },
 ): Promise<boolean> {
   const photo = await new ReviewPhotosDAO(createDb(db)).getById(photoId);
-  return photo !== null && photo.status === 'ready';
+  if (!photo || photo.status !== 'ready') {
+    return false;
+  }
+  return !options?.allowOriginal || photo.round === 'final';
+}
+
+export async function reviewOriginalDownloadFilename(
+  db: D1Database,
+  photoId: string,
+): Promise<string | null> {
+  const photo = await new ReviewPhotosDAO(createDb(db)).getById(photoId);
+  return photo ? reviewDownloadFilename(photo) : null;
 }
