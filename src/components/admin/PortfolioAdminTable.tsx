@@ -5,6 +5,7 @@ import type { PortfolioPhotoAdminUpdateBody } from '../../lib/admin/portfolio-sc
 import type { AdminPortfolioListPage } from '../../lib/admin/trpc-types.ts';
 import { requestReprocess } from '../../lib/ingest/browser-upload.ts';
 import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
+import AdminEmptyState from './AdminEmptyState.tsx';
 import PortfolioRow from './PortfolioRow.tsx';
 
 const portfolioListInfiniteQueryConfig = {
@@ -46,10 +47,13 @@ function PortfolioAdminTableInner() {
         ? listQuery.error.message
         : String(listQuery.error)
       : photos.length === 0
-        ? 'No portfolio photos yet — upload via Upload.'
+        ? 'No portfolio photos yet.'
         : `${photos.length} photo(s) shown${listQuery.hasNextPage ? ' — load more for older photos.' : '.'}`;
 
   const statusMessage = actionStatus !== null ? actionStatus : listStatus;
+
+  const showEmptyState =
+    listQuery.isSuccess && !listQuery.isError && photos.length === 0 && actionStatus === null;
 
   const updateListCache = (
     updater: (items: AdminPortfolioListPage['items']) => AdminPortfolioListPage['items'],
@@ -132,57 +136,72 @@ function PortfolioAdminTableInner() {
         {statusMessage}
       </p>
 
-      <div className="mt-6 overflow-x-auto">
-        <table className="w-full text-left text-sm" style={{ color: 'var(--color-fg)' }}>
-          <thead>
-            <tr
-              style={{
-                color: 'var(--color-fg-muted)',
-                borderBottom: '1px solid var(--color-border)',
+      {showEmptyState ? (
+        <AdminEmptyState title="No portfolio photos yet">
+          <p>
+            Upload originals on{' '}
+            <a href="/admin/ingest" style={{ color: 'var(--color-accent)' }}>
+              Upload
+            </a>
+            . When ingest status is <strong>ready</strong>, publish photos here for the public home
+            grid and hero.
+          </p>
+        </AdminEmptyState>
+      ) : (
+        <>
+          <div className="mt-6 overflow-x-auto">
+            <table className="w-full text-left text-sm" style={{ color: 'var(--color-fg)' }}>
+              <thead>
+                <tr
+                  style={{
+                    color: 'var(--color-fg-muted)',
+                    borderBottom: '1px solid var(--color-border)',
+                  }}
+                >
+                  <th className="py-2 pr-4 font-normal">Preview</th>
+                  <th className="py-2 pr-4 font-normal">Ingest</th>
+                  <th className="py-2 pr-4 font-normal">Size</th>
+                  <th className="py-2 pr-4 font-normal">Published</th>
+                  <th className="py-2 pr-4 font-normal">Alt</th>
+                  <th className="py-2 pr-4 font-normal">Title</th>
+                  <th className="py-2 pr-4 font-normal">Caption</th>
+                  <th className="py-2 pr-4 font-normal">Category</th>
+                  <th className="py-2 pr-4 font-normal">Sort</th>
+                  <th className="py-2 pr-4 font-normal">Hero</th>
+                  <th className="py-2 pr-4 font-normal">Updated</th>
+                  <th className="py-2 font-normal">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {photos.map((photo) => (
+                  <PortfolioRow
+                    key={photo.id}
+                    photo={photo}
+                    busy={busyIds.has(photo.id)}
+                    onPatch={onPatch}
+                    onDelete={onDelete}
+                    onReprocess={onReprocess}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {listQuery.hasNextPage ? (
+            <button
+              type="button"
+              className="mt-4 text-xs underline"
+              style={{ color: 'var(--color-fg)' }}
+              disabled={listQuery.isFetchingNextPage || busyIds.size > 0}
+              onClick={() => {
+                void listQuery.fetchNextPage();
               }}
             >
-              <th className="py-2 pr-4 font-normal">Preview</th>
-              <th className="py-2 pr-4 font-normal">Ingest</th>
-              <th className="py-2 pr-4 font-normal">Size</th>
-              <th className="py-2 pr-4 font-normal">Published</th>
-              <th className="py-2 pr-4 font-normal">Alt</th>
-              <th className="py-2 pr-4 font-normal">Title</th>
-              <th className="py-2 pr-4 font-normal">Caption</th>
-              <th className="py-2 pr-4 font-normal">Category</th>
-              <th className="py-2 pr-4 font-normal">Sort</th>
-              <th className="py-2 pr-4 font-normal">Hero</th>
-              <th className="py-2 pr-4 font-normal">Updated</th>
-              <th className="py-2 font-normal">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {photos.map((photo) => (
-              <PortfolioRow
-                key={photo.id}
-                photo={photo}
-                busy={busyIds.has(photo.id)}
-                onPatch={onPatch}
-                onDelete={onDelete}
-                onReprocess={onReprocess}
-              />
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {listQuery.hasNextPage ? (
-        <button
-          type="button"
-          className="mt-4 text-xs underline"
-          style={{ color: 'var(--color-fg)' }}
-          disabled={listQuery.isFetchingNextPage || busyIds.size > 0}
-          onClick={() => {
-            void listQuery.fetchNextPage();
-          }}
-        >
-          {listQuery.isFetchingNextPage ? 'Loading…' : 'Load more'}
-        </button>
-      ) : null}
+              {listQuery.isFetchingNextPage ? 'Loading…' : 'Load more'}
+            </button>
+          ) : null}
+        </>
+      )}
     </>
   );
 }

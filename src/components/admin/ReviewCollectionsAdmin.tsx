@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
+import AdminEmptyState from './AdminEmptyState.tsx';
 
 const fieldStyle = {
   borderColor: 'var(--color-border)',
@@ -44,6 +45,9 @@ function ReviewCollectionsAdminInner() {
         : `${collections.length} collection(s).`;
 
   const statusMessage = actionStatus !== null ? actionStatus : listStatus;
+
+  const showCollectionsEmpty =
+    listQuery.isSuccess && !listQuery.isError && collections.length === 0 && actionStatus === null;
 
   const createMutation = useMutation(
     trpc.review.collections.create.mutationOptions({
@@ -169,112 +173,125 @@ function ReviewCollectionsAdminInner() {
         <p className="mt-2 text-xs" style={{ color: 'var(--color-fg-muted)' }} aria-live="polite">
           {statusMessage}
         </p>
-        <div className="mt-3 overflow-x-auto">
-          <table className="w-full text-left text-sm" style={{ color: 'var(--color-fg)' }}>
-            <thead>
-              <tr
-                style={{
-                  color: 'var(--color-fg-muted)',
-                  borderBottom: '1px solid var(--color-border)',
-                }}
-              >
-                <th className="py-2 pr-4 font-normal">Slug</th>
-                <th className="py-2 pr-4 font-normal">Title</th>
-                <th className="py-2 pr-4 font-normal">Expires</th>
-                <th className="py-2 pr-4 font-normal">Link</th>
-                <th className="py-2 pr-4 font-normal">Actions</th>
-                <th className="py-2 font-normal">Id</th>
-              </tr>
-            </thead>
-            <tbody>
-              {collections.map((row) => {
-                const reviewPath = `/review/${encodeURIComponent(row.slug)}`;
-                const detailPath = `/admin/review/collections/${encodeURIComponent(row.id)}`;
-                const absoluteUrl =
-                  typeof window !== 'undefined'
-                    ? `${window.location.origin}${reviewPath}`
-                    : reviewPath;
-                const busy = busyId === row.id;
+        {showCollectionsEmpty ? (
+          <AdminEmptyState title="No review collections yet">
+            <p>
+              Use the form above to create a collection, then upload review photos on{' '}
+              <a href="/admin/ingest" style={{ color: 'var(--color-accent)' }}>
+                Upload
+              </a>{' '}
+              (choose the <strong>review</strong> bucket and pick this collection). Share the client
+              link from the table once rows appear here.
+            </p>
+          </AdminEmptyState>
+        ) : (
+          <div className="mt-3 overflow-x-auto">
+            <table className="w-full text-left text-sm" style={{ color: 'var(--color-fg)' }}>
+              <thead>
+                <tr
+                  style={{
+                    color: 'var(--color-fg-muted)',
+                    borderBottom: '1px solid var(--color-border)',
+                  }}
+                >
+                  <th className="py-2 pr-4 font-normal">Slug</th>
+                  <th className="py-2 pr-4 font-normal">Title</th>
+                  <th className="py-2 pr-4 font-normal">Expires</th>
+                  <th className="py-2 pr-4 font-normal">Link</th>
+                  <th className="py-2 pr-4 font-normal">Actions</th>
+                  <th className="py-2 font-normal">Id</th>
+                </tr>
+              </thead>
+              <tbody>
+                {collections.map((row) => {
+                  const reviewPath = `/review/${encodeURIComponent(row.slug)}`;
+                  const detailPath = `/admin/review/collections/${encodeURIComponent(row.id)}`;
+                  const absoluteUrl =
+                    typeof window !== 'undefined'
+                      ? `${window.location.origin}${reviewPath}`
+                      : reviewPath;
+                  const busy = busyId === row.id;
 
-                return (
-                  <tr key={row.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                    <td className="py-2 pr-4">{row.slug}</td>
-                    <td className="py-2 pr-4">{row.title ?? '—'}</td>
-                    <td className="py-2 pr-4 text-xs">{formatExpires(row.expiresAt)}</td>
-                    <td className="py-2 pr-4 text-xs">
-                      <a href={reviewPath} style={{ color: 'var(--color-accent)' }}>
-                        {reviewPath}
-                      </a>
-                      <button
-                        type="button"
-                        className="ml-2 underline"
-                        style={{ color: 'var(--color-fg-muted)' }}
-                        disabled={busy}
-                        onClick={() => {
-                          void copyText('client link', absoluteUrl, setActionStatus);
-                        }}
-                      >
-                        Copy
-                      </button>
-                    </td>
-                    <td className="py-2 pr-4 text-xs">
-                      <a
-                        href={detailPath}
-                        className="mr-3"
-                        style={{ color: 'var(--color-accent)' }}
-                      >
-                        Inspect
-                      </a>
-                      <button
-                        type="button"
-                        style={{ color: 'var(--color-fg-muted)' }}
-                        disabled={busy || revokeMutation.isPending}
-                        onClick={() => {
-                          if (
-                            !confirm(
-                              'Revoke this review link? Clients will lose access; R2 objects are deleted.',
-                            )
-                          ) {
-                            return;
-                          }
-                          setBusyId(row.id);
-                          void (async () => {
-                            try {
-                              await revokeMutation.mutateAsync({ id: row.id });
-                            } catch {
-                              /* onError sets actionStatus */
-                            } finally {
-                              setBusyId(null);
+                  return (
+                    <tr key={row.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
+                      <td className="py-2 pr-4">{row.slug}</td>
+                      <td className="py-2 pr-4">{row.title ?? '—'}</td>
+                      <td className="py-2 pr-4 text-xs">{formatExpires(row.expiresAt)}</td>
+                      <td className="py-2 pr-4 text-xs">
+                        <a href={reviewPath} style={{ color: 'var(--color-accent)' }}>
+                          {reviewPath}
+                        </a>
+                        <button
+                          type="button"
+                          className="ml-2 underline"
+                          style={{ color: 'var(--color-fg-muted)' }}
+                          disabled={busy}
+                          onClick={() => {
+                            void copyText('client link', absoluteUrl, setActionStatus);
+                          }}
+                        >
+                          Copy
+                        </button>
+                      </td>
+                      <td className="py-2 pr-4 text-xs">
+                        <a
+                          href={detailPath}
+                          className="mr-3"
+                          style={{ color: 'var(--color-accent)' }}
+                        >
+                          Inspect
+                        </a>
+                        <button
+                          type="button"
+                          style={{ color: 'var(--color-fg-muted)' }}
+                          disabled={busy || revokeMutation.isPending}
+                          onClick={() => {
+                            if (
+                              !confirm(
+                                'Revoke this review link? Clients will lose access; R2 objects are deleted.',
+                              )
+                            ) {
+                              return;
                             }
-                          })();
-                        }}
-                      >
-                        Revoke
-                      </button>
-                    </td>
-                    <td
-                      className="py-2 font-mono text-xs"
-                      style={{ color: 'var(--color-fg-muted)' }}
-                    >
-                      <span>{row.id}</span>
-                      <button
-                        type="button"
-                        className="ml-2 underline"
+                            setBusyId(row.id);
+                            void (async () => {
+                              try {
+                                await revokeMutation.mutateAsync({ id: row.id });
+                              } catch {
+                                /* onError sets actionStatus */
+                              } finally {
+                                setBusyId(null);
+                              }
+                            })();
+                          }}
+                        >
+                          Revoke
+                        </button>
+                      </td>
+                      <td
+                        className="py-2 font-mono text-xs"
                         style={{ color: 'var(--color-fg-muted)' }}
-                        disabled={busy}
-                        onClick={() => {
-                          void copyText('collection id', row.id, setActionStatus);
-                        }}
                       >
-                        Copy
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                        <span>{row.id}</span>
+                        <button
+                          type="button"
+                          className="ml-2 underline"
+                          style={{ color: 'var(--color-fg-muted)' }}
+                          disabled={busy}
+                          onClick={() => {
+                            void copyText('collection id', row.id, setActionStatus);
+                          }}
+                        >
+                          Copy
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </>
   );

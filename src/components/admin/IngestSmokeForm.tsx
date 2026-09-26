@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 
 import { uploadPhoto, type UploadProgress } from '../../lib/ingest/browser-upload.ts';
 import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
+import AdminEmptyState from './AdminEmptyState.tsx';
 
 const fieldStyle = {
   borderColor: 'var(--color-border)',
@@ -50,22 +51,34 @@ function IngestSmokeFormInner() {
         }));
 
   return (
-    <form
-      className="space-y-4"
-      onSubmit={async (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-        const data = new FormData(form);
-        const file = data.get('file');
-        if (!(file instanceof File) || file.size === 0) {
-          setStatusText('Choose an image file.');
-          return;
-        }
-        if (bucket === 'review' && !collectionId) {
-          setStatusText('Pick a review collection (or create one under Review).');
-          return;
-        }
+    <>
+      <AdminEmptyState title="How upload works" align="start">
+        <p>
+          Pick an image file and submit. The browser PUTs to R2 using a presigned URL, then the
+          Worker runs compress-once and writes variants.
+        </p>
+        <p className="mt-2">
+          <strong>Portfolio</strong> uploads land in{' '}
+          <a href="/admin/portfolio" style={{ color: 'var(--color-accent)' }}>
+            Portfolio
+          </a>{' '}
+          — publish ready rows for the public site. <strong>Review</strong> uploads require a
+          collection from{' '}
+          <a href="/admin/review" style={{ color: 'var(--color-accent)' }}>
+            Review
+          </a>{' '}
+          first; clients proof on the share link.
+        </p>
+        <p className="mt-2">
+          Failed or stuck ingest? Reprocess from{' '}
+          <a href="/admin/portfolio" style={{ color: 'var(--color-accent)' }}>
+            Portfolio
+          </a>{' '}
+          or the collection detail page.
+        </p>
+      </AdminEmptyState>
 
+<<<<<<< HEAD
         setBusy(true);
         setPutPercent(null);
         setStatusText('Requesting upload URL…');
@@ -177,12 +190,117 @@ function IngestSmokeFormInner() {
         style={{
           background: 'color-mix(in oklab, var(--color-fg) 6%, transparent)',
           color: 'var(--color-fg-muted)',
+=======
+      <form
+        className="mt-6 space-y-4"
+        onSubmit={async (event) => {
+          event.preventDefault();
+          const form = event.currentTarget;
+          const data = new FormData(form);
+          const file = data.get('file');
+          if (!(file instanceof File) || file.size === 0) {
+            setStatusText('Choose an image file.');
+            return;
+          }
+          if (bucket === 'review' && !collectionId) {
+            setStatusText('Pick a review collection (or create one under Review).');
+            return;
+          }
+
+          setBusy(true);
+          setStatusText('Uploading…');
+          try {
+            const result =
+              bucket === 'review'
+                ? await uploadPhoto({ file, bucket, collectionId })
+                : await uploadPhoto({ file, bucket });
+            setStatusText(JSON.stringify(result, null, 2));
+            form.reset();
+          } catch (error) {
+            setStatusText(error instanceof Error ? error.message : String(error));
+          } finally {
+            setBusy(false);
+          }
+>>>>>>> f8bc1b3 (feat(admin): empty states and ingest guidance (P2.5 P3 partial))
         }}
-        aria-live="polite"
       >
-        {statusText}
-      </pre>
-    </form>
+        <label className="block text-sm" style={{ color: 'var(--color-fg)' }}>
+          Bucket
+          <select
+            name="bucket"
+            className="mt-1 block w-full border px-3 py-2"
+            style={fieldStyle}
+            value={bucket}
+            disabled={busy}
+            onChange={(event) => {
+              setBucket(event.target.value as Bucket);
+            }}
+          >
+            <option value="portfolio">portfolio (PORTFOLIO)</option>
+            <option value="review">review (REVIEW)</option>
+          </select>
+        </label>
+
+        {bucket === 'review' ? (
+          <label className="block text-sm" style={{ color: 'var(--color-fg)' }}>
+            Review collection
+            <select
+              name="collectionId"
+              className="mt-1 block w-full border px-3 py-2 text-sm"
+              style={fieldStyle}
+              value={collectionId}
+              disabled={busy || collectionsQuery.isPending || collections.length === 0}
+              onChange={(event) => setCollectionId(event.target.value)}
+            >
+              {collectionOptions.map((option) => (
+                <option key={option.value || option.label} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs" style={{ color: 'var(--color-fg-muted)' }}>
+              <a href="/admin/review" style={{ color: 'var(--color-accent)' }}>
+                Create a collection
+              </a>{' '}
+              if none appear.
+            </p>
+          </label>
+        ) : null}
+
+        <label className="block text-sm" style={{ color: 'var(--color-fg)' }}>
+          Photo
+          <input
+            type="file"
+            name="file"
+            accept="image/*"
+            required
+            disabled={busy}
+            className="mt-1 block w-full text-sm"
+            style={{ color: 'var(--color-fg)' }}
+          />
+        </label>
+
+        <button
+          type="submit"
+          disabled={busy}
+          className="px-4 py-2 text-sm disabled:opacity-60"
+          style={{ background: 'var(--color-accent)', color: 'var(--color-bg)' }}
+        >
+          {busy ? 'Uploading…' : 'Upload'}
+        </button>
+
+        <pre
+          className="mt-6 overflow-x-auto p-3 text-xs"
+          style={{
+            background: 'color-mix(in oklab, var(--color-fg) 6%, transparent)',
+            color: 'var(--color-fg-muted)',
+          }}
+          aria-live="polite"
+        >
+          {statusText}
+        </pre>
+      </form>
+    </>
   );
 }
 
