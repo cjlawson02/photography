@@ -55,14 +55,16 @@ export function jobStepLabel(status: ReviewJobStatus): string {
   return JOB_STEP_DEFINITIONS.find((step) => step.status === status)?.label ?? status;
 }
 
-/** Steps the admin may advance to from the current step in Phase A1 (workflows 1–2 setup). */
-export const A1_ADMIN_TRANSITION_TARGETS: Partial<Record<ReviewJobStatus, ReviewJobStatus[]>> = {
+/** Steps the admin may advance to from the current step (workflows 1–2). */
+export const ADMIN_JOB_TRANSITION_TARGETS: Partial<Record<ReviewJobStatus, ReviewJobStatus[]>> = {
   proofs_uploaded: ['shared'],
+  picks_submitted: ['editing', 'shared'],
+  editing: ['shared'],
 };
 
 export function isTransitionAllowed(from: ReviewJobStatus, to: ReviewJobStatus): boolean {
   if (from === to) return true;
-  const allowed = A1_ADMIN_TRANSITION_TARGETS[from];
+  const allowed = ADMIN_JOB_TRANSITION_TARGETS[from];
   return allowed?.includes(to) ?? false;
 }
 
@@ -82,6 +84,8 @@ export type JobStepPrimaryAction =
   | { kind: 'upload_proofs'; label: string; href: string }
   | { kind: 'mark_shared'; label: string; targetStatus: 'shared' }
   | { kind: 'preview_client'; label: string; href: string }
+  | { kind: 'copy_filenames'; label: string }
+  | { kind: 'reopen_picks'; label: string; targetStatus: 'shared' }
   | { kind: 'none'; label: string };
 
 export function jobStepPrimaryAction(input: {
@@ -102,11 +106,21 @@ export function jobStepPrimaryAction(input: {
     case 'shared':
       return { kind: 'preview_client', label: 'Preview as client', href: reviewPath };
     case 'picks_submitted':
+      return { kind: 'copy_filenames', label: 'Copy filenames for Lightroom' };
     case 'editing':
+      return { kind: 'copy_filenames', label: 'Copy filenames for Lightroom' };
     case 'finals_delivered':
     case 'closed':
       return { kind: 'none', label: 'Next actions arrive in a later admin phase.' };
     default:
       return { kind: 'none', label: '—' };
   }
+}
+
+/** Secondary admin action on job page when picks are locked. */
+export function jobStepSecondaryAction(status: ReviewJobStatus): JobStepPrimaryAction | null {
+  if (status === 'picks_submitted' || status === 'editing') {
+    return { kind: 'reopen_picks', label: 'Reopen picks', targetStatus: 'shared' };
+  }
+  return null;
 }

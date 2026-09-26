@@ -43,6 +43,13 @@
       "when": 1790409894154,
       "tag": "0005_short_toad_men",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1790410121664,
+      "tag": "0006_pretty_black_panther",
+      "breakpoints": true
     }
   ]
 }
