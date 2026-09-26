@@ -15,7 +15,7 @@
 | Phase 3 — Public site | Done (MVP) | Home + React islands, SEO meta on home; extra public routes + brand tokens `_TBD_` |
 | Phase 4 — Client review | Done (phase 1) | `/review/{slug}`, React gallery, selection API, admin revoke, `noindex` + robots |
 | Post-MVP hardening | In progress | O1 Sentry, security audit ([#51](https://github.com/cjlawson02/photography/pull/51)–[#52](https://github.com/cjlawson02/photography/pull/52)); open backlog Phase 2.5 |
-| Phase 5 — Cutover | In progress | Portfolio **T7 done**; **T6 cutover sequence** next ([CUTOVER.md](CUTOVER.md#cutover-sequence-after-migration)); domain + legacy 301 live |
+| Phase 5 — Cutover | Monitoring | **T6 signed off** (Chris, 2026-09-26): 301 + prod smoke; watch errors / decommission legacy ([CUTOVER.md](CUTOVER.md#6-post-cutover-monitoring)) |
 
 Production host live (`photography.chrislawson.dev`): Access `/admin*`, D1 remote migrations, R2 CORS, Access vars + R2 secrets — [DEPLOY.md](DEPLOY.md).
 
