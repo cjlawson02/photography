@@ -2,6 +2,7 @@ import type { ReviewJobStatus } from '../../db/schema/review/job-status.ts';
 import {
   buildJobStepRail,
   jobStepLabel,
+  jobStepSecondaryAction,
   type JobStepPrimaryAction,
 } from '../../lib/review/job-steps.ts';
 import { adminClass } from './admin-styles.ts';
@@ -12,6 +13,10 @@ type AdminJobStepRailProps = {
   primaryAction: JobStepPrimaryAction;
   onMarkShared?: () => void;
   markSharedPending?: boolean;
+  onCopyFilenames?: () => void;
+  copyFilenamesPending?: boolean;
+  onReopenPicks?: () => void;
+  reopenPicksPending?: boolean;
 };
 
 export function AdminJobStatusBadge({ status }: { status: ReviewJobStatus }) {
@@ -25,8 +30,13 @@ export default function AdminJobStepRail({
   primaryAction,
   onMarkShared,
   markSharedPending,
+  onCopyFilenames,
+  copyFilenamesPending,
+  onReopenPicks,
+  reopenPicksPending,
 }: AdminJobStepRailProps) {
   const steps = buildJobStepRail(status);
+  const secondaryAction = jobStepSecondaryAction(status);
 
   return (
     <section className="admin-job-rail" aria-label="Shoot job steps">
@@ -74,8 +84,27 @@ export default function AdminJobStepRail({
             {primaryAction.label}
           </a>
         ) : null}
+        {primaryAction.kind === 'copy_filenames' ? (
+          <AdminPrimaryButton
+            type="button"
+            disabled={copyFilenamesPending}
+            onClick={() => onCopyFilenames?.()}
+          >
+            {primaryAction.label}
+          </AdminPrimaryButton>
+        ) : null}
         {primaryAction.kind === 'none' ? (
           <p className={`text-sm ${adminClass.fgMuted}`}>{primaryAction.label}</p>
+        ) : null}
+        {secondaryAction ? (
+          <AdminPrimaryButton
+            type="button"
+            className="ml-3"
+            disabled={reopenPicksPending}
+            onClick={() => onReopenPicks?.()}
+          >
+            {secondaryAction.label}
+          </AdminPrimaryButton>
         ) : null}
       </div>
     </section>

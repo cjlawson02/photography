@@ -168,7 +168,7 @@ Guided, low-frequency admin: client-shoot step rail (proof → picks → deliver
 **Tasks** (planned)
 
 - [x] **A1** Shoot job page + step rail — [ADMIN-UX § Lifecycles / Workflows 1–2](ADMIN-UX.md#lifecycles)
-- [ ] **A2** Client “Submit picks” + lock / reopen + filename export for Lightroom — [Workflow 2](ADMIN-UX.md#2-receive-picks); persist `originalFilename`
+- [x] **A2** Client “Submit picks” + lock / reopen + filename export for Lightroom — [Workflow 2](ADMIN-UX.md#2-receive-picks); persist `originalFilename`
 - [ ] **A3** Delivery round + public download mode — [Workflow 3](ADMIN-UX.md#3-deliver-finals) (ZIP / storage shape: [open decisions](ADMIN-UX.md#open-decisions))
 - [ ] **A4** Front-page set (order, hero) + Library grid + inspector — [Workflow 5](ADMIN-UX.md#5-refresh-the-front-page); [patterns](ADMIN-UX.md#interaction-patterns)
 - [ ] **A5** Home (active shoot cards + attention banners) — [IA](ADMIN-UX.md#information-architecture)

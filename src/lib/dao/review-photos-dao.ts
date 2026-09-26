@@ -18,6 +18,7 @@ export class ReviewPhotosDAO {
     status?: PhotoStatus;
     mimeType?: string | null;
     selectionStatus?: SelectionStatus;
+    originalFilename?: string | null;
     id?: string;
     width?: number | null;
     height?: number | null;
@@ -27,6 +28,7 @@ export class ReviewPhotosDAO {
       status: values.status ?? ('pending' as const),
       mimeType: values.mimeType ?? null,
       selectionStatus: values.selectionStatus ?? ('none' as const),
+      originalFilename: values.originalFilename ?? null,
       width: values.width ?? null,
       height: values.height ?? null,
       ...(values.id ? { id: values.id } : {}),
@@ -82,6 +84,7 @@ export class ReviewPhotosDAO {
       status?: PhotoStatus;
       mimeType?: string | null;
       selectionStatus?: SelectionStatus;
+      originalFilename?: string | null;
       width?: number | null;
       height?: number | null;
     },
@@ -107,6 +110,7 @@ export class ReviewPhotosDAO {
       status?: PhotoStatus;
       mimeType?: string | null;
       selectionStatus?: SelectionStatus;
+      originalFilename?: string | null;
       width?: number | null;
       height?: number | null;
     },

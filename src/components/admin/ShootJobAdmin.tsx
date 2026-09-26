@@ -203,6 +203,19 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
     }),
   );
 
+  const reopenPicksMutation = useMutation(
+    trpc.review.collections.reopenPicks.mutationOptions({
+      onSuccess: async () => {
+        setEditStatus('Picks reopened — client can change selections again.');
+        await queryClient.invalidateQueries(trpc.review.collections.detail.queryFilter());
+        await queryClient.invalidateQueries(trpc.review.collections.list.queryFilter());
+      },
+      onError: (error) => {
+        setEditStatus(errorMessage(error));
+      },
+    }),
+  );
+
   const deletePhotoMutation = useMutation(
     trpc.review.collections.deletePhoto.mutationOptions({
       onSuccess: async () => {
@@ -241,7 +254,27 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
     updateMutation.isPending ||
     deletePhotoMutation.isPending ||
     transitionMutation.isPending ||
+    reopenPicksMutation.isPending ||
     busyPhotoId !== null;
+
+  const copyFilenames = async () => {
+    setEditStatus('Preparing filenames…');
+    try {
+      const result = await queryClient.fetchQuery(
+        trpc.review.collections.exportPickFilenames.queryOptions({ id: collectionId }),
+      );
+      await navigator.clipboard.writeText(result.text);
+      setEditStatus(
+        result.filenames.length === 0
+          ? 'No picks to export yet.'
+          : `Copied ${result.filenames.length} filename(s) for Lightroom.`,
+      );
+      await queryClient.invalidateQueries(trpc.review.collections.detail.queryFilter());
+      await queryClient.invalidateQueries(trpc.review.collections.list.queryFilter());
+    } catch (error) {
+      setEditStatus(errorMessage(error));
+    }
+  };
 
   const statusMessage = detailQuery.isPending
     ? 'Loading…'
@@ -289,6 +322,22 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
               id: collectionId,
               to: primaryAction.targetStatus,
             });
+          }}
+          copyFilenamesPending={photoActionsBusy}
+          onCopyFilenames={() => {
+            void copyFilenames();
+          }}
+          reopenPicksPending={reopenPicksMutation.isPending}
+          onReopenPicks={() => {
+            if (
+              !confirm(
+                'Reopen picks? The client will be able to change selections on the review link again.',
+              )
+            ) {
+              return;
+            }
+            setEditStatus('Reopening picks…');
+            void reopenPicksMutation.mutateAsync({ id: collectionId });
           }}
         />
       ) : null}

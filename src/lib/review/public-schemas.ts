@@ -8,3 +8,8 @@ export const reviewSelectionBodySchema = z.object({
   photoId: idSchema,
   selectionStatus: selectionStatusSchema,
 });
+
+/** POST `/review/api/submit-picks` — client finished choosing. */
+export const reviewSubmitPicksBodySchema = z.object({
+  slug: z.string().trim().min(1),
+});

@@ -10,6 +10,7 @@ import { GALLERY_VARIANT, THUMB_VARIANT } from '../ingest/keys.ts';
 import { reviewVariantAdminUrl, reviewVariantPublicUrl } from '../media/variant-media-url.ts';
 import { resolveReviewCollectionAccess } from '../review/collection-access.ts';
 import { isTransitionAllowed } from '../review/job-steps.ts';
+import { areClientPicksLocked } from '../review/picks-lock.ts';
 export { updateReviewSelection } from '../review/update-selection.ts';
 import { buildReviewSlug } from '../review/slug.ts';
 import { isSqliteUniqueViolation } from '../sqlite-unique-violation.ts';
@@ -23,23 +24,25 @@ export type PublicReviewPhoto = {
   height: number | null;
 };
 
-export type PublicReviewCollection = {
-  slug: string;
-  title: string | null;
-  photos: PublicReviewPhoto[];
-};
-
 export type AdminReviewCollectionPhoto = {
   id: string;
   status: PhotoStatus;
   selectionStatus: SelectionStatus;
   mimeType: string | null;
+  originalFilename: string | null;
   createdAt: number;
   updatedAt: number;
   thumbUrl: string | null;
   galleryUrl: string | null;
   width: number | null;
   height: number | null;
+};
+
+export type PublicReviewCollection = {
+  slug: string;
+  title: string | null;
+  picksLocked: boolean;
+  photos: PublicReviewPhoto[];
 };
 
 export type AdminReviewCollectionDetail = {
@@ -143,12 +146,21 @@ export class ReviewService {
     const now = Date.now();
     const timestamps: {
       sharedAt?: number;
-      submittedAt?: number;
+      submittedAt?: number | null;
       deliveredAt?: number;
       closedAt?: number;
     } = {};
     if (to === 'shared' && collection.sharedAt == null) {
       timestamps.sharedAt = now;
+    }
+    if (to === 'shared' && (from === 'picks_submitted' || from === 'editing')) {
+      timestamps.submittedAt = null;
+    }
+    if (to === 'picks_submitted' && collection.submittedAt == null) {
+      timestamps.submittedAt = now;
+    }
+    if (to === 'editing' && collection.submittedAt == null) {
+      timestamps.submittedAt = now;
     }
 
     const updated = await this.app.d1.reviewCollections.update(id, {
@@ -213,6 +225,7 @@ export class ReviewService {
         status: row.status,
         selectionStatus: row.selectionStatus,
         mimeType: row.mimeType,
+        originalFilename: row.originalFilename,
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
         thumbUrl: ready ? reviewVariantAdminUrl(row.id, THUMB_VARIANT.suffix, row.updatedAt) : null,
@@ -228,6 +241,31 @@ export class ReviewService {
       collection: this.mapCollectionRow(collection),
       photos,
     };
+  }
+
+  async exportPickFilenames(id: string): Promise<{ filenames: string[]; text: string }> {
+    const detail = await this.getCollectionDetailForAdmin(id);
+    const picks = detail.photos.filter(
+      (photo) => photo.selectionStatus === 'selected' || photo.selectionStatus === 'approved',
+    );
+    const filenames = picks
+      .map((photo) => photo.originalFilename?.trim() || photo.id)
+      .toSorted((a, b) => a.localeCompare(b));
+    if (detail.collection.status === 'picks_submitted') {
+      await this.transitionJobStatus(id, 'editing');
+    }
+    return { filenames, text: filenames.join('\n') };
+  }
+
+  async reopenPicks(id: string) {
+    const collection = await this.app.d1.reviewCollections.getById(id);
+    if (!collection) {
+      throw new AppError('NOT_FOUND', `Review collection not found: ${id}`);
+    }
+    if (collection.status !== 'picks_submitted' && collection.status !== 'editing') {
+      throw new AppError('BAD_REQUEST', 'Picks can only be reopened after submission');
+    }
+    return this.transitionJobStatus(id, 'shared');
   }
 
   /**
@@ -322,6 +360,7 @@ export async function resolveReviewPageState(
     collection: {
       slug: access.collection.slug,
       title: access.collection.title,
+      picksLocked: areClientPicksLocked(access.collection.status),
       photos: ready.map((photo) => ({
         id: photo.id,
         galleryUrl: reviewVariantPublicUrl(photo.id, GALLERY_VARIANT.suffix, photo.updatedAt),
