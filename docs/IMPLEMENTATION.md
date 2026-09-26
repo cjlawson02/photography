@@ -134,7 +134,7 @@ Tracked after [#21](https://github.com/cjlawson02/photography/pull/21)–[#23](h
 | P1–P7 | Product polish | Ingest dimensions, alt/title, empty states, review lifecycle, upload hardening, pending TTL, admin pagination — see [HLD](HLD.md) `_TBD_` |
 | M1–M4 | Frontend islands + primitives | Query islands, remove dead `lib/admin/*-api.ts`, shared UI primitives, optional `embla-carousel-react` |
 | T1 | Test suite | Vitest + RTL; selection route + middleware |
-| T4 | D1 migrations in CI | Optional pre-deploy apply or gate |
+| T4 | D1 migrations in CI | Pre-deploy apply on `main` in [ci-cd.yml](../.github/workflows/ci-cd.yml); optional gate / PR dry-run `_TBD_` |
 | T5 | Indexes | `ReviewPhotos.collectionId`, `PortfolioPhotos(published, status)` |
 | T6–T7 | Cutover + bulk migration | [CUTOVER.md](CUTOVER.md); legacy WP migration deferred |
 
