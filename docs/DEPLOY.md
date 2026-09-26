@@ -87,7 +87,7 @@ Workflow: [`.github/workflows/ci-cd.yml`](../.github/workflows/ci-cd.yml).
 
 | Trigger | What runs |
 | --- | --- |
-| Pull request | `npm test`, `npm run typecheck`, `npm run build`, `wrangler deploy --dry-run` |
+| Pull request | Node 24 — `npm test`, `npm run typecheck`, `npm run build`, `wrangler deploy --dry-run` |
 | Push to `main` | Same checks, then `wrangler deploy` to production |
 
 **Repository secrets** (Settings → Secrets and variables → Actions):

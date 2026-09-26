@@ -1,6 +1,8 @@
 # CI on every PR and push; deploy Worker to Cloudflare on push to main only.
 # Required repo secrets (deploy job): CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
 # See docs/DEPLOY.md — D1 remote migrations are not run in this workflow.
+#
+# Action versions (2026-09): checkout/setup-node v7; wrangler-action v4 (Wrangler from package-lock after npm ci).
 
 name: CI/CD
 
@@ -18,11 +20,11 @@ jobs:
     name: Test, typecheck, build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version: '24'
           cache: npm
 
       - name: Install dependencies
@@ -49,11 +51,11 @@ jobs:
       contents: read
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version: '24'
           cache: npm
 
       - name: Install dependencies
@@ -63,7 +65,7 @@ jobs:
         run: npm run build
 
       - name: Deploy Worker
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

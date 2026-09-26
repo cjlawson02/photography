@@ -10,7 +10,7 @@ Photography website for Chris Lawson. Details live in docs; start from the point
 
 ## Build and test commands
 
-Requires Node `>=22.12.0` (Astro 7). Prefer a current Node 22 LTS if the environment’s default is older.
+Requires Node `>=24.0.0` (Astro 7). CI uses Node 24.
 
 ```bash
 npm install
