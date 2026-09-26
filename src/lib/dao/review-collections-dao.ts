@@ -53,6 +53,14 @@ export class ReviewCollectionsDAO {
 			.limit(limit);
 	}
 
+	async deleteById(id: string) {
+		const deleted = await this.db
+			.delete(ReviewCollections)
+			.where(eq(ReviewCollections.id, id))
+			.returning();
+		return deleted[0] ?? null;
+	}
+
 	async update(
 		id: string,
 		patch: { slug?: string; title?: string | null; expiresAt?: number | null },

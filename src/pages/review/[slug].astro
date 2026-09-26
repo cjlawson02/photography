@@ -1,0 +1,68 @@
+---
+import { env } from 'cloudflare:workers';
+
+import ReviewGallery from '../../components/public/ReviewGallery.tsx';
+import ReviewLayout from '../../layouts/ReviewLayout.astro';
+import { resolveReviewPageState } from '../../lib/services/review-service.ts';
+
+const slug = Astro.params.slug?.trim() ?? '';
+const state = slug ? await resolveReviewPageState(env.DB, slug) : { kind: 'not_found' as const };
+
+if (state.kind === 'not_found') {
+	Astro.response.status = 404;
+}
+
+const pageTitle =
+	state.kind === 'ok'
+		? state.collection.title?.trim() || 'Client review'
+		: state.kind === 'expired'
+			? 'Review link expired'
+			: 'Client review';
+---
+
+{
+	state.kind === 'not_found' ? (
+		<ReviewLayout title="Review not found">
+			<main class="mx-auto max-w-xl px-4 py-16 text-center">
+				<h1 class="text-2xl" style="font-family: var(--font-display); color: var(--color-fg)">
+					Review not found
+				</h1>
+				<p class="mt-6 text-sm" style="color: var(--color-fg-muted)">
+					This link may be incorrect or has been revoked.
+				</p>
+			</main>
+		</ReviewLayout>
+	) : state.kind === 'expired' ? (
+		<ReviewLayout title={pageTitle}>
+			<main class="mx-auto max-w-xl px-4 py-16 text-center">
+				<h1 class="text-2xl" style="font-family: var(--font-display); color: var(--color-fg)">
+					This review link has expired
+				</h1>
+				{state.title ? (
+					<p class="mt-3 text-sm" style="color: var(--color-fg-muted)">{state.title}</p>
+				) : null}
+				<p class="mt-6 text-sm" style="color: var(--color-fg-muted)">
+					Contact Lawson Photography if you need a new link.
+				</p>
+			</main>
+		</ReviewLayout>
+	) : state.kind === 'ok' ? (
+		<ReviewLayout title={pageTitle}>
+			<main>
+				<header class="mx-auto max-w-3xl px-4 pt-10 text-center">
+					<h1 class="text-2xl" style="font-family: var(--font-display); color: var(--color-fg)">
+						{state.collection.title?.trim() || 'Client review'}
+					</h1>
+					<p class="mt-3 text-sm" style="color: var(--color-fg-muted)">
+						Select your favorites, then approve finals. Your choices save automatically.
+					</p>
+				</header>
+				<ReviewGallery
+					client:load
+					slug={state.collection.slug}
+					photos={state.collection.photos}
+				/>
+			</main>
+		</ReviewLayout>
+	) : null
+}

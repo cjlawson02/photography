@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
 import * as schema from '../../db/schema/index.ts';
@@ -45,6 +45,19 @@ export class ReviewPhotosDAO {
 			.select()
 			.from(ReviewPhotos)
 			.where(eq(ReviewPhotos.collectionId, collectionId));
+	}
+
+	/** Public review grid — ingest-ready rows for one collection. */
+	async listReadyByCollectionId(collectionId: string) {
+		return this.db
+			.select()
+			.from(ReviewPhotos)
+			.where(and(eq(ReviewPhotos.collectionId, collectionId), eq(ReviewPhotos.status, 'ready')))
+			.orderBy(asc(ReviewPhotos.createdAt));
+	}
+
+	async deleteByCollectionId(collectionId: string) {
+		return this.db.delete(ReviewPhotos).where(eq(ReviewPhotos.collectionId, collectionId));
 	}
 
 	async update(

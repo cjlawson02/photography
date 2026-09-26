@@ -1,8 +1,8 @@
 ---
 import { env } from 'cloudflare:workers';
 
-import HeroCarousel from '../components/public/HeroCarousel.astro';
-import PublicHomeGallery from '../components/public/PublicHomeGallery.astro';
+import HeroCarousel from '../components/public/HeroCarousel.tsx';
+import PublicHomeGallery from '../components/public/PublicHomeGallery.tsx';
 import PublicLayout from '../layouts/PublicLayout.astro';
 import { selectHeroPhotos } from '../lib/portfolio/hero-photos.ts';
 import { listPublishedPortfolioPhotos } from '../lib/services/portfolio-service.ts';
@@ -12,6 +12,6 @@ const heroPhotos = selectHeroPhotos(photos);
 ---
 
 <PublicLayout title="Lawson Photography">
-	<HeroCarousel photos={heroPhotos} />
-	<PublicHomeGallery photos={photos} />
+	<HeroCarousel client:load photos={heroPhotos} />
+	<PublicHomeGallery client:visible photos={photos} />
 </PublicLayout>

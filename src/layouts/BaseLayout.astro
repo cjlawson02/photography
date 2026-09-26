@@ -3,9 +3,11 @@ import '../styles/global.css';
 
 interface Props {
 	title?: string;
+	/** When set, emitted as `<meta name="robots" …>` (e.g. review surfaces). */
+	robots?: string;
 }
 
-const { title = 'Lawson Photography' } = Astro.props;
+const { title = 'Lawson Photography', robots } = Astro.props;
 ---
 
 <!doctype html>
@@ -15,6 +17,7 @@ const { title = 'Lawson Photography' } = Astro.props;
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
 		<meta name="viewport" content="width=device-width" />
+		{robots ? <meta name="robots" content={robots} /> : null}
 		<meta name="generator" content={Astro.generator} />
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
