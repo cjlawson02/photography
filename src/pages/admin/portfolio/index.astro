@@ -13,6 +13,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 	<PortfolioAdminTable client:load />
 
 	<p class="mt-6 text-xs" style="color: var(--color-fg-muted)">
-		API: <code>GET/PATCH/DELETE /admin/api/portfolio/photos</code>
+		API: <code>/admin/api/trpc</code> (<code>portfolio.list</code>, <code>portfolio.update</code>,
+		<code>portfolio.delete</code>)
 	</p>
 </AdminLayout>

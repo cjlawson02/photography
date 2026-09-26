@@ -26,6 +26,22 @@ export class ReviewService {
 		return new ReviewService(app);
 	}
 
+	async createCollection(input: { slug: string; title?: string | null; expiresAt?: number | null }) {
+		const dao = this.app.d1.reviewCollections;
+		const existing = await dao.getBySlug(input.slug);
+		if (existing) {
+			throw new AppError('CONFLICT', 'Slug already in use');
+		}
+		try {
+			return await dao.insert(input);
+		} catch (error) {
+			if (isSqliteUniqueViolation(error)) {
+				throw new AppError('CONFLICT', 'Slug already in use');
+			}
+			throw error;
+		}
+	}
+
 	async revokeCollection(id: string, options: { cleanupR2: boolean }) {
 		const existing = await this.app.d1.reviewCollections.getById(id);
 		if (!existing) {
@@ -128,4 +144,10 @@ export async function updateReviewSelection(
 		throw new AppError('NOT_FOUND', 'Review photo not found');
 	}
 	return updated;
+}
+
+function isSqliteUniqueViolation(error: unknown): boolean {
+	if (!(error instanceof Error)) return false;
+	const message = error.message.toLowerCase();
+	return message.includes('unique') || message.includes('constraint');
 }

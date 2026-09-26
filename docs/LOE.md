@@ -32,7 +32,7 @@ Task rows map 1:1 to [IMPLEMENTATION.md](IMPLEMENTATION.md) checklists. Widen a 
 | Bind private R2 `PORTFOLIO` + `REVIEW` | S | Binding wiring |
 | R2 S3 API secrets/CORS for browser PUT | S–M | Config risk; needed before Phase 1 smoke |
 | Tailwind + CSS design tokens | S (stub) / _TBD_ (polish) | Visual system polish `_TBD_` |
-| Place admin mutations under `/admin/api/*` | S–M | Access prefix coverage for thin handlers (not Astro Actions) |
+| Place admin mutations under `/admin/api/trpc` | S–M | Access prefix coverage (not Astro Actions) |
 | Access on `/admin*` + shared JWT verify helper | M | Every `/admin/*` mutation verifies JWT |
 | Env/secrets inventory | S / _TBD_ list | Document as decided |
 
