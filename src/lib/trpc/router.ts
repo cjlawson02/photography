@@ -1,8 +1,11 @@
 import { z } from 'zod/v4';
 
 import {
+  portfolioBulkDeleteInputSchema,
   portfolioBulkUpdateInputSchema,
+  portfolioFrontPageAddInputSchema,
   portfolioFrontPageReorderInputSchema,
+  portfolioFrontPageSetInputSchema,
   portfolioListInputSchema,
   portfolioPhotoAdminUpdateBodySchema,
 } from '../admin/portfolio-schemas.ts';
@@ -74,6 +77,13 @@ export const appRouter = createTRPCRouter({
       .mutation(async ({ ctx, input }) =>
         PortfolioService.from(ctx.getAppEnv()).bulkUpdateMetadata(input.ids, input.data),
       ),
+    bulkDelete: adminProcedure
+      .input(portfolioBulkDeleteInputSchema)
+      .mutation(async ({ ctx, input }) =>
+        PortfolioService.from(ctx.getAppEnv()).bulkDeletePhotos(input.ids, {
+          cleanupR2: input.cleanupR2,
+        }),
+      ),
     frontPage: createTRPCRouter({
       list: adminProcedure.query(async ({ ctx }) =>
         PortfolioService.from(ctx.getAppEnv()).listFrontPageForAdmin(),
@@ -82,6 +92,16 @@ export const appRouter = createTRPCRouter({
         .input(portfolioFrontPageReorderInputSchema)
         .mutation(async ({ ctx, input }) =>
           PortfolioService.from(ctx.getAppEnv()).reorderFrontPage(input.orderedIds),
+        ),
+      set: adminProcedure
+        .input(portfolioFrontPageSetInputSchema)
+        .mutation(async ({ ctx, input }) =>
+          PortfolioService.from(ctx.getAppEnv()).setFrontPage(input.orderedIds, input.heroIds),
+        ),
+      add: adminProcedure
+        .input(portfolioFrontPageAddInputSchema)
+        .mutation(async ({ ctx, input }) =>
+          PortfolioService.from(ctx.getAppEnv()).addToFrontPage(input.ids),
         ),
       setMembership: adminProcedure
         .input(

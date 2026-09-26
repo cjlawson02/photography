@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, lt, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, lt, or, sql } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
 import * as schema from '../../db/schema/index.ts';
@@ -12,6 +12,22 @@ import { definedProps } from '../utils/merge-defined.ts';
 type Db = DrizzleD1Database<typeof schema>;
 
 export type PortfolioPhotoRow = typeof PortfolioPhotos.$inferSelect;
+
+type PortfolioPhotoPatch = {
+  status?: PhotoStatus;
+  mimeType?: string | null;
+  published?: boolean;
+  category?: PortfolioCategory | null;
+  sortOrder?: number | null;
+  hero?: boolean;
+  frontPage?: boolean;
+  frontPageOrder?: number | null;
+  width?: number | null;
+  height?: number | null;
+  alt?: string | null;
+  title?: string | null;
+  caption?: string | null;
+};
 
 /** Portfolio photo DAO — insert/get/update for ingest + catalog. */
 export class PortfolioPhotosDAO {
@@ -56,6 +72,11 @@ export class PortfolioPhotosDAO {
       .where(eq(PortfolioPhotos.id, id))
       .limit(1);
     return rows[0] ?? null;
+  }
+
+  async getByIds(ids: string[]) {
+    if (ids.length === 0) return [];
+    return this.db.select().from(PortfolioPhotos).where(inArray(PortfolioPhotos.id, ids));
   }
 
   async getBySourceReviewPhotoId(sourceReviewPhotoId: string) {
@@ -145,24 +166,7 @@ export class PortfolioPhotosDAO {
       .limit(limit);
   }
 
-  async update(
-    id: string,
-    patch: {
-      status?: PhotoStatus;
-      mimeType?: string | null;
-      published?: boolean;
-      category?: PortfolioCategory | null;
-      sortOrder?: number | null;
-      hero?: boolean;
-      frontPage?: boolean;
-      frontPageOrder?: number | null;
-      width?: number | null;
-      height?: number | null;
-      alt?: string | null;
-      title?: string | null;
-      caption?: string | null;
-    },
-  ) {
+  async update(id: string, patch: PortfolioPhotoPatch) {
     const set = definedProps(patch);
     if (Object.keys(set).length === 0) {
       return this.getById(id);
@@ -176,25 +180,7 @@ export class PortfolioPhotosDAO {
   }
 
   /** Atomic read-then-act guard — updates only when `status` still matches. */
-  async updateIfStatus(
-    id: string,
-    expectedStatus: PhotoStatus,
-    patch: {
-      status?: PhotoStatus;
-      mimeType?: string | null;
-      published?: boolean;
-      category?: PortfolioCategory | null;
-      sortOrder?: number | null;
-      hero?: boolean;
-      frontPage?: boolean;
-      frontPageOrder?: number | null;
-      width?: number | null;
-      height?: number | null;
-      alt?: string | null;
-      title?: string | null;
-      caption?: string | null;
-    },
-  ) {
+  async updateIfStatus(id: string, expectedStatus: PhotoStatus, patch: PortfolioPhotoPatch) {
     const set = definedProps(patch);
     if (Object.keys(set).length === 0) {
       const row = await this.getById(id);
@@ -206,6 +192,59 @@ export class PortfolioPhotosDAO {
       .where(and(eq(PortfolioPhotos.id, id), eq(PortfolioPhotos.status, expectedStatus)))
       .returning();
     return updated[0] ?? null;
+  }
+
+  /** One UPDATE … WHERE id IN (…); callers keep `ids` small (D1 bound-parameter cap). */
+  async updateMany(ids: string[], patch: PortfolioPhotoPatch) {
+    const set = definedProps(patch);
+    if (ids.length === 0) return [];
+    if (Object.keys(set).length === 0) return this.getByIds(ids);
+    return this.db
+      .update(PortfolioPhotos)
+      .set(set)
+      .where(inArray(PortfolioPhotos.id, ids))
+      .returning();
+  }
+
+  /**
+   * Front-page membership + order in one D1 batch (atomic): `orderedIds` get
+   * `frontPageOrder` = index, `removeIds` leave the set (and lose hero).
+   */
+  async applyFrontPageSet(input: {
+    orderedIds: string[];
+    removeIds?: string[];
+    heroIds?: string[];
+  }) {
+    const heroIds = new Set(input.heroIds ?? []);
+    const removeIds = input.removeIds ?? [];
+    const statements = [
+      ...(removeIds.length > 0
+        ? [
+            this.db
+              .update(PortfolioPhotos)
+              .set({ frontPage: false, frontPageOrder: null, hero: false })
+              .where(inArray(PortfolioPhotos.id, removeIds)),
+          ]
+        : []),
+      ...input.orderedIds.map((id, index) =>
+        this.db
+          .update(PortfolioPhotos)
+          .set({
+            frontPage: true,
+            frontPageOrder: index,
+            ...(heroIds.has(id) ? { hero: true } : {}),
+          })
+          .where(eq(PortfolioPhotos.id, id)),
+      ),
+    ];
+    const [first, ...rest] = statements;
+    if (!first) return;
+    await this.db.batch([first, ...rest]);
+  }
+
+  async deleteMany(ids: string[]) {
+    if (ids.length === 0) return [];
+    return this.db.delete(PortfolioPhotos).where(inArray(PortfolioPhotos.id, ids)).returning();
   }
 
   async deleteById(id: string) {

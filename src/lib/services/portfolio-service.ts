@@ -10,7 +10,7 @@ import type {
   PortfolioPhotoAdminUpdateBody,
 } from '../admin/portfolio-schemas.ts';
 import { decodeAdminListCursor, encodeAdminListCursor } from '../pagination/admin-list-cursor.ts';
-import { canJoinFrontPage } from '../portfolio/front-page-eligibility.ts';
+import { frontPageBlockReason } from '../portfolio/front-page-eligibility.ts';
 
 export type PublicPortfolioPhoto = {
   id: string;
@@ -68,26 +68,83 @@ export class PortfolioService {
     return updated;
   }
 
-  /**
-   * Remove catalog row; optional R2 purge runs before D1 so live `/media/portfolio` URLs
-   * are not left pointing at deleted rows (orphan R2 only if D1 delete fails after purge).
-   */
   async listFrontPageForAdmin() {
     const rows = await this.app.d1.portfolioPhotos.listFrontPageForAdmin();
     return { items: rows };
   }
 
+  /** Reorder only — `orderedIds` must be exactly the current set; one atomic D1 batch. */
   async reorderFrontPage(orderedIds: string[]) {
     const rows = await this.app.d1.portfolioPhotos.listFrontPageForAdmin();
     const existing = new Set(rows.map((row) => row.id));
-    if (orderedIds.length !== rows.length || orderedIds.some((id) => !existing.has(id))) {
+    const unique = new Set(orderedIds);
+    if (
+      unique.size !== orderedIds.length ||
+      orderedIds.length !== rows.length ||
+      orderedIds.some((id) => !existing.has(id))
+    ) {
       throw new AppError('BAD_REQUEST', 'Reorder must include every front-page photo exactly once');
     }
-    for (let index = 0; index < orderedIds.length; index++) {
-      const id = orderedIds[index]!;
-      await this.app.d1.portfolioPhotos.update(id, { frontPageOrder: index });
-    }
+    await this.app.d1.portfolioPhotos.applyFrontPageSet({ orderedIds });
     return { orderedIds };
+  }
+
+  /**
+   * Replace the whole set (membership, order, hero for listed ids) in one D1 batch.
+   * Photos joining the set must pass front-page eligibility.
+   */
+  async setFrontPage(orderedIds: string[], heroIds: string[] = []) {
+    const ordered = new Set(orderedIds);
+    if (ordered.size !== orderedIds.length) {
+      throw new AppError('BAD_REQUEST', 'Front-page set lists a photo more than once');
+    }
+    if (heroIds.some((id) => !ordered.has(id))) {
+      throw new AppError('BAD_REQUEST', 'Hero photos must be in the front-page set');
+    }
+    const current = await this.app.d1.portfolioPhotos.listFrontPageForAdmin();
+    const currentIds = new Set(current.map((row) => row.id));
+    const newcomers = orderedIds.filter((id) => !currentIds.has(id));
+    const rows = await this.app.d1.portfolioPhotos.getByIds(newcomers);
+    if (rows.length !== newcomers.length) {
+      throw new AppError('NOT_FOUND', 'Some front-page photos no longer exist');
+    }
+    for (const row of rows) {
+      const reason = frontPageBlockReason(row);
+      if (reason) {
+        throw new AppError('BAD_REQUEST', `Cannot add ${row.id} to the front page: ${reason}`);
+      }
+    }
+    await this.app.d1.portfolioPhotos.applyFrontPageSet({
+      orderedIds,
+      removeIds: current.map((row) => row.id).filter((id) => !ordered.has(id)),
+      heroIds,
+    });
+    return { orderedIds };
+  }
+
+  /** Append eligible photos to the end of the set; ineligible ones are skipped with a reason. */
+  async addToFrontPage(ids: string[]) {
+    const current = await this.app.d1.portfolioPhotos.listFrontPageForAdmin();
+    const currentIds = current.map((row) => row.id);
+    const onFrontPage = new Set(currentIds);
+    const candidates = [...new Set(ids)].filter((id) => !onFrontPage.has(id));
+    const rows = new Map(
+      (await this.app.d1.portfolioPhotos.getByIds(candidates)).map((row) => [row.id, row]),
+    );
+    const added: string[] = [];
+    const skipped: { id: string; reason: string }[] = [];
+    for (const id of candidates) {
+      const row = rows.get(id);
+      const reason = row ? frontPageBlockReason(row) : 'Photo no longer exists.';
+      if (reason) skipped.push({ id, reason });
+      else added.push(id);
+    }
+    if (added.length > 0) {
+      await this.app.d1.portfolioPhotos.applyFrontPageSet({
+        orderedIds: [...currentIds, ...added],
+      });
+    }
+    return { added, skipped };
   }
 
   async setFrontPageMembership(id: string, onFrontPage: boolean) {
@@ -96,17 +153,11 @@ export class PortfolioService {
       throw new AppError('NOT_FOUND', `Portfolio photo not found: ${id}`);
     }
     if (onFrontPage) {
-      if (!canJoinFrontPage(photo)) {
-        throw new AppError(
-          'BAD_REQUEST',
-          'Photo needs ingest ready, publish on, alt text, and category before joining the front page',
-        );
+      const { skipped } = await this.addToFrontPage([id]);
+      if (skipped[0]) {
+        throw new AppError('BAD_REQUEST', `Cannot add to the front page: ${skipped[0].reason}`);
       }
-      const current = await this.app.d1.portfolioPhotos.listFrontPageForAdmin();
-      return this.app.d1.portfolioPhotos.update(id, {
-        frontPage: true,
-        frontPageOrder: current.length,
-      });
+      return (await this.app.d1.portfolioPhotos.getById(id)) ?? photo;
     }
     return this.app.d1.portfolioPhotos.update(id, {
       frontPage: false,
@@ -115,14 +166,38 @@ export class PortfolioService {
     });
   }
 
+  /** Single UPDATE for the whole selection (atomic); unpublish also leaves the front page. */
   async bulkUpdateMetadata(ids: string[], patch: PortfolioPhotoAdminUpdateBody) {
-    const updated = [];
-    for (const id of ids) {
-      updated.push(await this.updateMetadata(id, patch));
-    }
-    return { items: updated };
+    const items = await this.app.d1.portfolioPhotos.updateMany(
+      [...new Set(ids)],
+      patch.published === false ? { ...patch, frontPage: false, frontPageOrder: null } : patch,
+    );
+    return { items };
   }
 
+  /**
+   * Remove catalog rows; optional R2 purge runs before D1 so live `/media/portfolio` URLs
+   * are not left pointing at deleted rows (orphan R2 only if D1 delete fails after purge).
+   */
+  async bulkDeletePhotos(ids: string[], options: { cleanupR2: boolean }) {
+    const rows = await this.app.d1.portfolioPhotos.getByIds([...new Set(ids)]);
+    const found = rows.map((row) => row.id);
+    if (found.length === 0) return { ids: [] };
+    if (options.cleanupR2) {
+      await deletePhotoObjects({
+        r2: this.app.r2,
+        bucket: 'portfolio',
+        photoIds: found,
+        logLabel: 'portfolio-bulk-delete',
+        logDetails: { count: found.length },
+        errorMessage: 'Failed to delete portfolio objects from storage',
+      });
+    }
+    const deleted = await this.app.d1.portfolioPhotos.deleteMany(found);
+    return { ids: deleted.map((row) => row.id) };
+  }
+
+  /** Same purge ordering as `bulkDeletePhotos`. */
   async deletePhoto(id: string, options: { cleanupR2: boolean }) {
     const existing = await this.app.d1.portfolioPhotos.getById(id);
     if (!existing) {
