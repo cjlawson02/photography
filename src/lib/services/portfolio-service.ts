@@ -58,7 +58,10 @@ export class PortfolioService {
   }
 
   async updateMetadata(id: string, patch: PortfolioPhotoAdminUpdateBody) {
-    const updated = await this.app.d1.portfolioPhotos.update(id, patch);
+    const updated = await this.app.d1.portfolioPhotos.update(
+      id,
+      patch.published === false ? { ...patch, frontPage: false, frontPageOrder: null } : patch,
+    );
     if (!updated) {
       throw new AppError('NOT_FOUND', `Portfolio photo not found: ${id}`);
     }
@@ -146,14 +149,26 @@ export class PortfolioService {
   }
 }
 
-/** Public pages — D1 only (no R2 S3 secrets). */
+/** Public pages — D1 only (no R2 S3 secrets). All published photos, for category browsing. */
 export async function listPublishedPortfolioPhotos(
   d1: D1Database,
 ): Promise<PublicPortfolioPhoto[]> {
   const dao = new PortfolioPhotosDAO(createDb(d1));
-  const frontPageRows = await dao.listFrontPagePublishedReady();
-  const rows = frontPageRows.length > 0 ? frontPageRows : await dao.listPublishedReady();
-  return rows.map((row) => ({
+  return (await dao.listPublishedReady()).map(toPublicPortfolioPhoto);
+}
+
+/** Curated front-page set in admin order; empty until curated. */
+export async function listFrontPagePortfolioPhotos(
+  d1: D1Database,
+): Promise<PublicPortfolioPhoto[]> {
+  const dao = new PortfolioPhotosDAO(createDb(d1));
+  return (await dao.listFrontPagePublishedReady()).map(toPublicPortfolioPhoto);
+}
+
+function toPublicPortfolioPhoto(
+  row: Awaited<ReturnType<PortfolioPhotosDAO['listPublishedReady']>>[number],
+): PublicPortfolioPhoto {
+  return {
     id: row.id,
     category: row.category,
     sortOrder: row.sortOrder,
@@ -164,5 +179,5 @@ export async function listPublishedPortfolioPhotos(
     width: row.width,
     height: row.height,
     galleryUrl: portfolioVariantPublicUrl(row.id, GALLERY_VARIANT.suffix, row.updatedAt),
-  }));
+  };
 }

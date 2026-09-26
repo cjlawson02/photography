@@ -7,9 +7,15 @@ import PublicIntro from '../components/public/PublicIntro.astro';
 import PublicLayout from '../layouts/PublicLayout.astro';
 import { selectHeroPhotos } from '../lib/portfolio/hero-photos.ts';
 import { canonicalUrl, DEFAULT_SITE_DESCRIPTION, SITE_NAME } from '../lib/site/public-meta.ts';
-import { listPublishedPortfolioPhotos } from '../lib/services/portfolio-service.ts';
+import {
+	listFrontPagePortfolioPhotos,
+	listPublishedPortfolioPhotos,
+} from '../lib/services/portfolio-service.ts';
 
-const photos = await listPublishedPortfolioPhotos(env.DB);
+const [photos, featured] = await Promise.all([
+	listPublishedPortfolioPhotos(env.DB),
+	listFrontPagePortfolioPhotos(env.DB),
+]);
 const heroPhotos = selectHeroPhotos(photos);
 const ogImage =
 	heroPhotos[0]?.galleryUrl != null
@@ -26,5 +32,5 @@ const ogImage =
 >
 	<HeroCarousel client:load photos={heroPhotos} />
 	<PublicIntro />
-	<PublicHomeGallery client:visible photos={photos} />
+	<PublicHomeGallery client:visible photos={photos} featured={featured} />
 </PublicLayout>

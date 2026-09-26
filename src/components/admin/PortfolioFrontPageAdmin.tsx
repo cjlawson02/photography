@@ -66,7 +66,8 @@ function PortfolioFrontPageAdminInner() {
     <>
       <AdminSectionHeading>Front-page set</AdminSectionHeading>
       <p className={`mt-2 text-sm ${adminClass.fgMuted}`}>
-        Reorder with the arrows. Set one hero for the carousel. Add photos from{' '}
+        Reorder with the arrows. Mark hero photos for the carousel. This order is the default
+        Featured view on the home page. Add photos from{' '}
         <a className={adminClass.link} href="/admin/portfolio/library">
           Library
         </a>
