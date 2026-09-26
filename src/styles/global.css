@@ -354,3 +354,44 @@ h6 {
 .pswp__button {
   opacity: 0.9;
 }
+
+.public-lightbox-caption {
+  background: rgb(43 43 43 / 85%);
+  border: 1px solid var(--color-border);
+  bottom: var(--space-4);
+  box-sizing: border-box;
+  color: var(--color-fg);
+  font-family: inherit;
+  left: 50%;
+  margin: 0;
+  max-height: min(40vh, 12rem);
+  max-width: min(36rem, calc(100% - var(--space-4) * 2));
+  overflow: auto;
+  padding: var(--space-2) var(--space-3);
+  pointer-events: auto;
+  position: absolute;
+  text-align: center;
+  transform: translateX(-50%);
+  width: 100%;
+  z-index: 10;
+}
+
+.public-lightbox-caption[hidden] {
+  display: none;
+}
+
+.public-lightbox-caption__title {
+  color: var(--color-fg);
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin: 0 0 var(--space-1);
+  text-transform: uppercase;
+}
+
+.public-lightbox-caption__body {
+  color: var(--color-fg-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0;
+}

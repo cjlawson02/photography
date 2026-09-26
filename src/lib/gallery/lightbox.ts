@@ -1,11 +1,19 @@
 import PhotoSwipe from 'photoswipe';
 import 'photoswipe/style.css';
 
+import {
+  galleryLightboxCaptionParts,
+  gallerySlideAlt,
+  renderGalleryLightboxCaption,
+} from './lightbox-caption.ts';
+
 export type GalleryLightboxItem = {
   src: string;
   width: number;
   height: number;
   alt?: string;
+  title?: string;
+  caption?: string;
 };
 
 /** Matches ingest `gallery.webp` width; height is provisional until EXIF is stored. */
@@ -28,6 +36,28 @@ export function openGalleryLightbox(items: GalleryLightboxItem[], index: number)
     arrowPrev: true,
     arrowNext: true,
     close: true,
+  });
+
+  pswp.on('uiRegister', () => {
+    if (!pswp.ui) return;
+    pswp.ui.registerElement({
+      name: 'gallery-caption',
+      className: 'public-lightbox-caption',
+      order: 8,
+      isButton: false,
+      tagName: 'figcaption',
+      appendTo: 'root',
+      onInit: (el) => {
+        el.setAttribute('aria-live', 'polite');
+        const syncCaption = () => {
+          const slideItem = pswp.currSlide?.data as GalleryLightboxItem | undefined;
+          const parts = slideItem ? galleryLightboxCaptionParts(slideItem) : null;
+          renderGalleryLightboxCaption(el, parts);
+        };
+        pswp.on('change', syncCaption);
+        syncCaption();
+      },
+    });
   });
 
   activeLightbox = pswp;
@@ -53,13 +83,18 @@ export function galleryItemFromPhoto(photo: {
   title?: string | null;
   width?: number | null;
   height?: number | null;
+  caption?: string | null;
 }): GalleryLightboxItem {
   const { width, height } = galleryDisplayDimensions(photo);
-  const alt = photo.alt?.trim() || photo.title?.trim() || '';
+  const alt = gallerySlideAlt(photo);
+  const title = photo.title?.trim() || undefined;
+  const caption = photo.caption?.trim() || undefined;
   return {
     src: photo.galleryUrl,
     width,
     height,
     alt,
+    title,
+    caption,
   };
 }

@@ -116,10 +116,12 @@ Move traffic/content from the current site to the new Workers deployment. Runboo
 
 **Tasks**
 
-- [ ] Content/asset migration plan from legacy source (`_TBD_`)
-- [ ] DNS / custom domain / Access production checklist (`_TBD_`)
+- [ ] Content/asset migration from legacy source — **started** — dry-run scaffold [`scripts/legacy-portfolio-import.mjs`](../scripts/legacy-portfolio-import.mjs), checklist [migration/legacy-bulk-import.md](migration/legacy-bulk-import.md); export format _TBD_ ([CUTOVER.md#chris-input-needed](CUTOVER.md#chris-input-needed))
+- [x] DNS / custom domain — `photography.chrislawson.dev` live; legacy **301** on `lawsonphotography.me` ([CUTOVER.md#dns-and-domain](CUTOVER.md#dns-and-domain))
+- [ ] Access production re-verify after DNS changes — [DEPLOY.md](DEPLOY.md#2-cloudflare-access-admin)
 - [x] Smoke tests checklist — [SMOKE.md](SMOKE.md) (manual; automation `_TBD_`)
-- [ ] Rollback notes (`_TBD_`)
+- [ ] Rollback notes — draft table in [CUTOVER.md#rollback](CUTOVER.md#rollback); RTO/RPO _TBD_
+- [ ] Remote D1 migrate + deploy promote + production smoke — sequence in [CUTOVER.md#cutover-sequence](CUTOVER.md#cutover-sequence)
 
 ### Phase 2.5 — Post-MVP backlog
 
@@ -133,7 +135,7 @@ Hardening and polish after MVP ([#21](https://github.com/cjlawson02/photography/
 | S4 | Delete / revoke ordering | **Done** — R2 batch delete; R2-before-D1 ([#30](https://github.com/cjlawson02/photography/pull/30)) |
 | S6 | Security headers | **Done** — middleware + CSP (Astro inline + Cloudflare beacon) ([#25](https://github.com/cjlawson02/photography/pull/25), [#43](https://github.com/cjlawson02/photography/pull/43)) |
 | P1 | Ingest dimensions | **Done** — ingest + public galleries ([#31](https://github.com/cjlawson02/photography/pull/31), [#34](https://github.com/cjlawson02/photography/pull/34)) |
-| P2 | Portfolio alt / title / caption | **Done (foundation)** — migration `0004_*` ([#36](https://github.com/cjlawson02/photography/pull/36)). _Open:_ lightbox caption UI |
+| P2 | Portfolio alt / title / caption | **Done** — migration `0004_*` ([#36](https://github.com/cjlawson02/photography/pull/36)); public PhotoSwipe caption UI (`public-lightbox-caption`, title when distinct from alt) |
 | P3 | Admin empty states | **Done** ([#39](https://github.com/cjlawson02/photography/pull/39)) |
 | P4 | Upload UX | **Done** — progress bar ([#40](https://github.com/cjlawson02/photography/pull/40)); inline upload ([#45](https://github.com/cjlawson02/photography/pull/45)) |
 | P5 | Review lifecycle | **Done (partial)** — collection update ([#41](https://github.com/cjlawson02/photography/pull/41)); delete review photo ([#42](https://github.com/cjlawson02/photography/pull/42)) |
@@ -152,7 +154,7 @@ Hardening and polish after MVP ([#21](https://github.com/cjlawson02/photography/
 | R1 | Review audit — triage leads | _Open_ — unverified leads FIX-31–40 (e.g. `ReviewGallery` JSON before `ok`, selection UX, lightbox dimensions); fix when reproduced |
 | R2 | Review audit — product / ops | _Track_ — optional reviewer password gate (FIX-06); confirm zone HSTS + Access coverage (Q-01); review proof cache TTL after revoke (Q-02) |
 | T5 | Indexes | **Done** ([#25](https://github.com/cjlawson02/photography/pull/25)) |
-| T6–T7 | Cutover + bulk migration | _Open_ — [CUTOVER.md](CUTOVER.md); legacy 301 via Cloudflare Redirect Rules |
+| T6–T7 | Cutover + bulk migration | **In progress** — [CUTOVER.md](CUTOVER.md) (domain + legacy 301 done; [cutover sequence](CUTOVER.md#cutover-sequence) + [bulk import scaffold](migration/legacy-bulk-import.md)) |
 | O1 | Sentry | **Done** — Worker (`@sentry/cloudflare` + `sentry.server.config.ts`), admin browser (`@sentry/react` via `AdminSentryBootstrap`), `SENTRY_DSN` + `SENTRY_RELEASE`; CI deploy uploads client (Vite plugin) and Worker (`dist-worker` + `npm run sentry:sourcemaps`) when `SENTRY_AUTH_TOKEN` + org/project vars are set ([DEPLOY.md](DEPLOY.md)) |
 
 ## Dependencies
