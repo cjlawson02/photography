@@ -173,7 +173,7 @@ Guided, low-frequency admin: client-shoot step rail (proof → picks → deliver
 - [x] **A4** Front-page set (order, hero) + Library grid + inspector — [Workflow 5](ADMIN-UX.md#5-refresh-the-front-page); [patterns](ADMIN-UX.md#interaction-patterns)
 - [x] **A5** Home (active shoot cards + attention banners) — [IA](ADMIN-UX.md#information-architecture)
 - [x] **A6** Close-out, retention, promote-to-portfolio — [Workflow 4](ADMIN-UX.md#4-close-out); HLD promote-as-copy
-- [ ] **A7** Ingest recovery parity (retry/remove) on proofs and finals — [Workflow 6](ADMIN-UX.md#6-recover-failed--stale-ingest)
+- [x] **A7** Ingest recovery parity (retry/remove) on proofs and finals — [Workflow 6](ADMIN-UX.md#6-recover-failed--stale-ingest)
 - [ ] Forms on new surfaces: react-hook-form + zod (same as M5 / [FRONTEND.md](FRONTEND.md))
 
 ## Dependencies
