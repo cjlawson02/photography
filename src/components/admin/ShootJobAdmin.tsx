@@ -15,6 +15,7 @@ import type {
   AdminReviewCollectionDetail,
   AdminReviewCollectionDetailPhoto,
 } from '../../lib/admin/trpc-types.ts';
+import { requestReprocess } from '../../lib/ingest/browser-upload.ts';
 import { jobStepPrimaryAction } from '../../lib/review/job-steps.ts';
 import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
 import AdminJobStepRail, { AdminJobStatusBadge } from './AdminJobStepRail.tsx';
