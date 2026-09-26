@@ -19,7 +19,7 @@ Rebuild [lawsonphotography.me](https://www.lawsonphotography.me/) on the Cloudfl
 - Cloudflare **Pages** as the app host (use Workers + Static Assets instead)
 - Hosted Cloudflare Images as primary blob storage
 - Separate buckets merely for original vs variant (use key prefixes within each purpose bucket)
-- tRPC / GraphQL API layer
+- GraphQL API layer
 - Third-party CMS (Payload, Sanity, etc.)
 - Password or token gate on client review (phase 1)
 - In-app admin login / third-party IdP (Cloudflare Access only)
@@ -71,7 +71,8 @@ flowchart TB
 | **Admin (`/admin`)** | Manage portfolio and review collections; Cloudflare Access; presigned PUTs into the right bucket; Images ingest after upload |
 | **Client review (`/review/{slug}`)** | Picu-style select/approve; phase 1 = link secrecy only (not access control); `noindex` + `robots.txt` Disallow; reads only `REVIEW` bucket via Worker |
 | **Drizzle** | Schema source of truth and typed queries against D1 (`drizzle-orm/d1`); flat SQL migrations under `src/db` |
-| **Thin handlers under `/admin/api/*`** | Admin mutations (presigned URLs, etc.); not Astro Actions — Actions stay on `/_actions/` and cannot be remounted under `/admin*` |
+| **Admin API (`/admin/api/trpc`)** | Type-safe **tRPC** (fetch adapter) for React admin islands; JWT middleware on every procedure; legacy REST paths under `/admin/api/*` thin-route to the same router for smoke docs |
+| **Thin handlers under `/admin/api/*` (legacy REST)** | Deprecated wrappers; prefer tRPC. Still under Access prefix; not Astro Actions |
 | **Tailwind + CSS tokens** | Styling; palette/layout inspired by the live Photograph theme |
 
 ## Admin auth
@@ -87,6 +88,14 @@ Access only blocks paths in the Access application. Astro Actions default to `/_
 3. Defense in depth: every admin mutation **must** verify the Access JWT (`Cf-Access-Jwt-Assertion`) before touching D1/R2 — even when Access already covers the path
 
 Same-origin admin UI → mutation calls send the Access cookie automatically once those paths are in the Access app. Unauthenticated callers get the Access challenge / deny and do not reach app code.
+
+### Admin tRPC (Chris decision)
+
+- Single fetch endpoint: **`/admin/api/trpc`** (`@trpc/server` adapter on Astro API routes).
+- React islands use **`@trpc/client`** (`httpBatchLink`, `credentials: 'same-origin'`) via `src/lib/trpc/client.ts`.
+- **`adminProcedure`** middleware calls `verifyAccessJwt` before D1/R2 (same as legacy REST).
+- **Public** pages and **`/media/*`** delivery stay plain HTTP — no tRPC on client review selection in v1.
+- Tradeoffs vs REST-only: extra client/server bundle (~tRPC + batch link), slightly larger cold-start parse; gain end-to-end types and one router instead of ad-hoc fetch wrappers.
 
 ## Data & Content
 

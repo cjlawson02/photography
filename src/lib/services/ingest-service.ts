@@ -23,7 +23,7 @@ export type IngestResult = {
 };
 
 /**
- * Ingest pipeline (FamilyNotes MediaService analogue, plain HTTP / AppError — no tRPC).
+ * Ingest pipeline (FamilyNotes MediaService analogue). Admin UI calls via tRPC; REST wrappers remain for smoke docs.
  */
 export class IngestService {
 	constructor(private readonly app: AppEnv) {}
@@ -67,7 +67,7 @@ export class IngestService {
 			contentType: input.contentType,
 			uploadUrl,
 			expiresInSeconds,
-			completeUrl: '/admin/api/ingest/complete',
+			completeUrl: '/admin/api/trpc',
 			...(input.bucket === 'review' ? { collectionId: input.collectionId } : {}),
 		};
 	}
