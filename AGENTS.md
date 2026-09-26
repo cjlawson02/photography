@@ -72,12 +72,12 @@ Phase 0 smoke:
 
 Unit: `npm test` (Cloudflare env zod, AppError HTTP mapping, ingest keys/presign schema). End-to-end upload against live R2/Images `_TBD_` until Access + CORS + secrets are set.
 
-Ingest (`AppEnv.from` / `getCloudflareEnv`) **fail-fast** if `R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` are missing (503). Copy `.dev.vars.example` → `.dev.vars` and fill R2_* for `/admin` ingest preview.
+Ingest (`AppEnv.from` on **`ingest.*` only**) **fail-fast** if `R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` are missing (503). Other admin tRPC uses bindings-only env and returns **403** without JWT even when R2_* are unset. Copy `.dev.vars.example` → `.dev.vars` and fill R2_* for `/admin` ingest preview.
 
 Phase 1 ingest (JWT + Zod body → `IngestService` via tRPC):
 
 - **`/admin/api/trpc`** — admin router (`portfolio.*`, `review.collections.*`, `ingest.*`); Cloudflare Access + `verifyAccessJwt` on every procedure
-- Legacy REST (deprecated, thin-route to same router): `POST /admin/api/ingest/presign`, `complete`, `reprocess`
+- **`GET /admin/api/health`** — Access JWT smoke (bindings only; no mutations)
 - Minimal smoke UI: `/admin`
 
 ## Security considerations
@@ -90,7 +90,7 @@ Phase 1 ingest (JWT + Zod body → `IngestService` via tRPC):
   - D1 + R2 resource names are wired in `wrangler.jsonc` (`photography`, `photography-portfolio`, `photography-review`)
   - Configure R2 CORS on both buckets: `npm run r2:cors:apply`
   - Cloudflare Access **Public DNS** app on `photography.chrislawson.dev` path `/admin*` (not Workers destination)
-- Admin mutations live under `/admin/api/trpc` (preferred) and legacy `/admin/api/*` REST wrappers; all must verify the Access JWT ([HLD Admin auth](docs/HLD.md#admin-auth)).
+- Admin mutations live under **`/admin/api/trpc`** only (plus **`/admin/api/health`** for smoke); all must verify the Access JWT ([HLD Admin auth](docs/HLD.md#admin-auth)).
 
 ## Commit and PR guidelines
 

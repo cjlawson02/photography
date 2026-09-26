@@ -31,32 +31,52 @@ type R2Bindings = {
  * Production bootstrap always passes validated S3 secrets from `getCloudflareEnv`.
  */
 export class R2DAO {
-	private static instance: R2DAO | undefined;
+	private static bindingsInstance: R2DAO | undefined;
+	private static ingestInstance: R2DAO | undefined;
 
-	private readonly aws: AwsClient;
+	private readonly aws: AwsClient | undefined;
 	private readonly accountId: string;
 	private readonly bindings: R2Bindings;
 
-	private constructor(bindings: R2Bindings, secrets: R2S3Secrets) {
+	private constructor(bindings: R2Bindings, secrets: R2S3Secrets | null) {
 		this.bindings = bindings;
-		this.accountId = secrets.accountId;
-		this.aws = new AwsClient({
-			accessKeyId: secrets.accessKeyId,
-			secretAccessKey: secrets.secretAccessKey,
-			service: 's3',
-			region: 'auto',
-		});
+		if (secrets) {
+			this.accountId = secrets.accountId;
+			this.aws = new AwsClient({
+				accessKeyId: secrets.accessKeyId,
+				secretAccessKey: secrets.secretAccessKey,
+				service: 's3',
+				region: 'auto',
+			});
+		} else {
+			this.accountId = '';
+		}
 	}
 
-	static getInstance(bindings: R2Bindings, secrets: R2S3Secrets): R2DAO {
-		if (!R2DAO.instance) {
-			R2DAO.instance = new R2DAO(bindings, secrets);
+	/** Worker binding get/put/delete — no S3 API secrets. */
+	static getBindingsInstance(bindings: R2Bindings): R2DAO {
+		if (!R2DAO.bindingsInstance) {
+			R2DAO.bindingsInstance = new R2DAO(bindings, null);
 		}
-		return R2DAO.instance;
+		return R2DAO.bindingsInstance;
+	}
+
+	/** Presigned PUT + binding ops — requires validated S3 secrets. */
+	static getIngestInstance(bindings: R2Bindings, secrets: R2S3Secrets): R2DAO {
+		if (!R2DAO.ingestInstance) {
+			R2DAO.ingestInstance = new R2DAO(bindings, secrets);
+		}
+		return R2DAO.ingestInstance;
+	}
+
+	/** @deprecated Use getIngestInstance or getBindingsInstance. */
+	static getInstance(bindings: R2Bindings, secrets: R2S3Secrets): R2DAO {
+		return R2DAO.getIngestInstance(bindings, secrets);
 	}
 
 	static resetInstance(): void {
-		R2DAO.instance = undefined;
+		R2DAO.bindingsInstance = undefined;
+		R2DAO.ingestInstance = undefined;
 	}
 
 	static readSecrets(env: {
@@ -115,6 +135,11 @@ export class R2DAO {
 		contentType: string;
 		expiresInSeconds?: number;
 	}): Promise<{ uploadUrl: string; expiresInSeconds: number }> {
+		if (!this.aws) {
+			throw new R2ConfigError(
+				'R2 S3 secrets not configured (R2_ACCOUNT_ID / R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY)',
+			);
+		}
 		const expiresInSeconds = options.expiresInSeconds ?? DEFAULT_EXPIRES_SECONDS;
 		const bucketName = this.bucketName(options.bucket);
 		const url = new URL(

@@ -5,50 +5,74 @@ import {
 	getCloudflareBindings,
 	getCloudflareEnv,
 	type CloudflareAppEnv,
+	type CloudflareBindings,
 } from './cloudflare-env.ts';
 import { D1DAO, ImagesDAO, R2DAO } from './dao/index.ts';
 
-const GLOBAL_KEY = '__lawsonPhotographyEnv' as const;
+const BINDINGS_KEY = '__lawsonPhotographyBindingsEnv' as const;
+const INGEST_KEY = '__lawsonPhotographyIngestEnv' as const;
 
 type GlobalEnvCache = typeof globalThis & {
-	[GLOBAL_KEY]?: AppEnv;
+	[BINDINGS_KEY]?: AppEnv;
+	[INGEST_KEY]?: AppEnv;
 };
 
 /**
  * Slim request bootstrap — wires D1 / R2 / Images DAOs once per isolate.
- * Requires parsed ingest env (R2 S3 secrets). Health uses `bindingHealth` instead.
- * No Clerk, Sentry, stages, or rate limiter (not in this app).
+ * `fromBindings` — D1 + binding R2 (no R2 S3 secrets); admin list/update and R2 cleanup via bindings.
+ * `from` — full ingest env (presigned PUT); fail-fast if R2_* unset.
+ * Health uses `bindingHealth` instead.
  */
 export class AppEnv {
 	readonly d1: D1DAO;
 	readonly images: ImagesDAO;
 	readonly r2: R2DAO;
 
-	private constructor(parsed: CloudflareAppEnv) {
-		this.d1 = D1DAO.getInstance(createDb(parsed.DB));
-		this.images = ImagesDAO.getInstance(parsed.IMAGES);
-		this.r2 = R2DAO.getInstance(
-			{ PORTFOLIO: parsed.PORTFOLIO, REVIEW: parsed.REVIEW },
-			{
-				accountId: parsed.R2_ACCOUNT_ID,
-				accessKeyId: parsed.R2_ACCESS_KEY_ID,
-				secretAccessKey: parsed.R2_SECRET_ACCESS_KEY,
-			},
-		);
+	private constructor(parsed: CloudflareBindings | CloudflareAppEnv, mode: 'bindings' | 'ingest') {
+		const bindings = parsed as CloudflareBindings;
+		this.d1 = D1DAO.getInstance(createDb(bindings.DB));
+		this.images = ImagesDAO.getInstance(bindings.IMAGES);
+		if (mode === 'ingest') {
+			const full = parsed as CloudflareAppEnv;
+			this.r2 = R2DAO.getIngestInstance(
+				{ PORTFOLIO: bindings.PORTFOLIO, REVIEW: bindings.REVIEW },
+				{
+					accountId: full.R2_ACCOUNT_ID,
+					accessKeyId: full.R2_ACCESS_KEY_ID,
+					secretAccessKey: full.R2_SECRET_ACCESS_KEY,
+				},
+			);
+		} else {
+			this.r2 = R2DAO.getBindingsInstance({
+				PORTFOLIO: bindings.PORTFOLIO,
+				REVIEW: bindings.REVIEW,
+			});
+		}
 	}
 
+	/** Bindings only — no R2 S3 API secrets (safe before auth / when secrets unset). */
+	static fromBindings(cf: Cloudflare.Env = workerEnv): AppEnv {
+		const g = globalThis as GlobalEnvCache;
+		if (!g[BINDINGS_KEY]) {
+			g[BINDINGS_KEY] = new AppEnv(getCloudflareBindings(cf), 'bindings');
+		}
+		return g[BINDINGS_KEY];
+	}
+
+	/** Full ingest env — bindings + required R2 S3 secrets. */
 	static from(cf: Cloudflare.Env = workerEnv): AppEnv {
 		const g = globalThis as GlobalEnvCache;
-		if (!g[GLOBAL_KEY]) {
-			g[GLOBAL_KEY] = new AppEnv(getCloudflareEnv(cf));
+		if (!g[INGEST_KEY]) {
+			g[INGEST_KEY] = new AppEnv(getCloudflareEnv(cf), 'ingest');
 		}
-		return g[GLOBAL_KEY];
+		return g[INGEST_KEY];
 	}
 
 	/** Test / local reset helper. */
 	static reset(): void {
 		const g = globalThis as GlobalEnvCache;
-		g[GLOBAL_KEY] = undefined;
+		g[BINDINGS_KEY] = undefined;
+		g[INGEST_KEY] = undefined;
 		D1DAO.resetInstance();
 		R2DAO.resetInstance();
 		ImagesDAO.resetInstance();
