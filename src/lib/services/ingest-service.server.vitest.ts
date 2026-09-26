@@ -20,9 +20,9 @@ function ensureBlobStreamPolyfill(): void {
   if (typeof Blob.prototype.stream === 'function') {
     return;
   }
-  Blob.prototype.stream = function stream(): ReadableStream<Uint8Array> {
+  Blob.prototype.stream = function stream(this: Blob) {
     return blobToReadableStream(this);
-  };
+  } as typeof Blob.prototype.stream;
 }
 
 ensureBlobStreamPolyfill();
