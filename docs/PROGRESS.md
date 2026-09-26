@@ -55,6 +55,7 @@ gantt
 
 | Date | Update |
 | --- | --- |
+| 2026-09-26 | R1 slice: FIX-32–35 + FIX-40 (stale-pending R2-fail guard, review JSON errors, select UX, lightbox dims, selection response trim) |
 | 2026-09-26 | Phase 2.5 S8 micro (EU Sentry `connect-src`, public `/health` trim) + T1 `node:test` → Vitest complete; remaining: CSP nonces, ingest E2E, workerd pool, P8/P9, R1 |
 | 2026-09-26 | Phase 2.6 **Done**: A1–A7 + RHF/zod on v2 surfaces (incl. close-out purge); open decisions stay in [ADMIN-UX.md](ADMIN-UX.md#open-decisions) |
 | 2026-09-26 | Phase 5 **Done**: monitoring setup + rollback/RTO-RPO in [CUTOVER.md](CUTOVER.md); IMPLEMENTATION T6–T7 closed |

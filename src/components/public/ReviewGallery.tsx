@@ -6,6 +6,7 @@ import {
   galleryItemFromPhoto,
   openGalleryLightbox,
 } from '../../lib/gallery/lightbox.ts';
+import { assertOkJsonResponse } from '../../lib/http/assert-ok-json.ts';
 import type { PublicReviewPhoto } from '../../lib/services/review-service.ts';
 import { addToSet, removeFromSet } from '../../lib/util/immutable-set.ts';
 
@@ -23,10 +24,7 @@ async function postSubmitPicks(slug: string) {
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ slug }),
   });
-  const json = (await res.json()) as { ok?: boolean; error?: string };
-  if (!res.ok || !json.ok) {
-    throw new Error(json.error ?? 'Could not submit picks');
-  }
+  await assertOkJsonResponse(res, 'Could not submit picks');
 }
 
 type OptimisticAction = {
@@ -40,16 +38,20 @@ async function postSelection(slug: string, photoId: string, selectionStatus: Sel
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ slug, photoId, selectionStatus }),
   });
-  const json = (await res.json()) as { ok?: boolean; error?: string };
-  if (!res.ok || !json.ok) {
-    throw new Error(json.error ?? 'Could not save selection');
-  }
+  await assertOkJsonResponse(res, 'Could not save selection');
 }
 
 function selectButtonLabel(status: SelectionStatus): string {
   if (status === 'approved') return 'Approved';
   if (status === 'selected') return 'Selected';
   return 'Select';
+}
+
+/** Toggle select: none↔selected; approved demotes to selected (does not wipe) — FIX-34. */
+export function nextSelectStatus(current: SelectionStatus): SelectionStatus {
+  if (current === 'none') return 'selected';
+  if (current === 'approved') return 'selected';
+  return 'none';
 }
 
 function applyOptimistic(photos: ReviewPhotoState[], action: OptimisticAction): ReviewPhotoState[] {
@@ -107,8 +109,7 @@ export default function ReviewGallery({
 
   const onToggleSelect = (photoId: string, current: SelectionStatus) => {
     if (picksLocked) return;
-    const next: SelectionStatus = current === 'none' ? 'selected' : 'none';
-    saveSelection(photoId, next, 'Could not save selection');
+    saveSelection(photoId, nextSelectStatus(current), 'Could not save selection');
   };
 
   const onToggleApprove = (photoId: string, current: SelectionStatus) => {

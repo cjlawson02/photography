@@ -32,8 +32,9 @@ export async function postReviewSelection(
       maxBytes: REVIEW_SELECTION_MAX_JSON_BYTES,
     });
     const mutate = await resolveMutateSelection(bindings.mutateSelection);
-    const photo = await ensureAppError(async () => mutate(bindings.db, body));
-    return Response.json({ ok: true, photo });
+    await ensureAppError(async () => mutate(bindings.db, body));
+    // Do not echo the D1 row (FIX-40); client already knows the intended selectionStatus.
+    return Response.json({ ok: true });
   } catch (error) {
     return toErrorResponse(error);
   }

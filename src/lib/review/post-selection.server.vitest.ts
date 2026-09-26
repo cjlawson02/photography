@@ -84,7 +84,7 @@ describe('postReviewSelection', () => {
     });
   });
 
-  it('returns { ok: true, photo } on success', async () => {
+  it('returns { ok: true } without the D1 photo row (FIX-40)', async () => {
     const photoId = createId();
     const photo = {
       id: photoId,
@@ -111,9 +111,6 @@ describe('postReviewSelection', () => {
     );
 
     expect(response.status).toBe(200);
-    const json = (await response.json()) as { ok: boolean; photo: typeof photo };
-    expect(json.ok).toBe(true);
-    expect(json.photo.id).toBe(photo.id);
-    expect(json.photo.selectionStatus).toBe(photo.selectionStatus);
+    await expect(response.json()).resolves.toEqual({ ok: true });
   });
 });

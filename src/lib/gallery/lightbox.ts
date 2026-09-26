@@ -115,14 +115,30 @@ export function openGalleryLightbox(items: GalleryLightboxItem[], index: number)
   pswp.init();
 }
 
+/**
+ * Display size for the gallery.webp variant (max width {@link DEFAULT_GALLERY_WIDTH}).
+ * D1 stores original EXIF dims; PhotoSwipe must not treat those as the 1600px slide size (FIX-35).
+ */
 export function galleryDisplayDimensions(photo: {
   width?: number | null;
   height?: number | null;
 }): { width: number; height: number } {
-  return {
-    width: photo.width ?? DEFAULT_GALLERY_WIDTH,
-    height: photo.height ?? DEFAULT_GALLERY_HEIGHT,
-  };
+  const originalWidth = photo.width;
+  const originalHeight = photo.height;
+  if (
+    originalWidth == null ||
+    originalHeight == null ||
+    originalWidth <= 0 ||
+    originalHeight <= 0
+  ) {
+    return { width: DEFAULT_GALLERY_WIDTH, height: DEFAULT_GALLERY_HEIGHT };
+  }
+  if (originalWidth <= DEFAULT_GALLERY_WIDTH) {
+    return { width: originalWidth, height: originalHeight };
+  }
+  const width = DEFAULT_GALLERY_WIDTH;
+  const height = Math.round((originalHeight * width) / originalWidth);
+  return { width, height };
 }
 
 export function galleryItemFromPhoto(photo: {

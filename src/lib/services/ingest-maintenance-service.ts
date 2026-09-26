@@ -53,24 +53,28 @@ export class IngestMaintenanceService {
 
     const portfolioRemoved: string[] = [];
     for (const row of portfolioRows) {
-      await this.removePendingPhoto('portfolio', row.id);
-      portfolioRemoved.push(row.id);
+      if (await this.removePendingPhoto('portfolio', row.id)) {
+        portfolioRemoved.push(row.id);
+      }
     }
 
     const reviewRemoved: string[] = [];
     for (const row of reviewRows) {
-      await this.removePendingPhoto('review', row.id);
-      reviewRemoved.push(row.id);
+      if (await this.removePendingPhoto('review', row.id)) {
+        reviewRemoved.push(row.id);
+      }
     }
 
     return { cutoffMs, portfolioRemoved, reviewRemoved };
   }
 
-  private async removePendingPhoto(bucket: PurposeBucket, id: string): Promise<void> {
+  /** R2 first; skip D1 delete when R2 fails so the id remains findable (FIX-32). */
+  private async removePendingPhoto(bucket: PurposeBucket, id: string): Promise<boolean> {
     try {
       await this.r2.deleteObjects(bucket, photoIngestObjectKeys(id));
     } catch (error) {
-      console.error('[ingest-maintenance] R2 cleanup failed', { bucket, id, error });
+      console.error('[ingest-maintenance] R2 cleanup failed; leaving D1 row', { bucket, id, error });
+      return false;
     }
 
     if (bucket === 'portfolio') {
@@ -78,5 +82,6 @@ export class IngestMaintenanceService {
     } else {
       await this.d1.reviewPhotos.deleteById(id);
     }
+    return true;
   }
 }
