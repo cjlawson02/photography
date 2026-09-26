@@ -4,7 +4,7 @@
  * Default dry-run. --execute writes. D1_TARGET=local|remote.
  */
 import { createId } from '@paralleldrive/cuid2';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import sharp from 'sharp';
 import {

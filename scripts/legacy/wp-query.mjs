@@ -128,7 +128,7 @@ ORDER BY p.menu_order ASC, p.post_date ASC;
     });
   }
 
-  return [...byAttachment.values()].sort((a, b) => {
+  return [...byAttachment.values()].toSorted((a, b) => {
     const ao = a.sortOrder ?? 999999;
     const bo = b.sortOrder ?? 999999;
     if (ao !== bo) return ao - bo;
