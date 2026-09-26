@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { postReviewSubmitPicks } from './post-submit-picks.ts';
 
 describe('postReviewSubmitPicks', () => {
-  it('returns 405-style error for non-POST', async () => {
+  it('returns ok for a same-origin POST', async () => {
     const response = await postReviewSubmitPicks(
       {
         db: {} as D1Database,
@@ -16,7 +16,10 @@ describe('postReviewSubmitPicks', () => {
       },
       new Request('https://example.com/review/api/submit-picks', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: {
+          'content-type': 'application/json',
+          Origin: 'https://example.com',
+        },
         body: JSON.stringify({ slug: 'secret-slug' }),
       }),
     );
@@ -24,5 +27,20 @@ describe('postReviewSubmitPicks', () => {
     const json = (await response.json()) as { ok: boolean; pickCount: number };
     expect(json.ok).toBe(true);
     expect(json.pickCount).toBe(2);
+  });
+
+  it('rejects cross-origin POST (FIX-36)', async () => {
+    const response = await postReviewSubmitPicks(
+      { db: {} as D1Database, rateLimiter: undefined },
+      new Request('https://example.com/review/api/submit-picks', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          Origin: 'https://evil.example',
+        },
+        body: JSON.stringify({ slug: 'secret-slug' }),
+      }),
+    );
+    expect(response.status).toBe(403);
   });
 });

@@ -20,6 +20,28 @@ describe('AppError', () => {
     await expect(response.json()).resolves.toEqual({ ok: false, error: 'Photo not found' });
   });
 
+  it('toResponse sanitizes 5xx bodies (FIX-37)', async () => {
+    const internal = new AppError(
+      'INTERNAL_SERVER_ERROR',
+      'D1_ERROR: UNIQUE constraint failed',
+    ).toResponse();
+    expect(internal.status).toBe(500);
+    await expect(internal.json()).resolves.toEqual({
+      ok: false,
+      error: 'Internal server error',
+    });
+
+    const unavailable = new AppError(
+      'SERVICE_UNAVAILABLE',
+      'R2 S3 secrets not configured',
+    ).toResponse();
+    expect(unavailable.status).toBe(503);
+    await expect(unavailable.json()).resolves.toEqual({
+      ok: false,
+      error: 'Service temporarily unavailable',
+    });
+  });
+
   it('fromUnknown maps R2ConfigError to 503', () => {
     const mapped = AppError.fromUnknown(new R2ConfigError('R2 S3 secrets not configured'));
     expect(mapped.code).toBe('SERVICE_UNAVAILABLE');

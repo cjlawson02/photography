@@ -8,7 +8,11 @@ function jsonRequest(body: unknown, init?: RequestInit): Request {
   return new Request('https://photography.example/review/api/selection', {
     method: 'POST',
     ...init,
-    headers: { 'content-type': 'application/json', ...init?.headers },
+    headers: {
+      'content-type': 'application/json',
+      Origin: 'https://photography.example',
+      ...init?.headers,
+    },
     body: JSON.stringify(body),
   });
 }
@@ -19,6 +23,7 @@ describe('postReviewSelection', () => {
       { db: {} as D1Database, rateLimiter: undefined },
       new Request('https://photography.example/review/api/selection', {
         method: 'POST',
+        headers: { Origin: 'https://photography.example' },
         body: JSON.stringify({ slug: 'x', photoId: createId(), selectionStatus: 'selected' }),
       }),
     );
@@ -27,6 +32,22 @@ describe('postReviewSelection', () => {
     await expect(response.json()).resolves.toEqual({
       ok: false,
       error: 'Content-Type must be application/json',
+    });
+  });
+
+  it('returns 403 when Origin is cross-site (FIX-36)', async () => {
+    const response = await postReviewSelection(
+      { db: {} as D1Database, rateLimiter: undefined },
+      jsonRequest(
+        { slug: 'client-review-secret-slug', photoId: createId(), selectionStatus: 'selected' },
+        { headers: { Origin: 'https://evil.example' } },
+      ),
+    );
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      error: 'Cross-origin request not allowed',
     });
   });
 

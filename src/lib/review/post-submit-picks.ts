@@ -1,5 +1,6 @@
 import { parseJsonBody, REVIEW_SELECTION_MAX_JSON_BYTES } from '../admin/http.ts';
 import { ensureAppError, toErrorResponse } from '../http/app-error.ts';
+import { assertRequestSameOrigin } from '../http/assert-same-origin.ts';
 import { reviewSubmitPicksBodySchema } from './public-schemas.ts';
 import { assertReviewSelectionRateLimit } from './selection-rate-limit.ts';
 import type { submitClientPicks } from './submit-client-picks.ts';
@@ -26,6 +27,7 @@ export async function postReviewSubmitPicks(
   request: Request,
 ): Promise<Response> {
   try {
+    assertRequestSameOrigin(request);
     await assertReviewSelectionRateLimit(bindings.rateLimiter, request);
     const body = await parseJsonBody(request, reviewSubmitPicksBodySchema, {
       maxBytes: REVIEW_SELECTION_MAX_JSON_BYTES,

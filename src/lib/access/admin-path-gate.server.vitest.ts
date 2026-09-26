@@ -45,7 +45,7 @@ describe('guardAdminPathAccess', () => {
     expect(result!.status).toBe(403);
     await expect(result!.json()).resolves.toEqual({
       ok: false,
-      error: 'Missing Cf-Access-Jwt-Assertion',
+      error: 'Unauthorized',
     });
     expect(result!.headers.get('Content-Security-Policy')).toBeTruthy();
   });

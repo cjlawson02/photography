@@ -31,7 +31,13 @@ export class AppError extends Error {
   }
 
   toResponse(): Response {
-    return Response.json({ ok: false, error: this.message }, { status: this.status });
+    const clientMessage =
+      this.status >= 500
+        ? this.code === 'SERVICE_UNAVAILABLE'
+          ? 'Service temporarily unavailable'
+          : 'Internal server error'
+        : this.message;
+    return Response.json({ ok: false, error: clientMessage }, { status: this.status });
   }
 
   static fromUnknown(error: unknown): AppError {
@@ -42,6 +48,7 @@ export class AppError extends Error {
     if (error instanceof z.ZodError) {
       return new AppError('BAD_REQUEST', formatZodIssues(error));
     }
+    // Keep the real message on the Error for logs/Sentry; toResponse sanitizes 5xx (FIX-37).
     const message = error instanceof Error ? error.message : 'Internal server error';
     return new AppError('INTERNAL_SERVER_ERROR', message);
   }

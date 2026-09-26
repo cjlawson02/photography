@@ -20,9 +20,8 @@ describe('admin-format', () => {
     expect(formatAdminDimensions(null, 800)).toBe('—');
   });
 
-  it('formatAdminTime formats epoch ms', () => {
-    const formatted = formatAdminTime(Date.UTC(2024, 0, 15, 12, 0, 0));
-    expect(formatted).toContain('2024');
+  it('formatAdminTime formats epoch ms in stable UTC (FIX-31)', () => {
+    expect(formatAdminTime(Date.UTC(2024, 0, 15, 12, 0, 0))).toBe('Jan 15, 2024, 12:00 PM UTC');
   });
 
   it('errorMessage unwraps Error', () => {

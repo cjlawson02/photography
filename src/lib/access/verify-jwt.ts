@@ -10,6 +10,12 @@ export type AccessIdentity = {
   payload: JWTPayload;
 };
 
+/** Cloudflare Access application tokens are RS256 (FIX-38). */
+const ACCESS_JWT_ALGORITHMS = ['RS256'] as const;
+
+/** Claims Access always sets; `email` is optional (service tokens). */
+const ACCESS_REQUIRED_CLAIMS = ['exp', 'iat'] as const;
+
 const jwksByTeamDomain = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
 
 function getAccessJwks(teamDomain: string): ReturnType<typeof createRemoteJWKSet> {
@@ -40,13 +46,20 @@ export async function verifyAccessJwt(request: Request, env: AccessEnv): Promise
   }
 
   const JWKS = getAccessJwks(teamDomain);
-  const { payload } = await jwtVerify(token, JWKS, {
-    issuer: teamDomain,
-    audience,
-  });
+  try {
+    const { payload } = await jwtVerify(token, JWKS, {
+      issuer: teamDomain,
+      audience,
+      algorithms: [...ACCESS_JWT_ALGORITHMS],
+      requiredClaims: [...ACCESS_REQUIRED_CLAIMS],
+    });
 
-  const email = typeof payload.email === 'string' ? payload.email : undefined;
-  return { email, payload };
+    const email = typeof payload.email === 'string' ? payload.email : undefined;
+    return { email, payload };
+  } catch (error) {
+    if (error instanceof AccessAuthError) throw error;
+    throw new AccessAuthError('Invalid Access token');
+  }
 }
 
 export class AccessAuthError extends Error {
@@ -59,13 +72,12 @@ function normalizeTeamDomain(raw: string | undefined): string {
   return trimmed.startsWith('https://') ? trimmed : `https://${trimmed}`;
 }
 
-/** JSON 403 helper for `/admin/api/*` handlers. */
+/** JSON 403 helper for `/admin/api/*` handlers — generic body only (FIX-37). */
 export function accessDeniedResponse(error: unknown): Response {
-  const message =
-    error instanceof AccessAuthError
-      ? error.message
-      : error instanceof Error
-        ? error.message
-        : 'Unauthorized';
-  return Response.json({ ok: false, error: message }, { status: 403 });
+  if (error instanceof AccessAuthError) {
+    console.warn('[access]', error.message);
+  } else if (error instanceof Error) {
+    console.warn('[access]', error.message);
+  }
+  return Response.json({ ok: false, error: 'Unauthorized' }, { status: 403 });
 }

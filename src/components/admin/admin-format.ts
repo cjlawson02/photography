@@ -1,8 +1,18 @@
 /** Shared display/format helpers for admin tables and inline edits. */
 
+/**
+ * Stable UTC display for SSR + client (FIX-31). Avoids `toLocaleString()` hydration
+ * mismatches between the Worker (UTC) and the admin's browser locale/timezone.
+ */
 export function formatAdminTime(ms: number | null | undefined): string {
   if (!ms) return '—';
-  return new Date(ms).toLocaleString();
+  return (
+    new Date(ms).toLocaleString('en-US', {
+      timeZone: 'UTC',
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    }) + ' UTC'
+  );
 }
 
 export function formatAdminDimensions(

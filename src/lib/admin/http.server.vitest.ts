@@ -18,7 +18,7 @@ describe('requireAdmin', () => {
     expect(response.status).toBe(403);
     await expect(response.json()).resolves.toMatchObject({
       ok: false,
-      error: 'Missing Cf-Access-Jwt-Assertion',
+      error: 'Unauthorized',
     });
   });
 

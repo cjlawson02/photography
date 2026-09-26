@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import type { z } from 'zod/v4';
 
@@ -137,9 +137,17 @@ type CollectionExpiresInputProps = {
 };
 
 function CollectionExpiresInput({ value, busy, onSave, onInvalid }: CollectionExpiresInputProps) {
+  // Defer local timezone formatting until after mount (FIX-31); Worker SSR is UTC.
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
   const { register, handleSubmit, reset } = useForm({
     resolver: zodResolver(reviewCollectionExpiresFieldSchema),
-    values: { expiresAtLocal: expiresAtToDatetimeLocal(value) },
+    values: {
+      expiresAtLocal: hydrated ? expiresAtToDatetimeLocal(value) : '',
+    },
   });
 
   return (
@@ -147,7 +155,7 @@ function CollectionExpiresInput({ value, busy, onSave, onInvalid }: CollectionEx
       type="datetime-local"
       className={`block w-full max-w-md text-sm ${adminClass.field}`}
       aria-label="Shoot expiry"
-      disabled={busy}
+      disabled={busy || !hydrated}
       {...register('expiresAtLocal', {
         onBlur: () => {
           void handleSubmit(

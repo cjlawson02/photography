@@ -55,6 +55,7 @@ gantt
 
 | Date | Update |
 | --- | --- |
+| 2026-09-26 | R1 complete: FIX-31/36–38 (UTC admin times, Origin check, sanitized 5xx/403, JWT RS256+claims) |
 | 2026-09-26 | R1 slice: FIX-32–35 + FIX-40 (stale-pending R2-fail guard, review JSON errors, select UX, lightbox dims, selection response trim) |
 | 2026-09-26 | Phase 2.5 T1/FIX-28: Vitest 4 + `@cloudflare/vitest-plugin` workerd pilot (`*.workers.vitest.ts`); Node suites unchanged |
 | 2026-09-26 | Phase 2.5 S8 micro (EU Sentry `connect-src`, public `/health` trim) + T1 `node:test` → Vitest complete; remaining: CSP nonces, ingest E2E, workerd pool, P8/P9, R1 |
