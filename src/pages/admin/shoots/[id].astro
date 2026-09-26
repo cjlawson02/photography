@@ -1,0 +1,47 @@
+---
+import { env } from 'cloudflare:workers';
+
+import AdminPageHeader from '../../../components/admin/AdminPageHeader.astro';
+import ShootJobAdmin from '../../../components/admin/ShootJobAdmin.tsx';
+import { idSchema } from '../../../db/schema/types.ts';
+import { loadReviewCollectionDetail } from '../../../lib/admin/ssr-initial-reads.ts';
+import { jobStepLabel } from '../../../lib/review/job-steps.ts';
+import { AppEnv } from '../../../lib/env.ts';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+
+const { id } = Astro.params;
+if (!id || !idSchema.safeParse(id).success) {
+	return Astro.redirect('/admin/shoots');
+}
+
+const app = AppEnv.fromBindings(env);
+const initialDetail = await loadReviewCollectionDetail(app, id);
+if (!initialDetail) {
+	return Astro.redirect('/admin/shoots');
+}
+
+const jobName =
+	initialDetail.collection.personName?.trim() ||
+	initialDetail.collection.title?.trim() ||
+	initialDetail.collection.slug;
+const stepLabel = jobStepLabel(initialDetail.collection.status);
+---
+
+<AdminLayout title={`Admin — ${jobName}`} current="shoots">
+	<nav class="admin-breadcrumbs text-sm" aria-label="Breadcrumb">
+		<ol class="admin-breadcrumbs__list">
+			<li class="admin-breadcrumbs__item">
+				<a class="admin-link" href="/admin/shoots">Client shoots</a>
+			</li>
+			<li class="admin-breadcrumbs__item admin-breadcrumbs__item--current" aria-current="page">
+				{jobName}
+			</li>
+		</ol>
+	</nav>
+	<AdminPageHeader
+		title={jobName}
+		lede={`Current step: ${stepLabel}. Follow the rail for what to do next — proof → picks → edit → deliver.`}
+	/>
+
+	<ShootJobAdmin client:load collectionId={id} initialDetail={initialDetail} />
+</AdminLayout>

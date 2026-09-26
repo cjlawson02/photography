@@ -8,7 +8,9 @@ describe('reviewCollectionCreateFormSchema', () => {
       reviewCollectionCreateFormSchema.parse({
         slugPrefix: '',
         title: '',
+        personName: '',
         expiresAtLocal: '',
+        notes: '',
       }),
     ).toEqual({});
   });
@@ -17,7 +19,9 @@ describe('reviewCollectionCreateFormSchema', () => {
     const result = reviewCollectionCreateFormSchema.safeParse({
       slugPrefix: '',
       title: '',
+      personName: '',
       expiresAtLocal: 'not-a-date',
+      notes: '',
     });
     expect(result.success).toBe(false);
   });

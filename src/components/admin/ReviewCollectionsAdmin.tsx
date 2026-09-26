@@ -17,12 +17,15 @@ import AdminFieldLabel from './AdminFieldLabel.tsx';
 import AdminPrimaryButton from './AdminPrimaryButton.tsx';
 import AdminSectionHeading from './AdminSectionHeading.tsx';
 import AdminStatusLine from './AdminStatusLine.tsx';
+import { AdminJobStatusBadge } from './AdminJobStepRail.tsx';
 import { AdminTable, AdminTableHead, AdminTableHeaderCell, AdminTableRow } from './AdminTable.tsx';
 
 const createCollectionDefaultValues: ReviewCollectionCreateFormValues = {
   slugPrefix: '',
   title: '',
+  personName: '',
   expiresAtLocal: '',
+  notes: '',
 };
 
 async function copyText(label: string, text: string, onStatus: (message: string) => void) {
@@ -110,12 +113,16 @@ function ReviewCollectionsAdminInner({ initialCollections }: ReviewCollectionsAd
   } = createForm;
 
   const firstCreateError =
-    errors.slugPrefix?.message ?? errors.title?.message ?? errors.expiresAtLocal?.message;
+    errors.slugPrefix?.message ??
+    errors.title?.message ??
+    errors.personName?.message ??
+    errors.expiresAtLocal?.message ??
+    errors.notes?.message;
 
   return (
     <>
       <section className="mt-8">
-        <AdminSectionHeading>New collection</AdminSectionHeading>
+        <AdminSectionHeading>New shoot</AdminSectionHeading>
         <form
           className="mt-3 grid gap-3 sm:grid-cols-2"
           onSubmit={handleSubmit(async (payload) => {
@@ -142,6 +149,15 @@ function ReviewCollectionsAdminInner({ initialCollections }: ReviewCollectionsAd
               secret segment.
             </span>
           </AdminFieldLabel>
+          <AdminFieldLabel label="Person name">
+            <input
+              type="text"
+              placeholder="Alex"
+              className={`mt-1 block w-full text-sm ${adminClass.field}`}
+              aria-invalid={errors.personName ? true : undefined}
+              {...register('personName')}
+            />
+          </AdminFieldLabel>
           <AdminFieldLabel label="Title (optional)">
             <input
               type="text"
@@ -150,7 +166,7 @@ function ReviewCollectionsAdminInner({ initialCollections }: ReviewCollectionsAd
               {...register('title')}
             />
           </AdminFieldLabel>
-          <AdminFieldLabel label="Expires (optional)">
+          <AdminFieldLabel label="Expires (optional)" className="sm:col-span-2">
             <input
               type="datetime-local"
               className={`mt-1 block w-full text-sm ${adminClass.field}`}
@@ -158,9 +174,17 @@ function ReviewCollectionsAdminInner({ initialCollections }: ReviewCollectionsAd
               {...register('expiresAtLocal')}
             />
           </AdminFieldLabel>
+          <AdminFieldLabel label="Notes (optional)" className="sm:col-span-2">
+            <textarea
+              rows={2}
+              className={`mt-1 block w-full text-sm ${adminClass.field}`}
+              aria-invalid={errors.notes ? true : undefined}
+              {...register('notes')}
+            />
+          </AdminFieldLabel>
           <div className="sm:col-span-2">
             <AdminPrimaryButton type="submit" disabled={createMutation.isPending}>
-              Create collection
+              Create shoot
             </AdminPrimaryButton>
           </div>
         </form>
@@ -168,30 +192,29 @@ function ReviewCollectionsAdminInner({ initialCollections }: ReviewCollectionsAd
       </section>
 
       <section className="mt-10">
-        <AdminSectionHeading>Collections</AdminSectionHeading>
+        <AdminSectionHeading>Shoots</AdminSectionHeading>
         <AdminStatusLine className="mt-2">{statusMessage}</AdminStatusLine>
         {showCollectionsEmpty ? (
-          <AdminEmptyState title="No review collections yet">
+          <AdminEmptyState title="No client shoots yet">
             <p>
-              Use the form above to create a collection, then open <strong>Inspect</strong> and
-              upload photos on the collection detail page. Share the client link from the table once
-              rows appear here.
+              Create a shoot above, then open it for the step rail. Upload proofs on the job page
+              and share the client link when you reach <strong>Shared</strong>.
             </p>
           </AdminEmptyState>
         ) : (
           <AdminTable className="mt-3">
             <AdminTableHead>
-              <AdminTableHeaderCell>Slug</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Person</AdminTableHeaderCell>
               <AdminTableHeaderCell>Title</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Step</AdminTableHeaderCell>
               <AdminTableHeaderCell>Expires</AdminTableHeaderCell>
               <AdminTableHeaderCell>Link</AdminTableHeaderCell>
               <AdminTableHeaderCell>Actions</AdminTableHeaderCell>
-              <AdminTableHeaderCell className="py-2">Id</AdminTableHeaderCell>
             </AdminTableHead>
             <tbody>
               {collections.map((row) => {
                 const reviewPath = `/review/${encodeURIComponent(row.slug)}`;
-                const detailPath = `/admin/review/collections/${encodeURIComponent(row.id)}`;
+                const jobPath = `/admin/shoots/${encodeURIComponent(row.id)}`;
                 const absoluteUrl =
                   typeof window !== 'undefined'
                     ? `${window.location.origin}${reviewPath}`
@@ -200,8 +223,11 @@ function ReviewCollectionsAdminInner({ initialCollections }: ReviewCollectionsAd
 
                 return (
                   <AdminTableRow key={row.id}>
-                    <td className="py-2 pr-4">{row.slug}</td>
-                    <td className="py-2 pr-4">{row.title ?? '—'}</td>
+                    <td className="py-2 pr-4">{row.personName ?? '—'}</td>
+                    <td className="py-2 pr-4">{row.title ?? row.slug}</td>
+                    <td className="py-2 pr-4">
+                      <AdminJobStatusBadge status={row.status} />
+                    </td>
                     <td className="py-2 pr-4 text-xs">{formatAdminTime(row.expiresAt)}</td>
                     <td className="py-2 pr-4 text-xs">
                       <a href={reviewPath} className={adminClass.link}>
@@ -219,10 +245,10 @@ function ReviewCollectionsAdminInner({ initialCollections }: ReviewCollectionsAd
                       </button>
                     </td>
                     <td className="py-2 pr-4 text-xs">
-                      <a href={detailPath} className={`mr-3 ${adminClass.link}`}>
-                        Inspect
+                      <a href={jobPath} className={`mr-3 ${adminClass.link}`}>
+                        Open job
                       </a>
-                      <a href={`${detailPath}#upload`} className={`mr-3 ${adminClass.link}`}>
+                      <a href={`${jobPath}#upload`} className={`mr-3 ${adminClass.link}`}>
                         Upload
                       </a>
                       <button
@@ -250,19 +276,6 @@ function ReviewCollectionsAdminInner({ initialCollections }: ReviewCollectionsAd
                         }}
                       >
                         Revoke
-                      </button>
-                    </td>
-                    <td className={`py-2 font-mono text-xs ${adminClass.fgMuted}`}>
-                      <span>{row.id}</span>
-                      <button
-                        type="button"
-                        className={`ml-2 ${adminClass.linkMuted}`}
-                        disabled={busy}
-                        onClick={() => {
-                          void copyText('collection id', row.id, setActionStatus);
-                        }}
-                      >
-                        Copy
                       </button>
                     </td>
                   </AdminTableRow>

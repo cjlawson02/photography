@@ -16,7 +16,9 @@ export const reviewCollectionCreateFormSchema = z
   .object({
     slugPrefix: z.string(),
     title: z.string(),
+    personName: z.string(),
     expiresAtLocal: z.string(),
+    notes: z.string(),
   })
   .superRefine((data, ctx) => {
     const prefix = data.slugPrefix.trim();
@@ -51,6 +53,14 @@ export const reviewCollectionCreateFormSchema = z
     if (title !== '') {
       body.title = title;
     }
+    const personName = data.personName.trim();
+    if (personName !== '') {
+      body.personName = personName;
+    }
+    const notes = data.notes.trim();
+    if (notes !== '') {
+      body.notes = notes;
+    }
     const expires = data.expiresAtLocal.trim();
     if (expires !== '') {
       body.expiresAt = parseDatetimeLocalToMs(expires) ?? undefined;
@@ -62,6 +72,14 @@ export type ReviewCollectionCreateFormValues = z.input<typeof reviewCollectionCr
 
 export const reviewCollectionTitleFieldSchema = z.object({
   title: z.string().transform(trimmedNullableText),
+});
+
+export const reviewCollectionPersonNameFieldSchema = z.object({
+  personName: z.string().transform(trimmedNullableText),
+});
+
+export const reviewCollectionNotesFieldSchema = z.object({
+  notes: z.string().transform(trimmedNullableText),
 });
 
 export const reviewCollectionExpiresFieldSchema = z

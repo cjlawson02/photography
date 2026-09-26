@@ -4,6 +4,7 @@ import {
   idSchema,
   reviewCollectionInsertSchema,
   reviewCollectionUpdateSchema,
+  reviewJobStatusSchema,
 } from '../../db/schema/types.ts';
 import { reviewSlugPrefixSchema } from '../review/slug.ts';
 import { cleanupR2Field } from './cleanup-r2-field.ts';
@@ -12,24 +13,31 @@ import { cleanupR2Field } from './cleanup-r2-field.ts';
 export const reviewCollectionCreateBodySchema = reviewCollectionInsertSchema
   .pick({
     title: true,
+    personName: true,
     expiresAt: true,
+    notes: true,
   })
   .extend({
     slugPrefix: reviewSlugPrefixSchema.optional(),
   })
   .strict();
 
+/** `review.collections.update` body — setup fields (slug is immutable). */
+export const reviewCollectionAdminUpdateBodySchema = reviewCollectionUpdateSchema
+  .pick({ title: true, personName: true, notes: true, expiresAt: true })
+  .refine((value) => Object.keys(value).length > 0, 'At least one field required');
+
+export type ReviewCollectionAdminUpdateBody = z.infer<typeof reviewCollectionAdminUpdateBodySchema>;
+
+export const reviewCollectionTransitionInputSchema = z.object({
+  id: idSchema,
+  to: reviewJobStatusSchema,
+});
+
 /** `review.collections.detail` input — collection id (cuid2). */
 export const reviewCollectionDetailInputSchema = z.object({
   id: idSchema,
 });
-
-/** `review.collections.update` body — title and expiry only (slug is immutable). */
-export const reviewCollectionAdminUpdateBodySchema = reviewCollectionUpdateSchema
-  .pick({ title: true, expiresAt: true })
-  .refine((value) => Object.keys(value).length > 0, 'At least one field required');
-
-export type ReviewCollectionAdminUpdateBody = z.infer<typeof reviewCollectionAdminUpdateBodySchema>;
 
 export const reviewCollectionUpdateInputSchema = z.object({
   id: idSchema,
