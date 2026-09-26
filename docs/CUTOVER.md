@@ -20,18 +20,19 @@ Order: **T7 migration** → **T6 cutover sequence** → post-cutover monitoring 
 | Legacy public site `lawsonphotography.me` (+ `www`) | **Re-verify** — T6 agent check (2026-09-26): `https://www.lawsonphotography.me/` returned **200** (WordPress), not 301; apex `lawsonphotography.me` **NXDOMAIN** from agent PoP. Intended: **301** → `https://photography.chrislawson.dev` via Redirect Rules on the **legacy zone** |
 | Admin Access on `/admin*` | Configured per [DEPLOY.md](DEPLOY.md) — **re-verify** after any Access or DNS change |
 | Remote D1 migrations on production | **Applied** — production `d1_migrations` matches repo (**5/5**); latest `main` deploy reported no pending migrations (2026-09-26) |
-| Bulk legacy WordPress → D1/R2 **portfolio** import | **Done** (Chris, 2026-09-26) — see [Content and asset migration (T7)](#content-and-asset-migration-t7) |
+| Bulk legacy WordPress → D1/R2 **portfolio** import | **Done (34 posts)** — FooGallery/Picu excluded — [migration/legacy-bulk-import.md](migration/legacy-bulk-import.md) |
 | Automated production smoke | Manual — [SMOKE.md](SMOKE.md) |
 
 ## Chris input needed
 
-Decisions still open (do not guess):
+Resolved for T7 portfolio import (see [migration/legacy-bulk-import.md](migration/legacy-bulk-import.md)):
 
-1. ~~**Legacy export format and path**~~ — **Resolved** — portfolio import complete.
-2. ~~**Metadata mapping**~~ — **Resolved** — portfolio import complete.
-3. **Review / Picu content** — whether any legacy client galleries must become `/review/{slug}` collections (separate from portfolio import).
+1. **Legacy export** — live MariaDB on `172.16.1.2` + NAS uploads at `/mnt/main/apps/lawsonphotography-wp/wp-content/uploads` (SSH key auth).
+2. **Metadata mapping** — post tags → category; Front Page Slider → hero; title/excerpt/alt as documented in the migration checklist; vision pass updated production captions.
+3. **Review / Picu** — **out of scope** for this import (also skip NextGEN `wp-content/gallery/`).
 4. **URL redirect map** — whether any legacy permalinks need path-specific redirects beyond the zone 301 (table _TBD_).
 5. **RTO/RPO and rollback owner** — who flips DNS/redirects and whether Workers rollback (`wrangler rollback` / redeploy prior SHA) is in scope.
+6. **Remote import sign-off** — **Done** — production has **34** published posts only (FooGallery excluded).
 
 ## Preconditions
 
@@ -60,8 +61,8 @@ Checklist: [migration/legacy-bulk-import.md](migration/legacy-bulk-import.md). P
 
 | Item | Status |
 | --- | --- |
-| Portfolio photos + metadata | **Done** (Chris, 2026-09-26) |
-| Review collections (legacy Picu) | _TBD_ — out of band unless required |
+| Portfolio photos + metadata | **Done** — **34** published posts only (FooGallery excluded); local + remote |
+| Review collections (legacy Picu) | Out of scope for T7 portfolio pass |
 | Redirect map (legacy URLs → new routes) | _TBD_ beyond zone 301 |
 
 ## Cutover sequence (after migration)

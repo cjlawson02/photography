@@ -106,17 +106,21 @@ h6 {
 
 .public-header__brand {
   color: var(--color-fg);
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
   padding: 10px;
   text-decoration: none;
 }
 
-.public-header__brand:hover,
-.public-header__brand:focus-visible {
-  color: var(--color-accent);
+.public-header__logo {
+  display: block;
+  height: 2.5rem;
+  width: auto;
+}
+
+.public-header__brand:hover .public-header__logo,
+.public-header__brand:focus-visible .public-header__logo {
+  opacity: 0.85;
 }
 
 .public-header__nav {

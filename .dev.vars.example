@@ -16,8 +16,19 @@ R2_ACCOUNT_ID=
 R2_ACCESS_KEY_ID=
 R2_SECRET_ACCESS_KEY=
 
-# R2 CORS: npm run r2:cors:apply (infra/r2-cors/) — origins include photography.chrislawson.dev + localhost:4321
-
 # Optional Worker error monitoring (@sentry/cloudflare — no-op when empty)
 # SENTRY_DSN=
 # SENTRY_RELEASE=
+
+# --- Legacy WP migration (T7) — prefer untracked `.legacy-export/.env` for secrets ---
+# WP_DB_HOST=172.16.1.2
+# WP_DB_PORT=3306
+# WP_DB_NAME=lawsonphotography
+# WP_DB_USER=lawsonphotography
+# WP_DB_PASSWORD=
+# WP_TABLE_PREFIX=wp_
+# LEGACY_SSH_HOST=172.16.1.2
+# LEGACY_NAS_SCP=root@172.16.1.2:/mnt/main/apps/lawsonphotography-wp/wp-content/uploads
+# LEGACY_EXPORT_ROOT=.legacy-export
+# D1_TARGET=local
+

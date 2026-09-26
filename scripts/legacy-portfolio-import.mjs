@@ -1,50 +1,32 @@
 #!/usr/bin/env node
 /**
- * Bulk legacy portfolio import scaffold (T7).
+ * Bulk legacy portfolio import (T7).
  *
- * Default: dry-run only — prints planned actions, no D1/R2 writes.
- * Real import logic is _TBD_ until LEGACY_EXPORT_ROOT layout is defined (see docs/migration/legacy-bulk-import.md).
+ * Default: dry-run. Subcommands via npm scripts or:
+ *   node scripts/legacy-portfolio-import.mjs [inventory|stage|wipe|import] [--execute]
+ *
+ * See docs/migration/legacy-bulk-import.md
  */
-import { existsSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { resolve } from 'node:path';
 
-const args = new Set(process.argv.slice(2));
-const dryRun =
-  args.has('--dry-run') ||
-  args.has('-n') ||
-  (process.env.DRY_RUN !== 'false' && process.env.DRY_RUN !== '0' && !args.has('--execute'));
+const REPO = resolve(import.meta.dirname, '..');
+const args = process.argv.slice(2);
+const cmd = ['inventory', 'stage', 'wipe', 'import'].includes(args[0]) ? args[0] : 'import';
+const rest = ['inventory', 'stage', 'wipe', 'import'].includes(args[0]) ? args.slice(1) : args;
 
-const exportRoot = process.env.LEGACY_EXPORT_ROOT ? resolve(process.env.LEGACY_EXPORT_ROOT) : null;
+const scriptMap = {
+  inventory: 'scripts/legacy/inventory.mjs',
+  stage: 'scripts/legacy/stage.mjs',
+  wipe: 'scripts/legacy/wipe-portfolio.mjs',
+  import: 'scripts/legacy/import-portfolio.mjs',
+};
 
-function log(...parts) {
-  console.log('[legacy-portfolio-import]', ...parts);
-}
-
-log(dryRun ? 'mode=dry-run (no writes)' : 'mode=execute (writes _TBD_)');
-
-if (!exportRoot) {
-  log('LEGACY_EXPORT_ROOT is unset — nothing to scan.');
-  log('Set LEGACY_EXPORT_ROOT to the legacy export directory, then re-run.');
-  log('See docs/migration/legacy-bulk-import.md and docs/CUTOVER.md.');
-  process.exit(dryRun ? 0 : 1);
-}
-
-if (!existsSync(exportRoot)) {
-  console.error(`LEGACY_EXPORT_ROOT does not exist: ${exportRoot}`);
-  process.exit(1);
-}
-
-log(`export root: ${exportRoot}`);
-log(
-  'Importer steps (_TBD_): parse export → map metadata → upload R2 variants → insert D1 PortfolioPhotos rows.',
-);
-
-if (dryRun) {
-  log(
-    'Dry-run complete. Pass --execute and DRY_RUN=false when import implementation and Chris approval are ready.',
-  );
-  process.exit(0);
-}
-
-console.error('Execute mode is not implemented yet — export format and mapping are _TBD_.');
-process.exit(1);
+const script = resolve(REPO, scriptMap[cmd]);
+console.log(`[legacy-portfolio-import] running ${cmd}…`);
+const result = spawnSync(process.execPath, [script, ...rest], {
+  cwd: REPO,
+  stdio: 'inherit',
+  env: process.env,
+});
+process.exit(result.status ?? 1);
