@@ -141,12 +141,13 @@ Hardening and polish after MVP ([#21](https://github.com/cjlawson02/photography/
 | P7 | Admin pagination | **Done (partial)** — `portfolio.list` cursor ([#38](https://github.com/cjlawson02/photography/pull/38)) |
 | M1 | Admin Query islands | **Done** — TanStack + tRPC on portfolio/review |
 | M2 | Dead admin fetch helpers | **Done** ([#29](https://github.com/cjlawson02/photography/pull/29)) |
-| M3–M4 | UI primitives / Embla | _Open_ — shared admin components; optional `embla-carousel-react` |
-| T1 | Test suite | **Partial** ([#33](https://github.com/cjlawson02/photography/pull/33)); Vitest + RTL `_TBD_` |
+| M3–M4 | UI primitives / Embla | **Done (partial)** — shared admin primitives ([#46](https://github.com/cjlawson02/photography/pull/46)); Embla pivot `_TBD_` if still warranted |
+| M5 | Admin forms | _Open_ — pivot admin forms to [react-hook-form](https://react-hook-form.com/) with `@hookform/resolvers/zod` (reuse existing Zod schemas where possible) |
+| T1 | Test suite | **Partial** ([#33](https://github.com/cjlawson02/photography/pull/33), [#47](https://github.com/cjlawson02/photography/pull/47)). Vitest + RTL on [#47](https://github.com/cjlawson02/photography/pull/47). **RTL:** prefer `@testing-library/user-event` over `fireEvent` (almost always) |
 | T4 | D1 migrations in CI | **Done** on `main` deploy ([#28](https://github.com/cjlawson02/photography/pull/28)); PR dry-run gate `_TBD_` |
 | T5 | Indexes | **Done** ([#25](https://github.com/cjlawson02/photography/pull/25)) |
 | T6–T7 | Cutover + bulk migration | _Open_ — [CUTOVER.md](CUTOVER.md); legacy 301 via Cloudflare Redirect Rules |
-| O1 | Sentry | **Done** — Worker `@sentry/cloudflare` only (no OTEL); admin browser `@sentry/react` + CSP `connect-src` for ingest; CI `SENTRY_RELEASE` + `wrangler deploy --upload-source-maps` + optional `@sentry/vite-plugin` when `SENTRY_AUTH_TOKEN` / org / project secrets set ([DEPLOY.md](DEPLOY.md)) |
+| O1 | Sentry | **Done** ([#32](https://github.com/cjlawson02/photography/pull/32), [#35](https://github.com/cjlawson02/photography/pull/35), [#48](https://github.com/cjlawson02/photography/pull/48)) — Worker `@sentry/cloudflare` only (skip [Workers OTEL→Sentry](https://developers.cloudflare.com/workers/observability/exporting-opentelemetry-data/sentry/)); admin `@sentry/react`; CI `SENTRY_RELEASE` + `wrangler deploy --upload-source-maps` + optional `@sentry/vite-plugin` when GitHub secrets set ([DEPLOY.md](DEPLOY.md)) |
 
 ## Dependencies
 
