@@ -1,3 +1,5 @@
+import { createId } from '@paralleldrive/cuid2';
+
 import type { AppEnv } from '../env.ts';
 import { createDb } from '../../db/client.ts';
 import { deletePhotoObjects } from '../dao/delete-photo-objects.ts';
@@ -12,7 +14,10 @@ import {
   reviewVariantAdminUrl,
   reviewVariantPublicUrl,
 } from '../media/variant-media-url.ts';
-import { resolveReviewCollectionAccess } from '../review/collection-access.ts';
+import {
+  isReviewDownloadMode,
+  resolveReviewCollectionAccess,
+} from '../review/collection-access.ts';
 import { isTransitionAllowed } from '../review/job-steps.ts';
 import { areClientPicksLocked } from '../review/picks-lock.ts';
 export { updateReviewSelection } from '../review/update-selection.ts';
@@ -336,26 +341,69 @@ export class ReviewService {
       throw new AppError('NOT_FOUND', `Final photo not found: ${finalPhotoId}`);
     }
 
-    const portfolioPhoto = await this.app.d1.portfolioPhotos.insert({
-      status: 'ready',
-      mimeType: finalPhoto.mimeType,
-      published: false,
-      width: finalPhoto.width,
-      height: finalPhoto.height,
-      sourceReviewPhotoId: finalPhotoId,
-    });
-
-    for (const key of photoIngestObjectKeys(finalPhotoId)) {
-      const object = await this.app.r2.get('review', key);
-      if (!object?.body) continue;
-      const suffix = key.slice(finalPhotoId.length + 1);
-      const destKey = `${portfolioPhoto.id}/${suffix}`;
-      await this.app.r2.put('portfolio', destKey, object.body, {
-        httpMetadata: object.httpMetadata,
-      });
+    const existing = await this.app.d1.portfolioPhotos.getBySourceReviewPhotoId(finalPhotoId);
+    if (existing) {
+      throw new AppError('CONFLICT', 'This final was already promoted to portfolio');
     }
 
-    return portfolioPhoto;
+    const objectKeys = photoIngestObjectKeys(finalPhotoId);
+    const sources: {
+      key: string;
+      body: ReadableStream | ArrayBuffer | ArrayBufferView;
+      httpMetadata?: R2HTTPMetadata;
+    }[] = [];
+    for (const key of objectKeys) {
+      const object = await this.app.r2.get('review', key);
+      if (!object?.body) {
+        throw new AppError(
+          'PRECONDITION_FAILED',
+          `Review object missing for promote: ${key}`,
+        );
+      }
+      sources.push({ key, body: object.body, httpMetadata: object.httpMetadata });
+    }
+
+    const portfolioId = createId();
+    try {
+      for (const { key, body, httpMetadata } of sources) {
+        const suffix = key.slice(finalPhotoId.length + 1);
+        const destKey = `${portfolioId}/${suffix}`;
+        await this.app.r2.put('portfolio', destKey, body, { httpMetadata });
+      }
+    } catch (error) {
+      await deletePhotoObjects({
+        r2: this.app.r2,
+        bucket: 'portfolio',
+        photoIds: [portfolioId],
+        logLabel: 'review-promote-rollback',
+        logDetails: { collectionId, finalPhotoId, portfolioId },
+        errorMessage: 'Failed to roll back portfolio objects after promote copy error',
+      }).catch(() => undefined);
+      throw error;
+    }
+
+    try {
+      const portfolioPhoto = await this.app.d1.portfolioPhotos.insert({
+        id: portfolioId,
+        status: 'ready',
+        mimeType: finalPhoto.mimeType,
+        published: false,
+        width: finalPhoto.width,
+        height: finalPhoto.height,
+        sourceReviewPhotoId: finalPhotoId,
+      });
+      return portfolioPhoto;
+    } catch (error) {
+      await deletePhotoObjects({
+        r2: this.app.r2,
+        bucket: 'portfolio',
+        photoIds: [portfolioId],
+        logLabel: 'review-promote-rollback',
+        logDetails: { collectionId, finalPhotoId, portfolioId },
+        errorMessage: 'Failed to roll back portfolio objects after promote insert error',
+      }).catch(() => undefined);
+      throw error;
+    }
   }
 
   async purgeCollectionRounds(
@@ -483,7 +531,7 @@ export class ReviewService {
 
 export type ReviewPageState =
   | { kind: 'ok'; collection: PublicReviewCollection }
-  | { kind: 'expired'; title: string | null }
+  | { kind: 'gallery_closed'; title: string | null }
   | { kind: 'not_found' };
 
 export async function resolveReviewPageState(
@@ -496,19 +544,21 @@ export async function resolveReviewPageState(
   if (!row) {
     return { kind: 'not_found' };
   }
-  const access = resolveReviewCollectionAccess(row);
+  const downloadMode = isReviewDownloadMode(row.status);
+  const proofRows = await photos.listReadyByCollectionIdAndRound(row.id, 'proof');
+  const finalRows = downloadMode
+    ? await photos.listReadyByCollectionIdAndRound(row.id, 'final')
+    : [];
+  const access = resolveReviewCollectionAccess(row, Date.now(), {
+    readyProofCount: proofRows.length,
+    readyFinalCount: finalRows.length,
+  });
   if (!access.ok) {
-    if (access.reason === 'expired') {
-      return { kind: 'expired', title: row.title };
+    if (access.reason === 'gallery_closed') {
+      return { kind: 'gallery_closed', title: row.title };
     }
     return { kind: 'not_found' };
   }
-  const downloadMode =
-    access.collection.status === 'finals_delivered' || access.collection.status === 'closed';
-  const proofRows = await photos.listReadyByCollectionIdAndRound(access.collection.id, 'proof');
-  const finalRows = downloadMode
-    ? await photos.listReadyByCollectionIdAndRound(access.collection.id, 'final')
-    : [];
   return {
     kind: 'ok',
     collection: {

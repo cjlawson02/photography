@@ -58,6 +58,15 @@ export class PortfolioPhotosDAO {
     return rows[0] ?? null;
   }
 
+  async getBySourceReviewPhotoId(sourceReviewPhotoId: string) {
+    const rows = await this.db
+      .select()
+      .from(PortfolioPhotos)
+      .where(eq(PortfolioPhotos.sourceReviewPhotoId, sourceReviewPhotoId))
+      .limit(1);
+    return rows[0] ?? null;
+  }
+
   async listForAdminPage(options: {
     limit: number;
     cursor: AdminListCursor | null;
