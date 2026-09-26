@@ -10,9 +10,10 @@
 | Level of effort | Done | Rough phase/task sizes in [LOE.md](LOE.md) |
 | Phase 0 — Foundation | Done | Astro Workers scaffold ([PR #3](https://github.com/cjlawson02/photography/pull/3)); data layer ([PR #6](https://github.com/cjlawson02/photography/pull/6)) |
 | Phase 1 — Ingest | Done | Presign + complete + reprocess ([PR #7](https://github.com/cjlawson02/photography/pull/7)) |
-| Phase 2 — Admin | Done (v1) | Portfolio publish/hero/sort/category + ingest/reprocess UX; polish `_TBD_` |
-| Phase 3 — Public site | In progress | Home + React islands, SEO meta on home; extra public routes + brand tokens `_TBD_` |
+| Phase 2 — Admin | Done | Portfolio/review admin, tRPC, inline upload, M3 primitives, M6 SSR initial reads; post-MVP in [IMPLEMENTATION.md](IMPLEMENTATION.md#phase-25--post-mvp-backlog) |
+| Phase 3 — Public site | Done (MVP) | Home + React islands, SEO meta on home; extra public routes + brand tokens `_TBD_` |
 | Phase 4 — Client review | Done (phase 1) | `/review/{slug}`, React gallery, selection API, admin revoke, `noindex` + robots |
+| Post-MVP hardening | In progress | O1 Sentry, security audit ([#51](https://github.com/cjlawson02/photography/pull/51)–[#52](https://github.com/cjlawson02/photography/pull/52)); open backlog Phase 2.5 |
 
 Production host live (`photography.chrislawson.dev`): Access `/admin*`, D1 remote migrations, R2 CORS, Access vars + R2 secrets — [DEPLOY.md](DEPLOY.md).
 
@@ -39,16 +40,20 @@ gantt
   section Build
   Phase 0 Foundation        :done,    p0, 2026-09-25, 1d
   Phase 1 Ingest            :done,    p1, after p0, 1d
-  Phase 2 Admin             :active,  p2, after p1, 2d
-  Phase 3 Public site       :active,  p3, after p1, 2d
-  Phase 4 Client review     :         p4, after p2, 1d
+  Phase 2 Admin             :done,    p2, after p1, 2d
+  Phase 3 Public site       :done,    p3, after p1, 2d
+  Phase 4 Client review     :done,    p4, after p2, 1d
   Phase 5 Cutover           :         p5, after p3, 1d
+  Post-MVP backlog          :active,  p25, after p4, 2d
 ```
 
 ## Changelog
 
 | Date | Update |
 | --- | --- |
+| 2026-09-26 | Docs sync: PROGRESS status/Gantt; [SMOKE.md](SMOKE.md) admin SSR; audit backlog in IMPLEMENTATION S7–R2 |
+| 2026-09-26 | [#50](https://github.com/cjlawson02/photography/pull/50) M6 admin SSR initial reads; [#51](https://github.com/cjlawson02/photography/pull/51)–[#52](https://github.com/cjlawson02/photography/pull/52) security audit fixes |
+| 2026-09-26 | [#49](https://github.com/cjlawson02/photography/pull/49) O1 Sentry browser + CI source maps; [#46](https://github.com/cjlawson02/photography/pull/46)–[#47](https://github.com/cjlawson02/photography/pull/47) M3 + Vitest/RTL |
 | 2026-09-26 | Refresh [IMPLEMENTATION.md](IMPLEMENTATION.md) Phase 2.5 table (shipped vs open backlog) |
 | 2026-09-26 | [#27](https://github.com/cjlawson02/photography/pull/27) Phase 2.5 S1 server review slugs + S2 selection rate limit; hashed-IP limits + `ADMIN_TRPC_RATE_LIMITER` on ingest tRPC |
 | 2026-09-26 | CD: `wrangler d1 migrations apply photography --remote` before Worker deploy on push to `main`; [DEPLOY.md](DEPLOY.md) |
@@ -56,7 +61,7 @@ gantt
 | 2026-09-26 | B3: admin review collection detail — `review.collections.detail`, `/admin/review/collections/{id}` inspect UI |
 | 2026-09-26 | Post-MVP hardening PR: media D1 gate, portfolio cache-bust, hero pause, admin fetch/tRPC polish; [IMPLEMENTATION.md](IMPLEMENTATION.md) Phase 2.5 backlog |
 | 2026-09-26 | [#23](https://github.com/cjlawson02/photography/pull/23) Oxlint + oxfmt; [#22](https://github.com/cjlawson02/photography/pull/22) frontend P0 + portfolio Query; [#21](https://github.com/cjlawson02/photography/pull/21) tRPC hardening, REST removed |
-| 2026-09-26 | Phase 2.5 P6 (partial): stale pending ingest TTL, cron cleanup, admin filter + manual cleanup |
+| 2026-09-26 | Phase 2.5 P6: lazy stale pending cleanup on admin lists (no cron); admin filter |
 | 2026-09-26 | Open items batch: portfolio reprocess UX, home SEO meta, [SMOKE.md](SMOKE.md); IMPLEMENTATION checklist sync |
 | 2026-09-25 | First production deploy: custom domain, Access Public DNS `/admin*`, Access vars in wrangler, R2 secrets + CORS, D1 remote; [DEPLOY.md](DEPLOY.md) updated |
 | 2026-09-25 | Phase 4 client review phase 1: public `/review/{slug}`, `/media/review`, selection UX, admin revoke |

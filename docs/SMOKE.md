@@ -13,8 +13,9 @@ Run after deploy or before cutover. Production host: `https://photography.chrisl
 
 - [ ] `/admin` redirects to Access login when unauthenticated
 - [ ] After login: `/admin/api/health` returns OK with JWT
-- [ ] Upload via tRPC (`/admin/api/trpc` → `ingest.*`): presign → PUT → complete; photo reaches `ready` on portfolio admin
-- [ ] Portfolio admin: publish, category, sort, hero; changes appear on public home when published
+- [ ] Portfolio / review list / review collection detail: first paint shows data without a loading spinner (SSR + TanStack `initialData`; see [FRONTEND.md](FRONTEND.md#hydration-choices))
+- [ ] Upload via tRPC (`/admin/api/trpc` → `ingest.*`): presign → PUT → complete; photo reaches `ready` on portfolio admin (inline upload on portfolio + review detail)
+- [ ] Portfolio admin: publish, category, sort, hero; changes appear on public home when published; optional **Stale pending only** filter and lazy stale cleanup on list load
 - [ ] Failed ingest: row shows `failed`; **Reprocess** on portfolio admin recovers when original exists in R2
 - [ ] Review: create collection, upload with `collectionId`, open `/review/{slug}`, select/approve
 

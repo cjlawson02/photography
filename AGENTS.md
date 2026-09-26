@@ -65,7 +65,7 @@ npx wrangler deploy
 
 - **React islands** (`@astrojs/react`) for interactive UI — no hand-rolled DOM `addEventListener` wiring; use React state/handlers in `src/components/public/*` and `src/components/admin/*`.
 - See [docs/FRONTEND.md](docs/FRONTEND.md) for hydration conventions and library usage.
-- Legacy admin `<script>` pages (ingest, review) migrate to React as touched.
+- Admin portfolio/review use React islands; uploads are inline (`AdminPhotoUpload`). `/admin/ingest` redirects to portfolio.
 
 ## Testing instructions
 
