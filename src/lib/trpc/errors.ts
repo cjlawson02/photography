@@ -1,4 +1,5 @@
 import { TRPCError } from '@trpc/server';
+import { getHTTPStatusCodeFromError } from '@trpc/server/http';
 
 import {
 	AppError,
@@ -11,9 +12,10 @@ const APP_TO_TRPC: Record<AppErrorCode, TRPCError['code']> = {
 	BAD_REQUEST: 'BAD_REQUEST',
 	FORBIDDEN: 'FORBIDDEN',
 	NOT_FOUND: 'NOT_FOUND',
+	CONFLICT: 'CONFLICT',
 	PRECONDITION_FAILED: 'PRECONDITION_FAILED',
 	INTERNAL_SERVER_ERROR: 'INTERNAL_SERVER_ERROR',
-	SERVICE_UNAVAILABLE: 'INTERNAL_SERVER_ERROR',
+	SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',
 };
 
 export function appErrorToTrpc(error: AppError): TRPCError {
@@ -24,44 +26,15 @@ export function appErrorToTrpc(error: AppError): TRPCError {
 	});
 }
 
-export async function runAppProcedure<T>(fn: () => Promise<T>): Promise<T> {
-	try {
-		return await fn();
-	} catch (error) {
-		if (error instanceof AppError) {
-			throw appErrorToTrpc(error);
-		}
-		if (error instanceof TRPCError) {
-			throw error;
-		}
-		throw appErrorToTrpc(AppError.fromUnknown(error));
-	}
-}
-
 export function trpcErrorToHttpStatus(code: TRPCError['code']): HttpErrorStatus {
-	switch (code) {
-		case 'BAD_REQUEST':
-		case 'PARSE_ERROR':
-			return 400;
-		case 'UNAUTHORIZED':
-		case 'FORBIDDEN':
-			return 403;
-		case 'NOT_FOUND':
-			return 404;
-		case 'PRECONDITION_FAILED':
-			return 412;
-		case 'INTERNAL_SERVER_ERROR':
-		case 'NOT_IMPLEMENTED':
-			return 500;
-		default:
-			return 400;
-	}
+	const err = new TRPCError({ code, message: 'status probe' });
+	return getHTTPStatusCodeFromError(err) as HttpErrorStatus;
 }
 
 /** Map tRPC failures to legacy `{ ok: false, error }` admin REST responses. */
 export function trpcErrorToResponse(error: unknown): Response {
 	if (error instanceof TRPCError) {
-		const status = trpcErrorToHttpStatus(error.code);
+		const status = getHTTPStatusCodeFromError(error) as HttpErrorStatus;
 		if (status >= 500) {
 			console.error('[trpc]', error);
 		}

@@ -72,7 +72,7 @@ Phase 0 smoke:
 
 Unit: `npm test` (Cloudflare env zod, AppError HTTP mapping, ingest keys/presign schema). End-to-end upload against live R2/Images `_TBD_` until Access + CORS + secrets are set.
 
-Ingest (`AppEnv.from` / `getCloudflareEnv`) **fail-fast** if `R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` are missing (503). Copy `.dev.vars.example` → `.dev.vars` and fill R2_* for `/admin` ingest preview.
+Ingest (`AppEnv.from` on **`ingest.*` only**) **fail-fast** if `R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` are missing (503). Other admin tRPC uses bindings-only env and returns **403** without JWT even when R2_* are unset. Copy `.dev.vars.example` → `.dev.vars` and fill R2_* for `/admin` ingest preview.
 
 Phase 1 ingest (JWT + Zod body → `IngestService` via tRPC):
 

@@ -1,12 +1,11 @@
+import type { inferRouterOutputs } from '@trpc/server';
+
+import type { AppRouter } from '../trpc/router.ts';
 import { adminTrpc } from '../trpc/client.ts';
 
-export type AdminReviewCollection = {
-	id: string;
-	slug: string;
-	title: string | null;
-	expiresAt: number | null;
-	createdAt: number;
-};
+type RouterOutputs = inferRouterOutputs<AppRouter>;
+
+export type AdminReviewCollection = RouterOutputs['review']['collections']['list'][number];
 
 export async function fetchReviewCollections(): Promise<AdminReviewCollection[]> {
 	return adminTrpc.review.collections.list.query();

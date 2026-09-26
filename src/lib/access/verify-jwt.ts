@@ -10,6 +10,17 @@ export type AccessIdentity = {
 	payload: JWTPayload;
 };
 
+const jwksByTeamDomain = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
+
+function getAccessJwks(teamDomain: string): ReturnType<typeof createRemoteJWKSet> {
+	let jwks = jwksByTeamDomain.get(teamDomain);
+	if (!jwks) {
+		jwks = createRemoteJWKSet(new URL(`${teamDomain}/cdn-cgi/access/certs`));
+		jwksByTeamDomain.set(teamDomain, jwks);
+	}
+	return jwks;
+}
+
 /**
  * Verify Cloudflare Access JWT (`Cf-Access-Jwt-Assertion`).
  * Required on every `/admin/*` mutation — defense in depth beyond the edge Access policy.
@@ -31,7 +42,7 @@ export async function verifyAccessJwt(
 		throw new AccessAuthError('Missing Cf-Access-Jwt-Assertion');
 	}
 
-	const JWKS = createRemoteJWKSet(new URL(`${teamDomain}/cdn-cgi/access/certs`));
+	const JWKS = getAccessJwks(teamDomain);
 	const { payload } = await jwtVerify(token, JWKS, {
 		issuer: teamDomain,
 		audience,
