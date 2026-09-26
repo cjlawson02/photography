@@ -1,6 +1,7 @@
 import { env as workerEnv } from 'cloudflare:workers';
 
 import { createDb } from '../db/client.ts';
+import { isRateLimiterBinding } from './rate-limit/binding.ts';
 import {
   getCloudflareBindings,
   getCloudflareEnv,
@@ -84,10 +85,18 @@ export class AppEnv {
  * Ingest routes must use `AppEnv.from` (fail-fast if R2_* unset).
  */
 export function bindingHealth(raw: unknown): {
-  bindings: { db: boolean; portfolio: boolean; review: boolean; images: boolean };
+  bindings: {
+    db: boolean;
+    portfolio: boolean;
+    review: boolean;
+    images: boolean;
+    reviewSelectionRateLimiter: boolean;
+    adminTrpcRateLimiter: boolean;
+  };
   daos: { d1: boolean; images: boolean };
 } {
   const bindings = getCloudflareBindings(raw);
+  const env = raw as Cloudflare.Env;
   const d1 = D1DAO.getInstance(createDb(bindings.DB));
   const images = ImagesDAO.getInstance(bindings.IMAGES);
   return {
@@ -96,6 +105,8 @@ export function bindingHealth(raw: unknown): {
       portfolio: Boolean(bindings.PORTFOLIO),
       review: Boolean(bindings.REVIEW),
       images: Boolean(bindings.IMAGES),
+      reviewSelectionRateLimiter: isRateLimiterBinding(env.REVIEW_SELECTION_RATE_LIMITER),
+      adminTrpcRateLimiter: isRateLimiterBinding(env.ADMIN_TRPC_RATE_LIMITER),
     },
     daos: {
       d1: Boolean(d1),

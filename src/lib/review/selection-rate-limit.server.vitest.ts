@@ -1,13 +1,24 @@
-import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { AppError } from '../http/app-error.ts';
+import { setRateLimitBindingEnforcementForTests } from '../rate-limit/binding.ts';
 import { hashString } from '../util/hash-string.ts';
 import { assertReviewSelectionRateLimit } from './selection-rate-limit.ts';
 
 describe('assertReviewSelectionRateLimit', () => {
-  it('no-ops when limiter binding is missing', async () => {
+  afterEach(() => {
+    setRateLimitBindingEnforcementForTests(undefined);
+  });
+
+  it('no-ops when limiter binding is missing in dev', async () => {
     await assertReviewSelectionRateLimit(undefined, new Request('https://example.com'));
+  });
+
+  it('throws SERVICE_UNAVAILABLE when binding missing and enforcement required', async () => {
+    setRateLimitBindingEnforcementForTests(true);
+    await expect(
+      assertReviewSelectionRateLimit(undefined, new Request('https://example.com')),
+    ).rejects.toMatchObject({ code: 'SERVICE_UNAVAILABLE' });
   });
 
   it('passes when limiter allows the request', async () => {
@@ -29,22 +40,20 @@ describe('assertReviewSelectionRateLimit', () => {
       new Request('https://example.com', { headers: { 'CF-Connecting-IP': '203.0.113.1' } }),
     );
     const expected = `selection:${await hashString('203.0.113.1')}`;
-    assert.equal(capturedKey, expected);
+    expect(capturedKey).toBe(expected);
   });
 
   it('throws TOO_MANY_REQUESTS when limiter rejects', async () => {
-    await assert.rejects(
-      () =>
-        assertReviewSelectionRateLimit(
-          { limit: async () => ({ success: false }) },
-          new Request('https://example.com'),
-        ),
-      (error: unknown) => {
-        assert.ok(error instanceof AppError);
-        assert.equal(error.code, 'TOO_MANY_REQUESTS');
-        assert.equal(error.status, 429);
-        return true;
-      },
-    );
+    await expect(
+      assertReviewSelectionRateLimit(
+        { limit: async () => ({ success: false }) },
+        new Request('https://example.com'),
+      ),
+    ).rejects.toSatisfy((error: unknown) => {
+      expect(error).toBeInstanceOf(AppError);
+      expect((error as AppError).code).toBe('TOO_MANY_REQUESTS');
+      expect((error as AppError).status).toBe(429);
+      return true;
+    });
   });
 });

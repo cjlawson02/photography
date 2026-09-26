@@ -104,6 +104,11 @@ npx wrangler d1 migrations apply photography --remote
 | Sentry release | `SENTRY_RELEASE` Worker var from CI deploy (`github.sha`) |
 | R2 CORS | `npm run r2:cors:apply` (or dashboard JSON paste) |
 | Deploy | `npm run build && npx wrangler deploy` |
+| Rate limits | `wrangler.jsonc` `ratelimits` → `REVIEW_SELECTION_RATE_LIMITER` + `ADMIN_TRPC_RATE_LIMITER`; prod returns **503** if missing (`GET /health` booleans) |
+
+## 5b. Dependency audit (`npm audit`)
+
+As of 2026-09-26, `npm audit` reports **moderate** findings only, all on the **`drizzle-kit` → `@esbuild-kit/*` → `esbuild` ≤0.24.2** chain ([GHSA-67mh-4wv8-2f99](https://github.com/advisories/GHSA-67mh-4wv8-2f99) — esbuild dev-server request handling). **Accepted risk:** `drizzle-kit` is a **dev-only** migration CLI (`npm run db:generate`); it does not ship in the Worker bundle or run in production. `npm audit fix` suggests downgrading to `drizzle-kit@0.18.1` (semver-major regression). Re-triage when upgrading `drizzle-kit` or if audit adds production-path packages.
 
 ## 6. GitHub Actions CI/CD
 

@@ -1,4 +1,4 @@
-import { parseJsonBody } from '../admin/http.ts';
+import { parseJsonBody, REVIEW_SELECTION_MAX_JSON_BYTES } from '../admin/http.ts';
 import { ensureAppError, toErrorResponse } from '../http/app-error.ts';
 import { reviewSelectionBodySchema } from './public-schemas.ts';
 import { assertReviewSelectionRateLimit } from './selection-rate-limit.ts';
@@ -28,7 +28,9 @@ export async function postReviewSelection(
 ): Promise<Response> {
   try {
     await assertReviewSelectionRateLimit(bindings.rateLimiter, request);
-    const body = await parseJsonBody(request, reviewSelectionBodySchema);
+    const body = await parseJsonBody(request, reviewSelectionBodySchema, {
+      maxBytes: REVIEW_SELECTION_MAX_JSON_BYTES,
+    });
     const mutate = await resolveMutateSelection(bindings.mutateSelection);
     const photo = await ensureAppError(async () => mutate(bindings.db, body));
     return Response.json({ ok: true, photo });
