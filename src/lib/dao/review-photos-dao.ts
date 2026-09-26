@@ -1,4 +1,4 @@
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, eq, lt } from 'drizzle-orm';
 import type { DrizzleD1Database } from 'drizzle-orm/d1';
 
 import * as schema from '../../db/schema/index.ts';
@@ -55,6 +55,15 @@ export class ReviewPhotosDAO {
       .from(ReviewPhotos)
       .where(and(eq(ReviewPhotos.collectionId, collectionId), eq(ReviewPhotos.status, 'ready')))
       .orderBy(asc(ReviewPhotos.createdAt));
+  }
+
+  async listPendingCreatedBefore(cutoffMs: number, limit = 100) {
+    return this.db
+      .select()
+      .from(ReviewPhotos)
+      .where(and(eq(ReviewPhotos.status, 'pending'), lt(ReviewPhotos.createdAt, cutoffMs)))
+      .orderBy(asc(ReviewPhotos.createdAt))
+      .limit(limit);
   }
 
   async deleteByCollectionId(collectionId: string) {

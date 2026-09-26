@@ -21,6 +21,8 @@ export const portfolioListInputSchema = z.object({
     .max(PORTFOLIO_ADMIN_LIST_MAX_LIMIT)
     .optional()
     .default(PORTFOLIO_ADMIN_LIST_DEFAULT_LIMIT),
+  /** When true, only pending rows past the ingest stale cutoff (see stale-pending.ts). */
+  stalePendingOnly: z.boolean().optional().default(false),
 });
 
 export type PortfolioListInput = z.infer<typeof portfolioListInputSchema>;

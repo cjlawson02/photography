@@ -123,6 +123,8 @@ Why split portfolio vs review:
 
 A photo may move to **failed** and be **reprocessed** from the original; no full status state machine in v1.
 
+**Stale `pending` hygiene** — presign TTL is one hour (`3600s`); rows still `pending` after TTL plus a one-hour grace (`PENDING_INGEST_STALE_MS` in `src/lib/ingest/stale-pending.ts`) are treated as abandoned ingest. A daily Worker **Cron Trigger** (`scheduled` handler in `sentry.server.config.ts`, `0 5 * * *` UTC in `wrangler.jsonc`) deletes those D1 rows and best-effort R2 keys for both portfolio and review domains. Admin portfolio list can filter **Stale pending only** and run the same cleanup manually via `ingest.cleanupStalePending`.
+
 **Metadata (D1)** — one database, **two domain boundaries** in Drizzle (exact columns `_TBD_`):
 
 | Domain | Tables (illustrative) | Owns |

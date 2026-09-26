@@ -74,7 +74,8 @@ function IngestSmokeFormInner() {
           <a href="/admin/portfolio" style={{ color: 'var(--color-accent)' }}>
             Portfolio
           </a>{' '}
-          or the collection detail page.
+          or the collection detail page. Abandoned pending rows are removed automatically after the
+          stale cutoff (see portfolio <strong>Stale pending only</strong>).
         </p>
       </AdminEmptyState>
 

@@ -6,6 +6,7 @@ import type { PortfolioCategory } from '../../db/schema/portfolio/categories.ts'
 import { PortfolioPhotos } from '../../db/schema/portfolio/photos.ts';
 import type { PhotoStatus } from '../../db/schema/photo-status.ts';
 import type { AdminListCursor } from '../pagination/admin-list-cursor.ts';
+import { pendingIngestStaleCutoffMs } from '../ingest/stale-pending.ts';
 import { mergeDefined } from '../utils/merge-defined.ts';
 
 type Db = DrizzleD1Database<typeof schema>;
@@ -51,8 +52,13 @@ export class PortfolioPhotosDAO {
     return rows[0] ?? null;
   }
 
-  async listForAdminPage(options: { limit: number; cursor: AdminListCursor | null }) {
+  async listForAdminPage(options: {
+    limit: number;
+    cursor: AdminListCursor | null;
+    stalePendingOnly?: boolean;
+  }) {
     const take = options.limit + 1;
+    const staleCutoffMs = options.stalePendingOnly ? pendingIngestStaleCutoffMs() : null;
     const cursorWhere = options.cursor
       ? or(
           lt(PortfolioPhotos.updatedAt, options.cursor.updatedAt),
@@ -63,10 +69,27 @@ export class PortfolioPhotosDAO {
         )
       : undefined;
 
+    const staleWhere =
+      staleCutoffMs != null
+        ? and(eq(PortfolioPhotos.status, 'pending'), lt(PortfolioPhotos.createdAt, staleCutoffMs))
+        : undefined;
+
+    const whereClause =
+      cursorWhere && staleWhere ? and(cursorWhere, staleWhere) : (cursorWhere ?? staleWhere);
+
     const base = this.db.select().from(PortfolioPhotos);
-    const filtered = cursorWhere ? base.where(cursorWhere) : base;
+    const filtered = whereClause ? base.where(whereClause) : base;
 
     return filtered.orderBy(desc(PortfolioPhotos.updatedAt), desc(PortfolioPhotos.id)).limit(take);
+  }
+
+  async listPendingCreatedBefore(cutoffMs: number, limit = 100) {
+    return this.db
+      .select()
+      .from(PortfolioPhotos)
+      .where(and(eq(PortfolioPhotos.status, 'pending'), lt(PortfolioPhotos.createdAt, cutoffMs)))
+      .orderBy(asc(PortfolioPhotos.createdAt))
+      .limit(limit);
   }
 
   /** Public home grid — published ingest-ready rows only. */
