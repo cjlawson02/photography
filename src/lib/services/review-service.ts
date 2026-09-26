@@ -355,10 +355,7 @@ export class ReviewService {
     for (const key of objectKeys) {
       const object = await this.app.r2.get('review', key);
       if (!object?.body) {
-        throw new AppError(
-          'PRECONDITION_FAILED',
-          `Review object missing for promote: ${key}`,
-        );
+        throw new AppError('PRECONDITION_FAILED', `Review object missing for promote: ${key}`);
       }
       sources.push({ key, body: object.body, httpMetadata: object.httpMetadata });
     }
