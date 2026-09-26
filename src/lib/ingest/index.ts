@@ -18,4 +18,5 @@ export {
   requestPresign,
   requestReprocess,
   uploadPhoto,
+  type UploadProgress,
 } from './browser-upload.ts';

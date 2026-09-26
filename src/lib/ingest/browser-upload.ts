@@ -32,9 +32,19 @@ export type UploadResult = {
   variants: string[];
 };
 
+export type UploadProgress = {
+  loaded: number;
+  total: number;
+  /** 0–100 when size is known; otherwise null */
+  percent: number | null;
+};
+
+type UploadProgressHandler = (progress: UploadProgress) => void;
+
 type PortfolioUpload = {
   file: File;
   bucket: 'portfolio';
+  onProgress?: UploadProgressHandler;
 };
 
 type ReviewUpload = {
@@ -42,6 +52,7 @@ type ReviewUpload = {
   bucket: 'review';
   /** Required for review — FK to ReviewCollections. */
   collectionId: string;
+  onProgress?: UploadProgressHandler;
 };
 
 function trpcMessage(error: unknown, fallback: string): string {
@@ -65,15 +76,7 @@ export async function uploadPhoto(options: PortfolioUpload | ReviewUpload): Prom
     collectionId: options.bucket === 'review' ? options.collectionId : undefined,
   });
 
-  const put = await fetch(presign.uploadUrl, {
-    method: 'PUT',
-    headers: { 'Content-Type': contentType },
-    body: options.file,
-  });
-
-  if (!put.ok) {
-    throw new Error(`R2 PUT failed (${put.status})`);
-  }
+  await putFileWithProgress(presign.uploadUrl, options.file, contentType, options.onProgress);
 
   const complete = await requestComplete({
     id: presign.id,
@@ -150,4 +153,49 @@ function requireReviewCollectionId(collectionId: string | undefined): string {
     throw new Error('collectionId is required for review uploads');
   }
   return trimmed;
+}
+
+/**
+ * PUT file bytes to a presigned URL with upload progress (XHR — `fetch` has no upload progress).
+ */
+function putFileWithProgress(
+  url: string,
+  file: File,
+  contentType: string,
+  onProgress?: UploadProgressHandler,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('PUT', url);
+    xhr.setRequestHeader('Content-Type', contentType);
+
+    xhr.upload.addEventListener('progress', (event) => {
+      if (!onProgress) return;
+      const total = event.lengthComputable ? event.total : file.size;
+      const loaded = event.loaded;
+      let percent: number | null = null;
+      if (event.lengthComputable && event.total > 0) {
+        percent = Math.min(100, Math.round((event.loaded / event.total) * 100));
+      } else if (file.size > 0) {
+        percent = Math.min(100, Math.round((loaded / file.size) * 100));
+      }
+      onProgress({ loaded, total, percent });
+    });
+
+    xhr.addEventListener('load', () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve();
+      } else {
+        reject(new Error(`R2 PUT failed (${xhr.status})`));
+      }
+    });
+    xhr.addEventListener('error', () => {
+      reject(new Error('R2 PUT failed (network error)'));
+    });
+    xhr.addEventListener('abort', () => {
+      reject(new Error('R2 PUT aborted'));
+    });
+
+    xhr.send(file);
+  });
 }

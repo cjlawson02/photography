@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
-import { uploadPhoto } from '../../lib/ingest/browser-upload.ts';
+import { uploadPhoto, type UploadProgress } from '../../lib/ingest/browser-upload.ts';
 import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
 
 const fieldStyle = {
@@ -26,6 +26,7 @@ function IngestSmokeFormInner() {
   const [bucket, setBucket] = useState<Bucket>('portfolio');
   const [collectionId, setCollectionId] = useState('');
   const [statusText, setStatusText] = useState('Ready.');
+  const [putPercent, setPutPercent] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -66,15 +67,26 @@ function IngestSmokeFormInner() {
         }
 
         setBusy(true);
-        setStatusText('Uploading…');
+        setPutPercent(null);
+        setStatusText('Requesting upload URL…');
+        const onProgress = (progress: UploadProgress) => {
+          setPutPercent(progress.percent);
+          setStatusText(
+            progress.percent === null
+              ? 'Uploading to R2…'
+              : `Uploading to R2… ${progress.percent}%`,
+          );
+        };
         try {
           const result =
             bucket === 'review'
-              ? await uploadPhoto({ file, bucket, collectionId })
-              : await uploadPhoto({ file, bucket });
+              ? await uploadPhoto({ file, bucket, collectionId, onProgress })
+              : await uploadPhoto({ file, bucket, onProgress });
+          setPutPercent(null);
           setStatusText(JSON.stringify(result, null, 2));
           form.reset();
         } catch (error) {
+          setPutPercent(null);
           setStatusText(error instanceof Error ? error.message : String(error));
         } finally {
           setBusy(false);
@@ -145,6 +157,20 @@ function IngestSmokeFormInner() {
       >
         {busy ? 'Uploading…' : 'Upload'}
       </button>
+
+      {busy && putPercent !== null ? (
+        <div className="space-y-1">
+          <progress
+            className="block h-2 w-full"
+            max={100}
+            value={putPercent}
+            aria-label="Upload progress"
+          />
+          <p className="text-xs tabular-nums" style={{ color: 'var(--color-fg-muted)' }}>
+            {putPercent}%
+          </p>
+        </div>
+      ) : null}
 
       <pre
         className="mt-6 overflow-x-auto p-3 text-xs"
