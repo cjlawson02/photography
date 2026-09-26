@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { adminFgStyle } from './admin-styles.ts';
+import { adminClass } from './admin-styles.ts';
 
 type AdminFieldLabelProps = {
   label: string;
@@ -14,7 +14,7 @@ export default function AdminFieldLabel({
   className = 'block text-sm',
 }: AdminFieldLabelProps) {
   return (
-    <label className={className} style={adminFgStyle}>
+    <label className={`${className} ${adminClass.fg}`}>
       {label}
       {children}
     </label>

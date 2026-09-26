@@ -1,9 +1,6 @@
 import type { ReactNode } from 'react';
 
-const panelStyle = {
-  background: 'color-mix(in oklab, var(--color-fg) 6%, transparent)',
-  borderColor: 'var(--color-border)',
-};
+import { adminClass } from './admin-styles.ts';
 
 type AdminEmptyStateProps = {
   title: string;
@@ -21,12 +18,9 @@ export default function AdminEmptyState({
   const textAlign = align === 'start' ? 'text-left' : 'text-center';
   return (
     <div
-      className={`border border-dashed px-4 py-8 text-sm ${textAlign}`}
-      style={{ ...panelStyle, color: 'var(--color-fg-muted)' }}
+      className={`${adminClass.panelDashed} px-4 py-8 text-sm ${textAlign} ${adminClass.fgMuted}`}
     >
-      <p className="text-sm font-medium" style={{ color: 'var(--color-fg)' }}>
-        {title}
-      </p>
+      <p className={`text-sm font-medium ${adminClass.fg}`}>{title}</p>
       <div
         className={`mt-2 max-w-md text-xs leading-relaxed ${align === 'center' ? 'mx-auto' : ''}`}
       >

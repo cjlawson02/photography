@@ -6,7 +6,7 @@ import type { AdminPortfolioListPage } from '../../lib/admin/trpc-types.ts';
 import { requestReprocess } from '../../lib/ingest/browser-upload.ts';
 import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
 import { errorMessage } from './admin-format.ts';
-import { adminBorderStyle, adminFgMutedStyle, adminFgStyle } from './admin-styles.ts';
+import { adminClass } from './admin-styles.ts';
 import AdminEmptyState from './AdminEmptyState.tsx';
 import AdminPhotoUpload from './AdminPhotoUpload.tsx';
 import AdminStatusLine from './AdminStatusLine.tsx';
@@ -166,11 +166,7 @@ function PortfolioAdminTableInner({ initialPortfolioPage }: PortfolioAdminTableI
 
   return (
     <>
-      <section
-        className="mt-4 rounded border p-4"
-        style={adminBorderStyle}
-        aria-label="Upload portfolio photo"
-      >
+      <section className={adminClass.uploadSection} aria-label="Upload portfolio photo">
         <AdminPhotoUpload
           bucket="portfolio"
           compact
@@ -181,7 +177,7 @@ function PortfolioAdminTableInner({ initialPortfolioPage }: PortfolioAdminTableI
         />
       </section>
 
-      <div className="mt-4 flex flex-wrap items-center gap-4 text-xs" style={adminFgMutedStyle}>
+      <div className={adminClass.toolbar}>
         <label className="inline-flex items-center gap-2">
           <input
             type="checkbox"
@@ -194,8 +190,7 @@ function PortfolioAdminTableInner({ initialPortfolioPage }: PortfolioAdminTableI
         </label>
         <button
           type="button"
-          className="underline"
-          style={adminFgStyle}
+          className={adminClass.linkMuted}
           disabled={cleanupStaleMutation.isPending || busyIds.size > 0}
           onClick={() => {
             if (
@@ -255,8 +250,7 @@ function PortfolioAdminTableInner({ initialPortfolioPage }: PortfolioAdminTableI
           {listQuery.hasNextPage ? (
             <button
               type="button"
-              className="mt-4 text-xs underline"
-              style={adminFgStyle}
+              className={`mt-4 text-xs ${adminClass.linkMuted}`}
               disabled={listQuery.isFetchingNextPage || busyIds.size > 0}
               onClick={() => {
                 void listQuery.fetchNextPage();

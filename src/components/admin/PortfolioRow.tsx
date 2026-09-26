@@ -13,14 +13,7 @@ import { isStalePendingIngest } from '../../lib/ingest/stale-pending.ts';
 import { portfolioVariantPublicUrl } from '../../lib/media/portfolio-public-url.ts';
 import { PORTFOLIO_CATEGORIES } from '../../lib/portfolio/categories.ts';
 import { formatAdminDimensions, formatAdminTime, normalizeNullableText } from './admin-format.ts';
-import {
-  adminAccentStyle,
-  adminBorderStyle,
-  adminFgMutedStyle,
-  adminFgStyle,
-  adminFieldStyle,
-  adminTableRowStyle,
-} from './admin-styles.ts';
+import { adminClass } from './admin-styles.ts';
 
 function fieldChanged(
   field: keyof PortfolioPhotoAdminRowFormValues,
@@ -99,43 +92,29 @@ export default function PortfolioRow({ photo, busy, onPatch, onDelete, onReproce
   const canReprocess = photo.status === 'failed' || photo.status === 'pending';
   const stalePending = photo.status === 'pending' && isStalePendingIngest(photo.createdAt);
 
-  const textFieldClass = 'min-w-[8rem] border px-2 py-1 text-xs';
+  const textFieldClass = `min-w-[8rem] ${adminClass.fieldSm}`;
 
   return (
-    <tr style={adminTableRowStyle}>
+    <tr className={adminClass.tableRow}>
       <td className="py-3 pr-4 align-middle">
         {thumbUrl ? (
-          <img
-            src={thumbUrl}
-            alt=""
-            width={72}
-            height={54}
-            className="border object-cover"
-            style={{
-              ...adminBorderStyle,
-              width: '4.5rem',
-              height: '3.375rem',
-            }}
-          />
+          <img src={thumbUrl} alt="" width={72} height={54} className={adminClass.thumb} />
         ) : (
-          <span className="text-xs" style={adminFgMutedStyle}>
-            —
-          </span>
+          <span className={`text-xs ${adminClass.fgMuted}`}>—</span>
         )}
       </td>
       <td className="py-3 pr-4 align-middle">
         <code className="text-xs">{photo.status}</code>
         {stalePending ? (
           <span
-            className="ml-2 text-xs"
-            style={{ color: 'var(--color-accent)' }}
+            className={`ml-2 text-xs ${adminClass.accent}`}
             title="Pending longer than presign TTL + grace — safe to delete or run cleanup"
           >
             stale
           </span>
         ) : null}
       </td>
-      <td className="py-3 pr-4 align-middle text-xs tabular-nums" style={adminFgMutedStyle}>
+      <td className={`py-3 pr-4 align-middle text-xs tabular-nums ${adminClass.fgMuted}`}>
         {formatAdminDimensions(photo.width, photo.height)}
       </td>
       <td className="py-3 pr-4 align-middle">
@@ -166,7 +145,6 @@ export default function PortfolioRow({ photo, busy, onPatch, onDelete, onReproce
         <input
           type="text"
           className={`${textFieldClass} min-w-[8rem]`}
-          style={adminFieldStyle}
           aria-label="Alt text"
           placeholder="—"
           disabled={busy}
@@ -181,7 +159,6 @@ export default function PortfolioRow({ photo, busy, onPatch, onDelete, onReproce
         <input
           type="text"
           className={`${textFieldClass} min-w-[6rem]`}
-          style={adminFieldStyle}
           aria-label="Title"
           placeholder="—"
           disabled={busy}
@@ -196,7 +173,6 @@ export default function PortfolioRow({ photo, busy, onPatch, onDelete, onReproce
         <input
           type="text"
           className={`${textFieldClass} min-w-[8rem]`}
-          style={adminFieldStyle}
           aria-label="Caption"
           placeholder="—"
           disabled={busy}
@@ -213,8 +189,7 @@ export default function PortfolioRow({ photo, busy, onPatch, onDelete, onReproce
           control={control}
           render={({ field }) => (
             <select
-              className="border px-2 py-1 text-xs"
-              style={adminFieldStyle}
+              className={textFieldClass}
               aria-label="Category"
               value={field.value}
               disabled={busy}
@@ -239,8 +214,7 @@ export default function PortfolioRow({ photo, busy, onPatch, onDelete, onReproce
       <td className="py-3 pr-4 align-middle">
         <input
           type="number"
-          className="w-20 border px-2 py-1 text-xs"
-          style={adminFieldStyle}
+          className={`${textFieldClass} w-20`}
           aria-label="Sort order"
           placeholder="—"
           disabled={busy}
@@ -274,7 +248,7 @@ export default function PortfolioRow({ photo, busy, onPatch, onDelete, onReproce
           )}
         />
       </td>
-      <td className="py-3 pr-4 align-middle text-xs" style={adminFgMutedStyle}>
+      <td className={`py-3 pr-4 align-middle text-xs ${adminClass.fgMuted}`}>
         {formatAdminTime(photo.updatedAt)}
       </td>
       <td className="py-3 align-middle">
@@ -282,8 +256,7 @@ export default function PortfolioRow({ photo, busy, onPatch, onDelete, onReproce
           {canReprocess ? (
             <button
               type="button"
-              className="text-xs underline"
-              style={adminFgStyle}
+              className={`text-xs ${adminClass.linkMuted}`}
               disabled={busy}
               onClick={() => {
                 void onReprocess(photo.id);
@@ -294,8 +267,7 @@ export default function PortfolioRow({ photo, busy, onPatch, onDelete, onReproce
           ) : null}
           <button
             type="button"
-            className="text-xs underline"
-            style={adminAccentStyle}
+            className={`text-xs ${adminClass.linkMuted} ${adminClass.accent}`}
             disabled={busy}
             onClick={() => {
               if (!confirm(`Delete portfolio photo ${photo.id}?`)) return;

@@ -1,6 +1,7 @@
 ---
 import { env } from 'cloudflare:workers';
 
+import AdminPageHeader from '../../../components/admin/AdminPageHeader.astro';
 import ReviewCollectionsAdmin from '../../../components/admin/ReviewCollectionsAdmin.tsx';
 import {
 	loadReviewCollectionsList,
@@ -16,13 +17,10 @@ scheduleStalePendingCleanupAfterAdminListLoad(app, waitUntil);
 ---
 
 <AdminLayout title="Admin — Review" current="review">
-	<h1 class="text-2xl" style="font-family: var(--font-display); color: var(--color-fg)">
-		Review collections
-	</h1>
-	<p class="mt-2 text-sm" style="color: var(--color-fg-muted); max-width: var(--measure)">
-		Proofing sets addressed by slug. Share the client link below; selections save on the public review
-		page. Use collection ids for REVIEW ingest.
-	</p>
+	<AdminPageHeader
+		title="Review collections"
+		lede="Proofing sets addressed by slug. Share the client link below; selections save on the public review page. Use collection ids for REVIEW ingest."
+	/>
 
 	<ReviewCollectionsAdmin client:load initialCollections={initialCollections} />
 </AdminLayout>

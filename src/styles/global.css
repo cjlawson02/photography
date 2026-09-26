@@ -32,6 +32,7 @@
   --public-sheet-max: 96rem;
   --public-gutter: clamp(1.25rem, 4vw, 3rem);
   --public-header-h: 4rem;
+  --admin-content-max: 72rem;
   --font-size-base: 16px;
   --line-height-base: 1.55;
 }
@@ -947,6 +948,408 @@ h6 {
 .public-action-btn:disabled {
   cursor: wait;
   opacity: 0.65;
+}
+
+/* ----- Admin (Darkroom shell — shared tokens) ----- */
+
+.admin-shell {
+  flex: 1;
+  min-height: 100dvh;
+}
+
+.admin-header {
+  backdrop-filter: blur(14px) saturate(1.2);
+  background: rgb(11 11 11 / 82%);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.admin-header__inner {
+  align-items: flex-end;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  justify-content: space-between;
+  margin-inline: auto;
+  max-width: var(--admin-content-max);
+  padding: 1rem var(--public-gutter);
+  width: 100%;
+}
+
+.admin-header__brand {
+  align-items: center;
+  color: var(--color-fg);
+  display: inline-flex;
+  gap: 0.85rem;
+  text-decoration: none;
+}
+
+.admin-header__mark {
+  color: var(--color-accent);
+  display: block;
+  flex-shrink: 0;
+  height: 1.75rem;
+  transition: transform 700ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  width: 1.75rem;
+}
+
+.admin-header__brand:hover .admin-header__mark,
+.admin-header__brand:focus-visible .admin-header__mark {
+  transform: rotate(60deg);
+}
+
+.admin-header__titles {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.admin-header__wordmark {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.admin-header__meta {
+  color: var(--color-fg-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.admin-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0;
+  margin-inline: auto;
+  max-width: var(--admin-content-max);
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .admin-body {
+    flex-direction: row;
+  }
+}
+
+.admin-nav {
+  border-bottom: 1px solid var(--color-border);
+  padding: 0.75rem var(--public-gutter);
+}
+
+@media (min-width: 768px) {
+  .admin-nav {
+    border-bottom: 0;
+    border-right: 1px solid var(--color-border);
+    flex-shrink: 0;
+    padding: 1.5rem 0.5rem;
+    width: 11rem;
+  }
+}
+
+.admin-nav__list {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+@media (min-width: 768px) {
+  .admin-nav__list {
+    flex-direction: column;
+  }
+}
+
+.admin-nav__link {
+  border-bottom: 1px solid transparent;
+  border-left: 2px solid transparent;
+  color: var(--color-fg-muted);
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  letter-spacing: 0.1em;
+  padding: 0.5rem 0.75rem;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition:
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.admin-nav__link:hover,
+.admin-nav__link:focus-visible {
+  color: var(--color-fg);
+}
+
+.admin-nav__link--current {
+  border-left-color: var(--color-accent);
+  color: var(--color-fg);
+}
+
+.admin-main {
+  flex: 1;
+  padding: clamp(1.75rem, 4vw, 2.5rem) var(--public-gutter);
+}
+
+.admin-page-header {
+  margin-bottom: 0.25rem;
+}
+
+.admin-page-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.admin-lede {
+  color: var(--color-fg-muted);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  margin: 0.75rem 0 0;
+  max-width: var(--measure);
+}
+
+.admin-eyebrow {
+  align-items: center;
+  color: var(--color-fg-muted);
+  display: flex;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  gap: 0.6em;
+  letter-spacing: 0.16em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.admin-eyebrow::before {
+  background: var(--color-accent);
+  content: '';
+  flex-shrink: 0;
+  height: 0.45rem;
+  width: 0.45rem;
+}
+
+.admin-section-heading {
+  align-items: center;
+  color: var(--color-fg-muted);
+  display: flex;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 400;
+  gap: 0.75em;
+  letter-spacing: 0.16em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.admin-section-heading::before {
+  background: var(--color-accent);
+  content: '';
+  flex-shrink: 0;
+  height: 0.5rem;
+  width: 0.5rem;
+}
+
+.admin-fg {
+  color: var(--color-fg);
+}
+
+.admin-fg-muted {
+  color: var(--color-fg-muted);
+}
+
+.admin-accent {
+  color: var(--color-accent);
+}
+
+.admin-link {
+  color: var(--color-accent);
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.admin-link:hover,
+.admin-link:focus-visible {
+  color: var(--color-fg);
+  text-decoration: underline;
+}
+
+.admin-link-muted {
+  background: transparent;
+  border: 0;
+  color: var(--color-fg-muted);
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  text-decoration: underline;
+  transition: color 150ms ease;
+}
+
+.admin-link-muted:hover:not(:disabled),
+.admin-link-muted:focus-visible:not(:disabled) {
+  color: var(--color-fg);
+}
+
+.admin-link-muted:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.admin-field {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  box-sizing: border-box;
+  color: var(--color-fg);
+  font-family: inherit;
+  font-size: inherit;
+  transition: border-color 150ms ease;
+  width: 100%;
+}
+
+.admin-field:focus-visible {
+  border-color: var(--color-accent);
+  outline: none;
+}
+
+.admin-field--sm {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.admin-field:not(.admin-field--sm) {
+  padding: 0.5rem 0.75rem;
+}
+
+.admin-btn-primary {
+  background: var(--color-accent);
+  border: 0;
+  color: var(--color-bg);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  padding: 0.55rem 1rem;
+  text-transform: uppercase;
+  transition: opacity 150ms ease;
+}
+
+.admin-btn-primary:hover:not(:disabled),
+.admin-btn-primary:focus-visible:not(:disabled) {
+  opacity: 0.92;
+}
+
+.admin-btn-primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.admin-panel {
+  background: color-mix(in oklab, var(--color-fg) 6%, transparent);
+  border: 1px solid var(--color-border);
+  box-sizing: border-box;
+}
+
+.admin-panel--dashed {
+  border-style: dashed;
+}
+
+.admin-upload-section {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+}
+
+.admin-toolbar {
+  align-items: center;
+  color: var(--color-fg-muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  gap: 1rem;
+  margin-top: var(--space-3);
+}
+
+.admin-status {
+  color: var(--color-fg-muted);
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+.admin-table-wrap {
+  margin-top: var(--space-3);
+  overflow-x: auto;
+}
+
+.admin-table {
+  color: var(--color-fg);
+  font-size: 0.875rem;
+  text-align: left;
+  width: 100%;
+}
+
+.admin-table__head-row {
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-fg-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.admin-table__row {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.admin-table__th {
+  font-weight: 400;
+  padding: 0.5rem 1rem 0.5rem 0;
+}
+
+.admin-thumb {
+  border: 1px solid var(--color-border);
+  height: 3.375rem;
+  object-fit: cover;
+  width: 4.5rem;
+}
+
+.admin-code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+}
+
+.admin-footnote {
+  color: var(--color-fg-muted);
+  font-size: 0.75rem;
+  margin-top: 2.5rem;
+}
+
+.admin-progress {
+  accent-color: var(--color-accent);
+  block-size: 0.5rem;
+  inline-size: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-header__mark,
+  .admin-header__brand:hover .admin-header__mark,
+  .admin-header__brand:focus-visible .admin-header__mark {
+    transition: none;
+    transform: none;
+  }
 }
 
 /* PhotoSwipe — align chrome with site tokens */

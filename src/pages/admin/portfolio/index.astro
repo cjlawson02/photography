@@ -1,6 +1,7 @@
 ---
 import { env } from 'cloudflare:workers';
 
+import AdminPageHeader from '../../../components/admin/AdminPageHeader.astro';
 import PortfolioAdminTable from '../../../components/admin/PortfolioAdminTable.tsx';
 import {
 	loadPortfolioAdminFirstPage,
@@ -16,16 +17,15 @@ scheduleStalePendingCleanupAfterAdminListLoad(app, waitUntil);
 ---
 
 <AdminLayout title="Admin — Portfolio" current="portfolio">
-	<h1 class="text-2xl" style="font-family: var(--font-display); color: var(--color-fg)">Portfolio</h1>
-	<p class="mt-2 text-sm" style="color: var(--color-fg-muted); max-width: var(--measure)">
-		Publish ready photos to the public home grid. Upload new originals with the form below the
-		heading.
-	</p>
+	<AdminPageHeader
+		title="Portfolio"
+		lede="Publish ready photos to the public home grid. Upload new originals with the form below the heading."
+	/>
 
 	<PortfolioAdminTable client:load initialPortfolioPage={initialPortfolioPage} />
 
-	<p class="mt-6 text-xs" style="color: var(--color-fg-muted)">
-		API: <code>/admin/api/trpc</code> (<code>portfolio.list</code>, <code>portfolio.update</code>,
-		<code>portfolio.delete</code>)
+	<p class="admin-footnote">
+		API: <code class="admin-code">/admin/api/trpc</code> (<code class="admin-code">portfolio.list</code>,
+		<code class="admin-code">portfolio.update</code>, <code class="admin-code">portfolio.delete</code>)
 	</p>
 </AdminLayout>
