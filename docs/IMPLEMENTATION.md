@@ -143,6 +143,8 @@ Hardening and polish after MVP ([#21](https://github.com/cjlawson02/photography/
 | P5 | Review lifecycle | **Done (partial)** — collection update ([#41](https://github.com/cjlawson02/photography/pull/41)); delete review photo ([#42](https://github.com/cjlawson02/photography/pull/42)) |
 | P6 | Stale pending ingest | **Done** — lazy cleanup on admin lists; no Cron ([#44](https://github.com/cjlawson02/photography/pull/44), [#45](https://github.com/cjlawson02/photography/pull/45)) |
 | P7 | Admin pagination | **Done (partial)** — `portfolio.list` cursor ([#38](https://github.com/cjlawson02/photography/pull/38)) |
+| P8 | Portfolio priority / rating | _Open_ — per-photo priority flag (or rating) editable in admin; public mosaic (`src/lib/gallery/mosaic-layout.ts`) favors high-priority photos for large slots (full-height beside a stack, wider singles). Scale (boolean vs 1–5) _TBD_ |
+| P9 | Multiple tags per photo | _Open_ — `PortfolioPhotos.category` is a single nullable column today; move to a many-to-many tag table (or JSON array) so one photo can appear under several filters. Admin multi-select + public filter/counts update; migration backfills from `category` |
 | M1 | Admin Query islands | **Done** — TanStack + tRPC on portfolio/review |
 | M2 | Dead admin fetch helpers | **Done** ([#29](https://github.com/cjlawson02/photography/pull/29)) |
 | M3–M4 | UI primitives / Embla | **M3 Done** ([#46](https://github.com/cjlawson02/photography/pull/46)) — `admin-styles`, `admin-format`, table/status/form primitives + `AdminPhotoUpload`. **M4 N/A** — imperative `embla-carousel` per [FRONTEND.md](FRONTEND.md). |

@@ -2,7 +2,6 @@
 import BaseLayout from './BaseLayout.astro';
 import ApertureMark from '../components/public/ApertureMark.tsx';
 import SiteHeader from '../components/public/SiteHeader.tsx';
-import { SITE_NAME } from '../lib/site/public-meta.ts';
 
 interface Props {
 	title?: string;
@@ -24,7 +23,7 @@ const { title, description, ogImage, canonical, overlayHeader = false } = Astro.
 		<div class="public-footer__inner">
 			<p class="public-footer__brand">
 				<ApertureMark className="public-footer__mark" />
-				<span>&copy; {new Date().getFullYear()} {SITE_NAME}</span>
+				<span>&copy; {new Date().getFullYear()} Chris Lawson</span>
 			</p>
 			<a href="#top" class="public-footer__link">Back to top <span aria-hidden="true">↑</span></a>
 		</div>

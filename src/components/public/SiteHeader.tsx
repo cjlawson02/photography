@@ -33,11 +33,6 @@ export default function SiteHeader({ overlay = false }: Props) {
           <ApertureMark className="public-header__mark" />
           <span className="public-header__wordmark">{SITE_NAME}</span>
         </a>
-        <nav className="public-header__nav" aria-label="Primary">
-          <a href="/#gallery" className="public-header__nav-link">
-            Portfolio
-          </a>
-        </nav>
       </div>
     </header>
   );

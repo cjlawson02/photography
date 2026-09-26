@@ -138,11 +138,9 @@ export default function HeroCarousel({ photos }: Props) {
   if (total === 0) return null;
 
   const pauseLabel = autoplayEnabled ? 'Pause automatic slide show' : 'Resume automatic slide show';
-  const eyebrow = [
-    showNav ? `Frame ${pad2(selected + 1)}` : 'Featured',
-    current?.category,
-    current?.title?.trim(),
-  ].filter((part): part is string => Boolean(part));
+  const currentTitle = current?.title?.trim();
+  const currentCaption = current?.caption?.trim();
+  const currentCategory = current?.category?.trim();
 
   return (
     <section
@@ -181,57 +179,63 @@ export default function HeroCarousel({ photos }: Props) {
       <div className="public-hero__scrim" aria-hidden="true" />
 
       <div className="public-hero__content">
-        <p className="public-hero__eyebrow" aria-hidden="true">
-          {eyebrow.map((part) => (
-            <span key={part} className="public-hero__eyebrow-part">
-              {part}
-            </span>
-          ))}
-        </p>
-        <h1 className="public-hero__title">Chris Lawson</h1>
-        <p className="public-hero__tagline">Landscapes · Portraits · People</p>
-        <div className="public-hero__actions">
-          <a href="#gallery" className="public-hero__cue">
+        <div className="public-hero__copy">
+          <div key={selected} className="public-hero__card">
+            {currentCategory ? <p className="public-hero__category">{currentCategory}</p> : null}
+            {currentTitle ? <p className="public-hero__title">{currentTitle}</p> : null}
+            {currentCaption && currentCaption !== currentTitle ? (
+              <p className="public-hero__caption">{currentCaption}</p>
+            ) : null}
+          </div>
+          <a href="#gallery" className="public-hero__cta">
             <span>View the gallery</span>
-            <span className="public-hero__cue-line" aria-hidden="true" />
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+              <path
+                d="M12 5v14M6 13l6 6 6-6"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="square"
+              />
+            </svg>
           </a>
-          {showNav && (
-            <div className="public-hero__controls">
-              <p className="public-hero__counter" aria-hidden="true">
-                <span className="public-hero__counter-current">{pad2(selected + 1)}</span>
-                <span className="public-hero__counter-sep">/</span>
-                {pad2(total)}
-              </p>
-              <button
-                type="button"
-                className="public-hero__btn"
-                aria-label="Previous featured photo"
-                onClick={scrollPrev}
-              >
-                <Chevron direction="left" />
-              </button>
-              {!prefersReducedMotion ? (
-                <button
-                  type="button"
-                  className="public-hero__btn"
-                  aria-pressed={!autoplayEnabled}
-                  aria-label={pauseLabel}
-                  onClick={toggleAutoplay}
-                >
-                  <PlayPauseIcon playing={autoplayEnabled} />
-                </button>
-              ) : null}
-              <button
-                type="button"
-                className="public-hero__btn"
-                aria-label="Next featured photo"
-                onClick={scrollNext}
-              >
-                <Chevron direction="right" />
-              </button>
-            </div>
-          )}
         </div>
+        {showNav && (
+          <div className="public-hero__controls">
+            <p className="public-hero__counter" aria-hidden="true">
+              <span className="public-hero__counter-current">{pad2(selected + 1)}</span>
+              <span className="public-hero__counter-sep">/</span>
+              {pad2(total)}
+            </p>
+            <button
+              type="button"
+              className="public-hero__btn"
+              aria-label="Previous featured photo"
+              onClick={scrollPrev}
+            >
+              <Chevron direction="left" />
+            </button>
+            {!prefersReducedMotion ? (
+              <button
+                type="button"
+                className="public-hero__btn"
+                aria-pressed={!autoplayEnabled}
+                aria-label={pauseLabel}
+                onClick={toggleAutoplay}
+              >
+                <PlayPauseIcon playing={autoplayEnabled} />
+              </button>
+            ) : null}
+            <button
+              type="button"
+              className="public-hero__btn"
+              aria-label="Next featured photo"
+              onClick={scrollNext}
+            >
+              <Chevron direction="right" />
+            </button>
+          </div>
+        )}
       </div>
 
       {showNav && (
