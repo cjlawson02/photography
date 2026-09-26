@@ -7,6 +7,7 @@ Interactive UI uses **React** via `@astrojs/react`. Astro pages own layout and S
 - Public components: `src/components/public/*.tsx`
 - Admin interactive components: `src/components/admin/*.tsx`
 - Admin client→server: **tRPC** via `src/lib/trpc/client.ts` → `/admin/api/trpc` (typed procedures; do not add new ad-hoc `fetch('/admin/api/...')` in islands).
+- Admin forms: **react-hook-form** + `@hookform/resolvers/zod`; client field schemas in `src/lib/admin/admin-form-schemas.ts` (server/tRPC Zod in `src/lib/admin/*-schemas.ts`).
 - Missing R2 S3 secrets surface as **503** on ingest procedures only (`ingest.*`); other admin routes use bindings-only env and still return **403** when Access JWT is missing.
 - If Access serves an HTML login or redirect instead of JSON, the tRPC client calls **`location.reload()`** so the browser can complete Cloudflare Access.
 - Wire islands from `.astro` with `client:*` directives.
