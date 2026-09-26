@@ -1,0 +1,31 @@
+---
+import { env } from 'cloudflare:workers';
+
+import AdminPageHeader from '../../../components/admin/AdminPageHeader.astro';
+import ReviewCollectionsAdmin from '../../../components/admin/ReviewCollectionsAdmin.tsx';
+import {
+	loadReviewCollectionsList,
+	scheduleStalePendingCleanupAfterAdminListLoad,
+} from '../../../lib/admin/ssr-initial-reads.ts';
+import { AppEnv } from '../../../lib/env.ts';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+
+const app = AppEnv.fromBindings(env);
+const waitUntil = Astro.locals.cfContext?.waitUntil.bind(Astro.locals.cfContext);
+const initialCollections = await loadReviewCollectionsList(app);
+scheduleStalePendingCleanupAfterAdminListLoad(app, waitUntil);
+---
+
+<AdminLayout title="Admin — Client shoots" current="shoots">
+	<nav class="admin-breadcrumbs text-sm" aria-label="Breadcrumb">
+		<ol class="admin-breadcrumbs__list">
+			<li class="admin-breadcrumbs__item admin-breadcrumbs__item--current">Client shoots</li>
+		</ol>
+	</nav>
+	<AdminPageHeader
+		title="Client shoots"
+		lede="Each row is a proofing job. Open a job for the step rail (setup → share link → picks → deliver). Upload proofs on the job page."
+	/>
+
+	<ReviewCollectionsAdmin client:load initialCollections={initialCollections} />
+</AdminLayout>

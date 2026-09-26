@@ -4,10 +4,12 @@ import { deletePhotoObjects } from '../dao/delete-photo-objects.ts';
 import { ReviewCollectionsDAO } from '../dao/review-collections-dao.ts';
 import { ReviewPhotosDAO } from '../dao/review-photos-dao.ts';
 import type { SelectionStatus } from '../../db/schema/review/selection-status.ts';
+import type { ReviewJobStatus } from '../../db/schema/review/job-status.ts';
 import { AppError } from '../http/app-error.ts';
 import { GALLERY_VARIANT, THUMB_VARIANT } from '../ingest/keys.ts';
 import { reviewVariantAdminUrl, reviewVariantPublicUrl } from '../media/variant-media-url.ts';
 import { resolveReviewCollectionAccess } from '../review/collection-access.ts';
+import { isTransitionAllowed } from '../review/job-steps.ts';
 export { updateReviewSelection } from '../review/update-selection.ts';
 import { buildReviewSlug } from '../review/slug.ts';
 import { isSqliteUniqueViolation } from '../sqlite-unique-violation.ts';
@@ -45,6 +47,13 @@ export type AdminReviewCollectionDetail = {
     id: string;
     slug: string;
     title: string | null;
+    personName: string | null;
+    status: ReviewJobStatus;
+    notes: string | null;
+    sharedAt: number | null;
+    submittedAt: number | null;
+    deliveredAt: number | null;
+    closedAt: number | null;
     expiresAt: number | null;
     createdAt: number;
     updatedAt: number;
@@ -62,7 +71,9 @@ export class ReviewService {
   async createCollection(input: {
     slugPrefix?: string;
     title?: string | null;
+    personName?: string | null;
     expiresAt?: number | null;
+    notes?: string | null;
   }) {
     const dao = this.app.d1.reviewCollections;
     const maxAttempts = 5;
@@ -72,7 +83,9 @@ export class ReviewService {
         return await dao.insert({
           slug,
           title: input.title,
+          personName: input.personName,
           expiresAt: input.expiresAt,
+          notes: input.notes,
         });
       } catch (error) {
         if (isSqliteUniqueViolation(error)) {
@@ -87,7 +100,15 @@ export class ReviewService {
     throw new AppError('INTERNAL_SERVER_ERROR', 'Could not create review collection');
   }
 
-  async updateCollection(id: string, patch: { title?: string | null; expiresAt?: number | null }) {
+  async updateCollection(
+    id: string,
+    patch: {
+      title?: string | null;
+      personName?: string | null;
+      notes?: string | null;
+      expiresAt?: number | null;
+    },
+  ) {
     const updated = await this.app.d1.reviewCollections.update(id, patch);
     if (!updated) {
       throw new AppError('NOT_FOUND', `Review collection not found: ${id}`);
@@ -95,13 +116,96 @@ export class ReviewService {
     return updated;
   }
 
-  async getCollectionDetailForAdmin(id: string): Promise<AdminReviewCollectionDetail> {
+  private async maybeAdvanceProofsUploaded(
+    collectionId: string,
+    status: ReviewJobStatus,
+    readyPhotoCount: number,
+  ) {
+    if (status !== 'setup' || readyPhotoCount === 0) {
+      return null;
+    }
+    return this.app.d1.reviewCollections.update(collectionId, { status: 'proofs_uploaded' });
+  }
+
+  async transitionJobStatus(id: string, to: ReviewJobStatus) {
     const collection = await this.app.d1.reviewCollections.getById(id);
+    if (!collection) {
+      throw new AppError('NOT_FOUND', `Review collection not found: ${id}`);
+    }
+    const from = collection.status;
+    if (from === to) {
+      return collection;
+    }
+    if (!isTransitionAllowed(from, to)) {
+      throw new AppError('BAD_REQUEST', `Cannot move job from ${from} to ${to}`);
+    }
+
+    const now = Date.now();
+    const timestamps: {
+      sharedAt?: number;
+      submittedAt?: number;
+      deliveredAt?: number;
+      closedAt?: number;
+    } = {};
+    if (to === 'shared' && collection.sharedAt == null) {
+      timestamps.sharedAt = now;
+    }
+
+    const updated = await this.app.d1.reviewCollections.update(id, {
+      status: to,
+      ...timestamps,
+    });
+    if (!updated) {
+      throw new AppError('NOT_FOUND', `Review collection not found: ${id}`);
+    }
+    return updated;
+  }
+
+  private mapCollectionRow(collection: {
+    id: string;
+    slug: string;
+    title: string | null;
+    personName: string | null;
+    status: ReviewJobStatus;
+    notes: string | null;
+    sharedAt: number | null;
+    submittedAt: number | null;
+    deliveredAt: number | null;
+    closedAt: number | null;
+    expiresAt: number | null;
+    createdAt: number;
+    updatedAt: number;
+  }) {
+    return {
+      id: collection.id,
+      slug: collection.slug,
+      title: collection.title,
+      personName: collection.personName,
+      status: collection.status,
+      notes: collection.notes,
+      sharedAt: collection.sharedAt,
+      submittedAt: collection.submittedAt,
+      deliveredAt: collection.deliveredAt,
+      closedAt: collection.closedAt,
+      expiresAt: collection.expiresAt,
+      createdAt: collection.createdAt,
+      updatedAt: collection.updatedAt,
+    };
+  }
+
+  async getCollectionDetailForAdmin(id: string): Promise<AdminReviewCollectionDetail> {
+    let collection = await this.app.d1.reviewCollections.getById(id);
     if (!collection) {
       throw new AppError('NOT_FOUND', `Review collection not found: ${id}`);
     }
 
     const rows = await this.app.d1.reviewPhotos.listByCollectionId(id);
+    const readyCount = rows.filter((row) => row.status === 'ready').length;
+    const advanced = await this.maybeAdvanceProofsUploaded(id, collection.status, readyCount);
+    if (advanced) {
+      collection = advanced;
+    }
+
     const photos: AdminReviewCollectionPhoto[] = rows.map((row) => {
       const ready = row.status === 'ready';
       return {
@@ -121,14 +225,7 @@ export class ReviewService {
     });
 
     return {
-      collection: {
-        id: collection.id,
-        slug: collection.slug,
-        title: collection.title,
-        expiresAt: collection.expiresAt,
-        createdAt: collection.createdAt,
-        updatedAt: collection.updatedAt,
-      },
+      collection: this.mapCollectionRow(collection),
       photos,
     };
   }

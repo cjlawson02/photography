@@ -102,18 +102,18 @@ npx wrangler deploy
 
 Human doc index: [README.md](README.md). Agent-focused shortcuts:
 
-| Need | Read |
-| --- | --- |
-| Architecture / auth / ingest | [docs/HLD.md](docs/HLD.md) |
-| Phase tasks / backlog IDs | [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md) |
-| Estimates | [docs/LOE.md](docs/LOE.md) |
-| Status / Gantt / changelog | [docs/PROGRESS.md](docs/PROGRESS.md) |
-| Deploy / Access / secrets / CORS / CI | [docs/DEPLOY.md](docs/DEPLOY.md) |
-| Manual smoke | [docs/SMOKE.md](docs/SMOKE.md) |
-| Cutover runbook | [docs/CUTOVER.md](docs/CUTOVER.md) |
-| Public React islands | [docs/FRONTEND.md](docs/FRONTEND.md) |
-| Admin product UX | [docs/ADMIN-UX.md](docs/ADMIN-UX.md) |
-| Legacy import | [docs/migration/legacy-bulk-import.md](docs/migration/legacy-bulk-import.md) |
-| Agent commands | This file |
+| Need                                  | Read                                                                         |
+| ------------------------------------- | ---------------------------------------------------------------------------- |
+| Architecture / auth / ingest          | [docs/HLD.md](docs/HLD.md)                                                   |
+| Phase tasks / backlog IDs             | [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md)                             |
+| Estimates                             | [docs/LOE.md](docs/LOE.md)                                                   |
+| Status / Gantt / changelog            | [docs/PROGRESS.md](docs/PROGRESS.md)                                         |
+| Deploy / Access / secrets / CORS / CI | [docs/DEPLOY.md](docs/DEPLOY.md)                                             |
+| Manual smoke                          | [docs/SMOKE.md](docs/SMOKE.md)                                               |
+| Cutover runbook                       | [docs/CUTOVER.md](docs/CUTOVER.md)                                           |
+| Public React islands                  | [docs/FRONTEND.md](docs/FRONTEND.md)                                         |
+| Admin product UX                      | [docs/ADMIN-UX.md](docs/ADMIN-UX.md)                                         |
+| Legacy import                         | [docs/migration/legacy-bulk-import.md](docs/migration/legacy-bulk-import.md) |
+| Agent commands                        | This file                                                                    |
 
 Treat this file as living documentation: prune stale rules and fill `_TBD_` sections when decided.
