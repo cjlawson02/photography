@@ -10,6 +10,7 @@ import type {
   PortfolioPhotoAdminUpdateBody,
 } from '../admin/portfolio-schemas.ts';
 import { decodeAdminListCursor, encodeAdminListCursor } from '../pagination/admin-list-cursor.ts';
+import { canJoinFrontPage } from '../portfolio/front-page-eligibility.ts';
 
 export type PublicPortfolioPhoto = {
   id: string;
@@ -68,6 +69,57 @@ export class PortfolioService {
    * Remove catalog row; optional R2 purge runs before D1 so live `/media/portfolio` URLs
    * are not left pointing at deleted rows (orphan R2 only if D1 delete fails after purge).
    */
+  async listFrontPageForAdmin() {
+    const rows = await this.app.d1.portfolioPhotos.listFrontPageForAdmin();
+    return { items: rows };
+  }
+
+  async reorderFrontPage(orderedIds: string[]) {
+    const rows = await this.app.d1.portfolioPhotos.listFrontPageForAdmin();
+    const existing = new Set(rows.map((row) => row.id));
+    if (orderedIds.length !== rows.length || orderedIds.some((id) => !existing.has(id))) {
+      throw new AppError('BAD_REQUEST', 'Reorder must include every front-page photo exactly once');
+    }
+    for (let index = 0; index < orderedIds.length; index++) {
+      const id = orderedIds[index]!;
+      await this.app.d1.portfolioPhotos.update(id, { frontPageOrder: index });
+    }
+    return { orderedIds };
+  }
+
+  async setFrontPageMembership(id: string, onFrontPage: boolean) {
+    const photo = await this.app.d1.portfolioPhotos.getById(id);
+    if (!photo) {
+      throw new AppError('NOT_FOUND', `Portfolio photo not found: ${id}`);
+    }
+    if (onFrontPage) {
+      if (!canJoinFrontPage(photo)) {
+        throw new AppError(
+          'BAD_REQUEST',
+          'Photo needs ingest ready, publish on, alt text, and category before joining the front page',
+        );
+      }
+      const current = await this.app.d1.portfolioPhotos.listFrontPageForAdmin();
+      return this.app.d1.portfolioPhotos.update(id, {
+        frontPage: true,
+        frontPageOrder: current.length,
+      });
+    }
+    return this.app.d1.portfolioPhotos.update(id, {
+      frontPage: false,
+      frontPageOrder: null,
+      hero: false,
+    });
+  }
+
+  async bulkUpdateMetadata(ids: string[], patch: PortfolioPhotoAdminUpdateBody) {
+    const updated = [];
+    for (const id of ids) {
+      updated.push(await this.updateMetadata(id, patch));
+    }
+    return { items: updated };
+  }
+
   async deletePhoto(id: string, options: { cleanupR2: boolean }) {
     const existing = await this.app.d1.portfolioPhotos.getById(id);
     if (!existing) {
@@ -99,7 +151,8 @@ export async function listPublishedPortfolioPhotos(
   d1: D1Database,
 ): Promise<PublicPortfolioPhoto[]> {
   const dao = new PortfolioPhotosDAO(createDb(d1));
-  const rows = await dao.listPublishedReady();
+  const frontPageRows = await dao.listFrontPagePublishedReady();
+  const rows = frontPageRows.length > 0 ? frontPageRows : await dao.listPublishedReady();
   return rows.map((row) => ({
     id: row.id,
     category: row.category,
