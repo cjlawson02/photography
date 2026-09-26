@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { sentryOptionsFromEnv, shouldCaptureHttpStatus } from './sentry.ts';
+import {
+  sentryBrowserConfigFromEnv,
+  sentryOptionsFromEnv,
+  shouldCaptureHttpStatus,
+} from './sentry.ts';
 
 test('sentryOptionsFromEnv returns undefined without DSN', () => {
   assert.equal(sentryOptionsFromEnv({} as Env), undefined);
@@ -21,6 +25,26 @@ test('sentryOptionsFromEnv passes DSN and optional release', () => {
       dsn: 'https://example@o0.ingest/0',
       release: 'photography@abc',
     },
+  );
+});
+
+test('sentryBrowserConfigFromEnv returns undefined without DSN', () => {
+  assert.equal(sentryBrowserConfigFromEnv({} as Env), undefined);
+});
+
+test('sentryBrowserConfigFromEnv passes DSN and optional release', () => {
+  assert.deepEqual(
+    sentryBrowserConfigFromEnv({ SENTRY_DSN: 'https://example@o0.ingest/0' } as Env),
+    {
+      dsn: 'https://example@o0.ingest/0',
+    },
+  );
+  assert.deepEqual(
+    sentryBrowserConfigFromEnv({
+      SENTRY_DSN: 'https://example@o0.ingest/0',
+      SENTRY_RELEASE: 'photography@abc',
+    } as Env),
+    { dsn: 'https://example@o0.ingest/0', release: 'photography@abc' },
   );
 });
 

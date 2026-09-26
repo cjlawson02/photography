@@ -63,7 +63,17 @@ npx wrangler secret put SENTRY_DSN
 
 **Release:** GitHub Actions sets Worker var `SENTRY_RELEASE` to `${{ github.sha }}` on each production deploy (`wrangler deploy --var SENTRY_RELEASE:<sha>`). That value is passed to Sentry as `release` when the DSN is configured ([`sentryOptionsFromEnv`](../src/lib/observability/sentry.ts)). Do not store release as a secret.
 
-Local: add `SENTRY_DSN=` to `.dev.vars`; optionally set `SENTRY_RELEASE=` (e.g. `photography@local`) for release grouping in dev. Browser / admin client SDK and CI source-map upload are deferred (see [IMPLEMENTATION.md](IMPLEMENTATION.md) Phase 2.5 **O1**).
+Local: add `SENTRY_DSN=` to `.dev.vars`; optionally set `SENTRY_RELEASE=` (e.g. `photography@local`) for release grouping in dev. When the DSN is set, admin pages mount [`AdminSentryInit`](../src/components/admin/AdminSentryInit.tsx) (`@sentry/react`) from [`AdminLayout`](../src/layouts/AdminLayout.astro).
+
+**Source maps (CI / production deploy):** Worker maps upload via `upload_source_maps` in [`wrangler.jsonc`](../wrangler.jsonc) and `wrangler deploy --upload-source-maps` (release var `SENTRY_RELEASE=${{ github.sha }}`). Client/admin bundles upload during `npm run build` when these **GitHub Actions secrets** are set (build-time only — not Worker secrets):
+
+| Secret | Purpose |
+| --- | --- |
+| `SENTRY_AUTH_TOKEN` | Auth for Wrangler + `@sentry/vite-plugin` uploads |
+| `SENTRY_ORG` | Sentry organization slug |
+| `SENTRY_PROJECT` | Sentry project slug |
+
+Without those secrets, deploy still succeeds; maps are skipped and the Vite plugin is not enabled.
 
 ## 4. R2 CORS (IaC)
 
@@ -93,6 +103,7 @@ npx wrangler d1 migrations apply photography --remote
 | Access vars | `CF_ACCESS_*` in `wrangler.jsonc` vars (redeploy) |
 | Secrets | `R2_*` via `wrangler secret put`; optional `SENTRY_DSN` |
 | Sentry release | `SENTRY_RELEASE` Worker var from CI deploy (`github.sha`) |
+| Sentry source maps (CI) | Optional GitHub secrets `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` |
 | R2 CORS | `npm run r2:cors:apply` (or dashboard JSON paste) |
 | Deploy | `npm run build && npx wrangler deploy` |
 

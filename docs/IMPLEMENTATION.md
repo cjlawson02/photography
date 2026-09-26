@@ -146,7 +146,7 @@ Hardening and polish after MVP ([#21](https://github.com/cjlawson02/photography/
 | T4 | D1 migrations in CI | **Done** on `main` deploy ([#28](https://github.com/cjlawson02/photography/pull/28)); PR dry-run gate `_TBD_` |
 | T5 | Indexes | **Done** ([#25](https://github.com/cjlawson02/photography/pull/25)) |
 | T6–T7 | Cutover + bulk migration | _Open_ — [CUTOVER.md](CUTOVER.md); legacy 301 via Cloudflare Redirect Rules |
-| O1 | Sentry | **Partial** ([#32](https://github.com/cjlawson02/photography/pull/32), [#35](https://github.com/cjlawson02/photography/pull/35)). _Open:_ browser SDK; source maps in CI |
+| O1 | Sentry | **Done** — Worker `@sentry/cloudflare` only (no OTEL); admin browser `@sentry/react` + CSP `connect-src` for ingest; CI `SENTRY_RELEASE` + `wrangler deploy --upload-source-maps` + optional `@sentry/vite-plugin` when `SENTRY_AUTH_TOKEN` / org / project secrets set ([DEPLOY.md](DEPLOY.md)) |
 
 ## Dependencies
 

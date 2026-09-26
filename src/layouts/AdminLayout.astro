@@ -1,5 +1,11 @@
 ---
+import { env } from 'cloudflare:workers';
+
+import AdminSentryInit from '../components/admin/AdminSentryInit.tsx';
+import { sentryBrowserConfigFromEnv } from '../lib/observability/sentry.ts';
 import BaseLayout from './BaseLayout.astro';
+
+const adminSentry = sentryBrowserConfigFromEnv(env);
 
 export type AdminNavId = 'dashboard' | 'portfolio' | 'review';
 
@@ -24,6 +30,9 @@ function navLinkStyle(active: boolean): string {
 ---
 
 <BaseLayout title={title}>
+	{adminSentry ? (
+		<AdminSentryInit client:idle dsn={adminSentry.dsn} release={adminSentry.release} />
+	) : null}
 	<div class="flex min-h-dvh flex-col">
 		<header
 			class="border-b px-4 py-4"
