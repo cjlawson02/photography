@@ -1,17 +1,18 @@
+import type { AppEnv } from '../env.ts';
 import { IngestMaintenanceService } from '../services/ingest-maintenance-service.ts';
 import type { TrpcContext } from './context.ts';
 
 /** Fire-and-forget stale pending cleanup after admin list loads (no cron). */
-export function scheduleStalePendingCleanup(ctx: TrpcContext): void {
-  const waitUntil = ctx.waitUntil;
+export function scheduleStalePendingCleanupForAppEnv(
+  app: AppEnv,
+  waitUntil?: (promise: Promise<unknown>) => void,
+): void {
   if (!waitUntil) return;
 
   waitUntil(
     (async () => {
       try {
-        const result = await IngestMaintenanceService.fromAppEnv(
-          ctx.getAppEnv(),
-        ).cleanupStalePending();
+        const result = await IngestMaintenanceService.fromAppEnv(app).cleanupStalePending();
         if (result.portfolioRemoved.length || result.reviewRemoved.length) {
           console.log('[ingest-maintenance] lazy cleanup removed stale pending rows', result);
         }
@@ -20,4 +21,8 @@ export function scheduleStalePendingCleanup(ctx: TrpcContext): void {
       }
     })(),
   );
+}
+
+export function scheduleStalePendingCleanup(ctx: TrpcContext): void {
+  scheduleStalePendingCleanupForAppEnv(ctx.getAppEnv(), ctx.waitUntil);
 }

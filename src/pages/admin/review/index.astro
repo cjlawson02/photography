@@ -1,8 +1,18 @@
 ---
+import { env } from 'cloudflare:workers';
+
 import ReviewCollectionsAdmin from '../../../components/admin/ReviewCollectionsAdmin.tsx';
+import {
+	loadReviewCollectionsList,
+	scheduleStalePendingCleanupAfterAdminListLoad,
+} from '../../../lib/admin/ssr-initial-reads.ts';
+import { AppEnv } from '../../../lib/env.ts';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
 
-/** Review collection management — create/list for ingest `collectionId`; public pages Phase 4. */
+const app = AppEnv.fromBindings(env);
+const waitUntil = Astro.locals.cfContext?.waitUntil.bind(Astro.locals.cfContext);
+const initialCollections = await loadReviewCollectionsList(app);
+scheduleStalePendingCleanupAfterAdminListLoad(app, waitUntil);
 ---
 
 <AdminLayout title="Admin — Review" current="review">
@@ -14,5 +24,5 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 		page. Use collection ids for REVIEW ingest.
 	</p>
 
-	<ReviewCollectionsAdmin client:load />
+	<ReviewCollectionsAdmin client:load initialCollections={initialCollections} />
 </AdminLayout>

@@ -1,6 +1,18 @@
 ---
+import { env } from 'cloudflare:workers';
+
 import PortfolioAdminTable from '../../../components/admin/PortfolioAdminTable.tsx';
+import {
+	loadPortfolioAdminFirstPage,
+	scheduleStalePendingCleanupAfterAdminListLoad,
+} from '../../../lib/admin/ssr-initial-reads.ts';
+import { AppEnv } from '../../../lib/env.ts';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
+
+const app = AppEnv.fromBindings(env);
+const waitUntil = Astro.locals.cfContext?.waitUntil.bind(Astro.locals.cfContext);
+const initialPortfolioPage = await loadPortfolioAdminFirstPage(app);
+scheduleStalePendingCleanupAfterAdminListLoad(app, waitUntil);
 ---
 
 <AdminLayout title="Admin — Portfolio" current="portfolio">
@@ -10,7 +22,7 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 		heading.
 	</p>
 
-	<PortfolioAdminTable client:load />
+	<PortfolioAdminTable client:load initialPortfolioPage={initialPortfolioPage} />
 
 	<p class="mt-6 text-xs" style="color: var(--color-fg-muted)">
 		API: <code>/admin/api/trpc</code> (<code>portfolio.list</code>, <code>portfolio.update</code>,

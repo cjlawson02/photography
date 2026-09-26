@@ -22,6 +22,9 @@ Interactive UI uses **React** via `@astrojs/react`. Astro pages own layout and S
 | Admin portfolio table | `client:load` | Access-gated; table edits need JS on arrival. |
 | Admin ingest upload | `client:load` | Primary task; presigned upload flow needs JS on arrival. |
 | Admin review collections | `client:load` | Create/list/revoke and copy links on arrival. |
+| Admin review collection detail | `client:load` | Same as list; SSR seeds collection + photos for first paint. |
+
+Admin **portfolio**, **review list**, and **review collection detail** pages load D1 data in Astro frontmatter (`AppEnv.fromBindings` + the same services as tRPC) and pass results into islands as optional `initial*` props. Islands seed TanStack Query with `initialData` and `initialDataUpdatedAt: Date.now()` so the default `staleTime` (30s in `query-client.ts`) avoids an immediate duplicate tRPC read after hydration. Mutations, invalidation, portfolio “load more”, and `stalePendingOnly: true` stay client-only. Missing review collection ids redirect to `/admin/review` during SSR.
 
 ## Libraries
 

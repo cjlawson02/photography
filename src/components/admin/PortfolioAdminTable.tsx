@@ -30,19 +30,32 @@ function removeBusyId(set: Set<string>, id: string): Set<string> {
   return next;
 }
 
-function PortfolioAdminTableInner() {
+type PortfolioAdminTableInnerProps = {
+  initialPortfolioPage?: AdminPortfolioListPage;
+};
+
+function PortfolioAdminTableInner({ initialPortfolioPage }: PortfolioAdminTableInnerProps) {
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [actionStatus, setActionStatus] = useState<string | null>(null);
   const [busyIds, setBusyIds] = useState<Set<string>>(() => new Set());
   const [stalePendingOnly, setStalePendingOnly] = useState(false);
+  const [initialDataUpdatedAt] = useState(() => Date.now());
 
   const listInfiniteQueryOptions = trpc.portfolio.list.infiniteQueryOptions(
     { stalePendingOnly },
     portfolioListInfiniteQueryConfig,
   );
 
-  const listQuery = useInfiniteQuery(listInfiniteQueryOptions);
+  const listQuery = useInfiniteQuery({
+    ...listInfiniteQueryOptions,
+    ...(initialPortfolioPage !== undefined && !stalePendingOnly
+      ? {
+          initialData: { pages: [initialPortfolioPage], pageParams: [null] },
+          initialDataUpdatedAt,
+        }
+      : {}),
+  });
 
   const photos = listQuery.data?.pages.flatMap((page) => page.items) ?? [];
 
@@ -258,10 +271,14 @@ function PortfolioAdminTableInner() {
   );
 }
 
-export default function PortfolioAdminTable() {
+type PortfolioAdminTableProps = {
+  initialPortfolioPage?: AdminPortfolioListPage;
+};
+
+export default function PortfolioAdminTable({ initialPortfolioPage }: PortfolioAdminTableProps) {
   return (
     <AdminTrpcProvider>
-      <PortfolioAdminTableInner />
+      <PortfolioAdminTableInner initialPortfolioPage={initialPortfolioPage} />
     </AdminTrpcProvider>
   );
 }
