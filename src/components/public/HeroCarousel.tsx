@@ -1,26 +1,64 @@
 import EmblaCarousel from 'embla-carousel';
 import Autoplay from 'embla-carousel-autoplay';
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+} from 'react';
 
 import type { PublicPortfolioPhoto } from '../../lib/services/portfolio-service.ts';
 
-/** WP FlexSlider-style interval (theme option was often ~5s). */
-const AUTOPLAY_DELAY_MS = 5000;
+const AUTOPLAY_DELAY_MS = 6500;
 
 type Props = {
   photos: PublicPortfolioPhoto[];
 };
 
+function pad2(n: number): string {
+  return String(n).padStart(2, '0');
+}
+
+function Chevron({ direction }: { direction: 'left' | 'right' }) {
+  return (
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+      <path
+        d={direction === 'left' ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7'}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="square"
+      />
+    </svg>
+  );
+}
+
+function PlayPauseIcon({ playing }: { playing: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+      {playing ? (
+        <path d="M8 5h2.5v14H8zM13.5 5H16v14h-2.5z" fill="currentColor" />
+      ) : (
+        <path d="M8 5l11 7-11 7z" fill="currentColor" />
+      )}
+    </svg>
+  );
+}
+
 export default function HeroCarousel({ photos }: Props) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const emblaRef = useRef<ReturnType<typeof EmblaCarousel> | null>(null);
   const autoplayRef = useRef<ReturnType<typeof Autoplay> | null>(null);
-  const [indicator, setIndicator] = useState('');
+  const [selected, setSelected] = useState(0);
   const [autoplayEnabled, setAutoplayEnabled] = useState(true);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
-  const showNav = photos.length > 1;
+  const total = photos.length;
+  const showNav = total > 1;
   const motionAutoplay = showNav && autoplayEnabled && !prefersReducedMotion;
+  const current = photos[selected] ?? photos[0];
 
   const scrollPrev = useCallback(() => {
     autoplayRef.current?.reset();
@@ -63,21 +101,22 @@ export default function HeroCarousel({ photos }: Props) {
     const viewport = viewportRef.current;
     if (!viewport || photos.length <= 1) return;
 
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const autoplay = Autoplay({
       delay: AUTOPLAY_DELAY_MS,
       stopOnInteraction: false,
     });
-    const embla = EmblaCarousel(viewport, { loop: true, align: 'start' }, [autoplay]);
+    const embla = EmblaCarousel(
+      viewport,
+      { loop: true, align: 'start', duration: reduced ? 10 : 42 },
+      [autoplay],
+    );
     emblaRef.current = embla;
     autoplayRef.current = autoplay;
 
-    const updateIndicator = () => {
-      const total = embla.scrollSnapList().length;
-      setIndicator(`${embla.selectedScrollSnap() + 1} / ${total}`);
-    };
-
-    embla.on('select', updateIndicator);
-    updateIndicator();
+    const onSelect = () => setSelected(embla.selectedScrollSnap());
+    embla.on('select', onSelect);
+    onSelect();
 
     return () => {
       embla.destroy();
@@ -96,9 +135,14 @@ export default function HeroCarousel({ photos }: Props) {
     }
   }, [motionAutoplay]);
 
-  if (photos.length === 0) return null;
+  if (total === 0) return null;
 
   const pauseLabel = autoplayEnabled ? 'Pause automatic slide show' : 'Resume automatic slide show';
+  const eyebrow = [
+    showNav ? `Frame ${pad2(selected + 1)}` : 'Featured',
+    current?.category,
+    current?.title?.trim(),
+  ].filter((part): part is string => Boolean(part));
 
   return (
     <section
@@ -107,66 +151,98 @@ export default function HeroCarousel({ photos }: Props) {
       aria-roledescription="carousel"
       tabIndex={showNav ? 0 : undefined}
       onKeyDown={handleKeyDown}
+      style={{ '--hero-delay': `${AUTOPLAY_DELAY_MS}ms` } as CSSProperties}
     >
-      <div className="public-hero__frame">
-        <div className="overflow-hidden" ref={viewportRef}>
-          <ul className="m-0 flex list-none touch-pan-y p-0">
-            {photos.map((photo, index) => (
-              <li
-                key={photo.id}
-                className="min-w-0 shrink-0 grow-0 basis-full"
-                aria-roledescription="slide"
-                aria-label={`Slide ${index + 1} of ${photos.length}`}
-              >
-                <img
-                  src={photo.galleryUrl}
-                  alt={photo.alt?.trim() ?? ''}
-                  width={photo.width ?? 1600}
-                  height={photo.height ?? 900}
-                  decoding="async"
-                  fetchPriority={index === 0 ? 'high' : 'auto'}
-                  className="block max-h-[min(70vh,720px)] w-full object-cover"
-                />
-              </li>
-            ))}
-          </ul>
-        </div>
+      <div className="public-hero__viewport" ref={viewportRef}>
+        <ul className="public-hero__track">
+          {photos.map((photo, index) => (
+            <li
+              key={photo.id}
+              className="public-hero__slide"
+              data-active={index === selected}
+              aria-roledescription="slide"
+              aria-label={`Slide ${index + 1} of ${total}`}
+            >
+              <img
+                src={photo.galleryUrl}
+                alt={photo.alt?.trim() ?? ''}
+                width={photo.width ?? 1600}
+                height={photo.height ?? 900}
+                decoding="async"
+                fetchPriority={index === 0 ? 'high' : 'auto'}
+                loading={index === 0 ? 'eager' : 'lazy'}
+                className="public-hero__img"
+              />
+            </li>
+          ))}
+        </ul>
+      </div>
 
-        {showNav && (
-          <>
-            <button
-              type="button"
-              className="public-hero__nav-btn public-hero__nav-btn--prev"
-              aria-label="Previous featured photo"
-              onClick={scrollPrev}
-            >
-              Prev
-            </button>
-            <button
-              type="button"
-              className="public-hero__nav-btn public-hero__nav-btn--next"
-              aria-label="Next featured photo"
-              onClick={scrollNext}
-            >
-              Next
-            </button>
-            {!prefersReducedMotion ? (
+      <div className="public-hero__scrim" aria-hidden="true" />
+
+      <div className="public-hero__content">
+        <p className="public-hero__eyebrow" aria-hidden="true">
+          {eyebrow.map((part) => (
+            <span key={part} className="public-hero__eyebrow-part">
+              {part}
+            </span>
+          ))}
+        </p>
+        <h1 className="public-hero__title">Chris Lawson</h1>
+        <p className="public-hero__tagline">Landscapes · Portraits · People</p>
+        <div className="public-hero__actions">
+          <a href="#gallery" className="public-hero__cue">
+            <span>View the gallery</span>
+            <span className="public-hero__cue-line" aria-hidden="true" />
+          </a>
+          {showNav && (
+            <div className="public-hero__controls">
+              <p className="public-hero__counter" aria-hidden="true">
+                <span className="public-hero__counter-current">{pad2(selected + 1)}</span>
+                <span className="public-hero__counter-sep">/</span>
+                {pad2(total)}
+              </p>
               <button
                 type="button"
-                className="public-hero__pause-btn"
-                aria-pressed={!autoplayEnabled}
-                aria-label={pauseLabel}
-                onClick={toggleAutoplay}
+                className="public-hero__btn"
+                aria-label="Previous featured photo"
+                onClick={scrollPrev}
               >
-                {autoplayEnabled ? 'Pause' : 'Play'}
+                <Chevron direction="left" />
               </button>
-            ) : null}
-            <p className="public-hero__indicator m-0" aria-hidden="true">
-              {indicator}
-            </p>
-          </>
-        )}
+              {!prefersReducedMotion ? (
+                <button
+                  type="button"
+                  className="public-hero__btn"
+                  aria-pressed={!autoplayEnabled}
+                  aria-label={pauseLabel}
+                  onClick={toggleAutoplay}
+                >
+                  <PlayPauseIcon playing={autoplayEnabled} />
+                </button>
+              ) : null}
+              <button
+                type="button"
+                className="public-hero__btn"
+                aria-label="Next featured photo"
+                onClick={scrollNext}
+              >
+                <Chevron direction="right" />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
+
+      {showNav && (
+        <div className="public-hero__progress" aria-hidden="true">
+          <span
+            key={selected}
+            className="public-hero__progress-bar"
+            data-running={motionAutoplay}
+          />
+        </div>
+      )}
     </section>
   );
 }

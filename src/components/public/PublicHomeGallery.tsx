@@ -12,6 +12,15 @@ type Props = {
   photos: PublicPortfolioPhoto[];
 };
 
+function pad2(n: number): string {
+  return String(n).padStart(2, '0');
+}
+
+/** Contact-sheet style code, e.g. `Nature` → `NAT`. */
+function categoryCode(category: string | null): string {
+  return (category ?? '').slice(0, 3).toUpperCase();
+}
+
 export default function PublicHomeGallery({ photos }: Props) {
   const [activeCategory, setActiveCategory] = useState('All');
   const gridRef = useRef<HTMLUListElement>(null);
@@ -20,6 +29,9 @@ export default function PublicHomeGallery({ photos }: Props) {
     activeCategory === 'All'
       ? photos
       : photos.filter((photo) => (photo.category ?? '') === activeCategory);
+
+  const countFor = (label: string) =>
+    label === 'All' ? photos.length : photos.filter((p) => (p.category ?? '') === label).length;
 
   const nudgeMasonry = useCallback(() => {
     const grid = gridRef.current;
@@ -46,34 +58,42 @@ export default function PublicHomeGallery({ photos }: Props) {
   };
 
   return (
-    <section
-      id="gallery"
-      className="public-wrap"
-      style={{ paddingBlock: 'var(--space-5) var(--space-4)' }}
-      aria-label="Gallery"
-    >
-      <h2 className="public-section-title">Gallery</h2>
+    <section id="gallery" className="public-gallery" aria-labelledby="gallery-title">
+      <div className="public-gallery__head">
+        <div>
+          <p className="public-kicker" aria-hidden="true">
+            Contact sheet — {pad2(visiblePhotos.length)} frames
+          </p>
+          <h2 id="gallery-title" className="public-section-title">
+            Gallery
+          </h2>
+        </div>
 
-      <ul className="public-filters m-0 flex list-none flex-wrap justify-center gap-0 p-0">
-        {PORTFOLIO_CATEGORY_LABELS.map((label) => {
-          const isActive = label === activeCategory;
-          return (
-            <li key={label}>
-              <button
-                type="button"
-                className="public-filter-btn"
-                aria-pressed={isActive}
-                onClick={() => setActiveCategory(label)}
-              >
-                {label}
-              </button>
-            </li>
-          );
-        })}
-      </ul>
+        <ul className="public-filters" aria-label="Filter by category">
+          {PORTFOLIO_CATEGORY_LABELS.map((label) => {
+            const isActive = label === activeCategory;
+            const count = countFor(label);
+            return (
+              <li key={label}>
+                <button
+                  type="button"
+                  className="public-filter-btn"
+                  aria-pressed={isActive}
+                  aria-label={`${label}, ${count} photos`}
+                  disabled={count === 0 && !isActive}
+                  onClick={() => setActiveCategory(label)}
+                >
+                  <span>{label}</span>
+                  <span className="public-filter-btn__count">[{pad2(count)}]</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
 
       {photos.length === 0 ? (
-        <p className="text-center text-sm" style={{ color: 'var(--color-fg-muted)' }}>
+        <p className="public-empty">
           No published photos yet. Upload and publish from{' '}
           <a href="/admin/portfolio" className="public-link">
             portfolio admin
@@ -81,16 +101,20 @@ export default function PublicHomeGallery({ photos }: Props) {
           .
         </p>
       ) : (
-        <ul ref={gridRef} className="public-masonry-grid columns-2 sm:columns-3 lg:columns-4">
-          {visiblePhotos.map((photo) => {
+        <ul
+          ref={gridRef}
+          className="public-masonry-grid public-masonry-grid--sheet columns-2 sm:columns-3 lg:columns-4"
+        >
+          {visiblePhotos.map((photo, index) => {
             const { width, height } = galleryDisplayDimensions(photo);
+            const frame = pad2(index + 1);
+            const title = photo.title?.trim();
             return (
               <li key={photo.id} className="public-masonry-item">
                 <button
                   type="button"
-                  className="block w-full cursor-pointer border-0 p-0"
-                  style={{ background: 'transparent' }}
-                  aria-label="View larger image"
+                  className="public-frame"
+                  aria-label={`View frame ${frame}${title ? `, ${title}` : ''} larger`}
                   onClick={() => openLightbox(photo.id)}
                 >
                   <img
@@ -104,6 +128,11 @@ export default function PublicHomeGallery({ photos }: Props) {
                     className="public-masonry-img"
                     onLoad={nudgeMasonry}
                   />
+                  <span className="public-frame__label" aria-hidden="true">
+                    <span className="public-frame__num">▸{frame}</span>
+                    {title ? <span className="public-frame__title">{title}</span> : null}
+                    <span className="public-frame__code">{categoryCode(photo.category)}</span>
+                  </span>
                 </button>
               </li>
             );

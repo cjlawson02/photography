@@ -21,6 +21,7 @@ const ogImage =
 	description={DEFAULT_SITE_DESCRIPTION}
 	canonical={canonicalUrl('/')}
 	ogImage={ogImage}
+	overlayHeader={heroPhotos.length > 0}
 >
 	<HeroCarousel client:load photos={heroPhotos} />
 	<PublicHomeGallery client:visible photos={photos} />
