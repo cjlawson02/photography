@@ -2,7 +2,15 @@
 
 Move production traffic from the legacy WordPress site to the Workers deployment. Architecture and delivery constraints live in [HLD.md](HLD.md); phase checklist in [IMPLEMENTATION.md](IMPLEMENTATION.md#phase-5--cutover).
 
-**Status:** in progress — custom domain and legacy 301 are live; remote migrate / bulk import / final smoke remain.
+**Status:** in progress — custom domain and legacy 301 are live for the new host; **T7 bulk migration** remains; **T6 cutover sequence** (promote, production smoke, monitoring) runs **only after migration** (see [Sequencing](#sequencing)).
+
+## Sequencing
+
+**Chris (2026-09-26):** Phase 5 **cutover** steps in [Cutover sequence (after migration)](#cutover-sequence-after-migration) run **only after** [T7 bulk migration](#content-and-asset-migration-t7) is complete and signed off. Do not treat remote promote + production smoke as the formal cutover gate until imported content is on production.
+
+**Already in place (does not complete cutover):** Workers custom domain on `photography.chrislawson.dev` and legacy zone **301** to the new host — useful for admin ingest and testing; not a substitute for migration + post-migration cutover.
+
+Order: **T7 migration** → **T6 cutover sequence** → post-cutover monitoring / legacy decommission (_TBD_).
 
 ## Current truth (2026-09-26)
 
@@ -46,9 +54,9 @@ Decisions required before finishing T7 bulk migration (do not guess):
 
 WordPress-specific paths may still need a small redirect map — see [Chris input needed](#chris-input-needed).
 
-## Content and asset migration
+## Content and asset migration (T7)
 
-Bulk migration scaffolding: [migration/legacy-bulk-import.md](migration/legacy-bulk-import.md). Until import runs, new portfolio work uses admin ingest on the Workers host.
+Bulk migration scaffolding: [migration/legacy-bulk-import.md](migration/legacy-bulk-import.md). **Blocks** [cutover sequence](#cutover-sequence-after-migration). Until import completes, new portfolio work uses admin ingest on the Workers host.
 
 | Item | Status |
 | --- | --- |
@@ -56,13 +64,15 @@ Bulk migration scaffolding: [migration/legacy-bulk-import.md](migration/legacy-b
 | Review collections (legacy Picu) | _TBD_ |
 | Redirect map (legacy URLs → new routes) | _TBD_ beyond zone 301 |
 
-## Cutover sequence
+## Cutover sequence (after migration)
 
-Execute in order when promoting a release or completing cutover. **Do not** run remote migrations or production deploy without explicit approval when schema is in flux.
+**Prerequisite:** T7 bulk import finished and verified per [migration/legacy-bulk-import.md](migration/legacy-bulk-import.md) (including production smoke on imported content where applicable).
+
+Execute in order for formal cutover completion. **Do not** run remote migrations or production deploy without explicit approval when schema is in flux.
 
 ### 1. Freeze (optional)
 
-- [ ] Pause legacy WordPress edits if they would diverge from the import snapshot (_TBD_ — Chris).
+- [ ] Pause legacy WordPress edits if they would diverge from the import snapshot (_TBD_ — Chris; typically **before** the migration snapshot, not after).
 
 ### 2. Database
 
@@ -94,16 +104,10 @@ Run [SMOKE.md](SMOKE.md) against `https://photography.chrislawson.dev`:
 
 ### 5. Legacy traffic
 
-- [x] Zone **301** from `lawsonphotography.me` → new host (done)
-- [ ] Spot-check deep links, query strings, and `/review/{slug}` on the new host (not legacy Picu paths)
+- [x] Zone **301** from `lawsonphotography.me` → new host (done early)
+- [ ] Spot-check deep links, query strings, and `/review/{slug}` on the new host **after migration** (not legacy Picu paths)
 
-### 6. Bulk import (when ready)
-
-1. Dry-run: `npm run migrate:legacy:portfolio -- --dry-run` with `LEGACY_EXPORT_ROOT` set.
-2. Chris sign-off on mapping and counts.
-3. Execute path _TBD_ — script currently exits until import logic lands.
-
-### 7. Post-cutover monitoring
+### 6. Post-cutover monitoring
 
 - Workers analytics / Sentry (if `SENTRY_DSN` set) — watch error rate for 24–48h after promote
 - [ ] Decommission legacy hosting — _TBD_ timeline

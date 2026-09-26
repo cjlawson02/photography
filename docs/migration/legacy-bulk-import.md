@@ -1,6 +1,6 @@
 # Legacy bulk import (Phase 5 / T7)
 
-Checklist for moving portfolio content from the legacy WordPress site into Workers + D1 + R2. **Do not run against production** until [CUTOVER.md](../CUTOVER.md) preconditions are met and Chris approves remote writes.
+Checklist for moving portfolio content from the legacy WordPress site into Workers + D1 + R2. **Do not run against production** until preconditions below are met and Chris approves remote writes. **T7 completes before** the Phase 5 cutover sequence ([CUTOVER.md § Sequencing](../CUTOVER.md#sequencing)).
 
 ## Prerequisites
 
