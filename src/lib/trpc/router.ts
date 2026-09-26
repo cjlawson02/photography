@@ -16,13 +16,17 @@ import {
   reviewCollectionUpdateInputSchema,
   reviewLinkFinalToPickInputSchema,
   reviewMarkDeliveredInputSchema,
+  reviewPromoteFinalInputSchema,
+  reviewPurgeRoundsInputSchema,
 } from '../admin/review-collection-schemas.ts';
 import { idSchema } from '../../db/schema/types.ts';
+import { AppError } from '../http/app-error.ts';
 import { completeBodySchema, presignBodySchema, reprocessBodySchema } from '../ingest/schemas.ts';
 import { IngestMaintenanceService } from '../services/ingest-maintenance-service.ts';
 import { IngestService } from '../services/ingest-service.ts';
 import { DashboardService } from '../services/dashboard-service.ts';
 import { PortfolioService } from '../services/portfolio-service.ts';
+import { DashboardService } from '../services/dashboard-service.ts';
 import { ReviewService } from '../services/review-service.ts';
 import { createTRPCRouter } from './init.ts';
 import { adminProcedure, rateLimitedAdminProcedure } from './middleware.ts';
@@ -146,6 +150,27 @@ export const appRouter = createTRPCRouter({
         .mutation(async ({ ctx, input }) =>
           ReviewService.from(ctx.getAppEnv()).markFinalsDelivered(input.id),
         ),
+      promoteFinal: adminProcedure
+        .input(reviewPromoteFinalInputSchema)
+        .mutation(async ({ ctx, input }) =>
+          ReviewService.from(ctx.getAppEnv()).promoteFinalToPortfolio(
+            input.collectionId,
+            input.finalPhotoId,
+          ),
+        ),
+      purgeRounds: adminProcedure
+        .input(reviewPurgeRoundsInputSchema)
+        .mutation(async ({ ctx, input }) => {
+          const collection = await ctx.getAppEnv().d1.reviewCollections.getById(input.collectionId);
+          if (!collection || collection.slug !== input.confirmSlug.trim()) {
+            throw new AppError('BAD_REQUEST', 'Confirmation slug does not match this shoot');
+          }
+          return ReviewService.from(ctx.getAppEnv()).purgeCollectionRounds(input.collectionId, {
+            proofs: input.proofs,
+            finals: input.finals,
+            cleanupR2: input.cleanupR2,
+          });
+        }),
       deliveryMessage: adminProcedure
         .input(reviewCollectionIdInputSchema)
         .query(async ({ ctx, input }) => {

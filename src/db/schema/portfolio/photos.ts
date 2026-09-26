@@ -45,6 +45,8 @@ export const PortfolioPhotos = sqliteTable(
     title: text('title'),
     /** Optional longer caption; null when unset. */
     caption: text('caption'),
+    /** Promote provenance — review photo copied into portfolio (A6). */
+    sourceReviewPhotoId: text('sourceReviewPhotoId'),
   },
   (table) => [index('PortfolioPhotos_published_status_idx').on(table.published, table.status)],
 );
