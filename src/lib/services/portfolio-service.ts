@@ -11,11 +11,14 @@ export type PublicPortfolioPhoto = {
   category: string | null;
   sortOrder: number | null;
   hero: boolean;
-  /** Public delivery: ingest `gallery.webp` (1600px wide) — largest generated variant. */
-  galleryUrl: string;
+  alt: string | null;
+  title: string | null;
+  caption: string | null;
   /** Natural pixels from ingest Images `info()`; null until complete. */
   width: number | null;
   height: number | null;
+  /** Public delivery: ingest `gallery.webp` (1600px wide) — largest generated variant. */
+  galleryUrl: string;
 };
 
 /**
@@ -39,9 +42,12 @@ export class PortfolioService {
       category: row.category,
       sortOrder: row.sortOrder,
       hero: row.hero,
-      galleryUrl: portfolioVariantPublicUrl(row.id, 'gallery.webp', row.updatedAt),
+      alt: row.alt,
+      title: row.title,
+      caption: row.caption,
       width: row.width,
       height: row.height,
+      galleryUrl: portfolioVariantPublicUrl(row.id, 'gallery.webp', row.updatedAt),
     }));
   }
 
@@ -100,8 +106,11 @@ export async function listPublishedPortfolioPhotos(
     category: row.category,
     sortOrder: row.sortOrder,
     hero: row.hero,
-    galleryUrl: portfolioVariantPublicUrl(row.id, 'gallery.webp', row.updatedAt),
+    alt: row.alt,
+    title: row.title,
+    caption: row.caption,
     width: row.width,
     height: row.height,
+    galleryUrl: portfolioVariantPublicUrl(row.id, 'gallery.webp', row.updatedAt),
   }));
 }

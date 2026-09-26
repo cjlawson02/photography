@@ -35,6 +35,12 @@ export const PortfolioPhotos = sqliteTable(
     width: integer('width', { mode: 'number' }),
     /** Natural pixel height from ingest (Images `info()` on original). */
     height: integer('height', { mode: 'number' }),
+    /** Accessible description for public `<img alt>` and lightbox; null until set in admin. */
+    alt: text('alt'),
+    /** Optional display title (lightbox / future captions); null when unset. */
+    title: text('title'),
+    /** Optional longer caption; null when unset. */
+    caption: text('caption'),
   },
   (table) => [index('PortfolioPhotos_published_status_idx').on(table.published, table.status)],
 );

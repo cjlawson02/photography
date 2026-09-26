@@ -21,6 +21,47 @@ function formatTime(ms: number | null | undefined): string {
   return new Date(ms).toLocaleString();
 }
 
+function normalizeNullableText(value: string | null | undefined): string | null {
+  const trimmed = value?.trim() ?? '';
+  return trimmed === '' ? null : trimmed;
+}
+
+type NullableTextInputProps = {
+  label: string;
+  value: string | null;
+  busy: boolean;
+  className?: string;
+  onSave: (next: string | null) => void;
+};
+
+function NullableTextInput({ label, value, busy, className, onSave }: NullableTextInputProps) {
+  const [draft, setDraft] = useState(() => value ?? '');
+  const [syncedValue, setSyncedValue] = useState(value);
+
+  if (value !== syncedValue) {
+    setSyncedValue(value);
+    setDraft(value ?? '');
+  }
+
+  return (
+    <input
+      type="text"
+      className={className}
+      style={fieldStyle}
+      aria-label={label}
+      value={draft}
+      placeholder="—"
+      disabled={busy}
+      onChange={(event) => setDraft(event.target.value)}
+      onBlur={() => {
+        const next = normalizeNullableText(draft);
+        if (next === normalizeNullableText(value)) return;
+        onSave(next);
+      }}
+    />
+  );
+}
+
 function formatDimensions(
   width: number | null | undefined,
   height: number | null | undefined,
@@ -103,6 +144,39 @@ export default function PortfolioRow({ photo, busy, onPatch, onDelete, onReproce
           />
           <span>{photo.published ? 'Yes' : 'No'}</span>
         </label>
+      </td>
+      <td className="py-3 pr-4 align-middle">
+        <NullableTextInput
+          label="Alt text"
+          className="min-w-[8rem] border px-2 py-1 text-xs"
+          value={photo.alt}
+          busy={busy}
+          onSave={(alt) => {
+            void onPatch(photo.id, { alt }, 'Saving alt…').catch(() => undefined);
+          }}
+        />
+      </td>
+      <td className="py-3 pr-4 align-middle">
+        <NullableTextInput
+          label="Title"
+          className="min-w-[6rem] border px-2 py-1 text-xs"
+          value={photo.title}
+          busy={busy}
+          onSave={(title) => {
+            void onPatch(photo.id, { title }, 'Saving title…').catch(() => undefined);
+          }}
+        />
+      </td>
+      <td className="py-3 pr-4 align-middle">
+        <NullableTextInput
+          label="Caption"
+          className="min-w-[8rem] border px-2 py-1 text-xs"
+          value={photo.caption}
+          busy={busy}
+          onSave={(caption) => {
+            void onPatch(photo.id, { caption }, 'Saving caption…').catch(() => undefined);
+          }}
+        />
       </td>
       <td className="py-3 pr-4 align-middle">
         <select

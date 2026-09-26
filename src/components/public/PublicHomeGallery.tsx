@@ -34,6 +34,8 @@ export default function PublicHomeGallery({ photos }: Props) {
     const items = visiblePhotos.map((photo) =>
       galleryItemFromPhoto({
         galleryUrl: photo.galleryUrl,
+        alt: photo.alt,
+        title: photo.title,
         width: photo.width,
         height: photo.height,
       }),
@@ -96,7 +98,7 @@ export default function PublicHomeGallery({ photos }: Props) {
                 >
                   <img
                     src={photo.galleryUrl}
-                    alt=""
+                    alt={photo.alt?.trim() ?? ''}
                     width={width}
                     height={height}
                     style={{ aspectRatio: `${width} / ${height}` }}
