@@ -8,7 +8,7 @@ Move production traffic from the legacy WordPress site to the Workers deployment
 
 **Chris (2026-09-26):** Phase 5 **cutover** steps in [Cutover sequence (after migration)](#cutover-sequence-after-migration) run **only after** [T7 bulk migration](#content-and-asset-migration-t7) is complete and signed off. Do not treat remote promote + production smoke as the formal cutover gate until imported content is on production.
 
-**Already in place (does not complete cutover):** Workers custom domain on `photography.chrislawson.dev` and legacy zone **301** to the new host — useful for admin ingest and testing; not a substitute for migration + post-migration cutover.
+**Already in place (does not complete cutover):** Workers custom domain on `photography.chrislawson.dev` — useful for admin ingest and testing; legacy zone **301** must be re-verified before cutover sign-off (see [Current truth](#current-truth-2026-09-26)).
 
 Order: **T7 migration** → **T6 cutover sequence** → post-cutover monitoring / legacy decommission (_TBD_).
 
@@ -17,9 +17,9 @@ Order: **T7 migration** → **T6 cutover sequence** → post-cutover monitoring 
 | Item | Status |
 | --- | --- |
 | Workers production host `https://photography.chrislawson.dev` | **Live** — custom domain + SSL on Workers ([DEPLOY.md](DEPLOY.md)) |
-| Legacy public site `lawsonphotography.me` (+ `www`) | **301** → `https://photography.chrislawson.dev` via Cloudflare **Redirect Rules** on the **legacy zone** (not Worker middleware) |
+| Legacy public site `lawsonphotography.me` (+ `www`) | **Re-verify** — T6 agent check (2026-09-26): `https://www.lawsonphotography.me/` returned **200** (WordPress), not 301; apex `lawsonphotography.me` **NXDOMAIN** from agent PoP. Intended: **301** → `https://photography.chrislawson.dev` via Redirect Rules on the **legacy zone** |
 | Admin Access on `/admin*` | Configured per [DEPLOY.md](DEPLOY.md) — **re-verify** after any Access or DNS change |
-| Remote D1 migrations on production | **Pending** — apply when schema changes are ready (see [Deploy sequence](#deploy-sequence)) |
+| Remote D1 migrations on production | **Applied** — production `d1_migrations` matches repo (**5/5**); latest `main` deploy reported no pending migrations (2026-09-26) |
 | Bulk legacy WordPress → D1/R2 **portfolio** import | **Done** (Chris, 2026-09-26) — see [Content and asset migration (T7)](#content-and-asset-migration-t7) |
 | Automated production smoke | Manual — [SMOKE.md](SMOKE.md) |
 
@@ -36,21 +36,21 @@ Decisions still open (do not guess):
 ## Preconditions
 
 - [x] Production Cloudflare resources wired in [DEPLOY.md](DEPLOY.md) (D1 id, R2 buckets, Access vars, secrets inventory documented)
-- [ ] CI/CD green on `main` ([`.github/workflows/ci-cd.yml`](../.github/workflows/ci-cd.yml)) immediately before promote
-- [ ] Manual smoke pass on production host — [SMOKE.md](SMOKE.md)
-- [ ] Remote D1 journal matches repo (`npx wrangler d1 migrations list photography --remote`)
+- [x] CI/CD green on `main` ([`.github/workflows/ci-cd.yml`](../.github/workflows/ci-cd.yml)) immediately before promote (verified run `36222384679` @ `f4da23c`, 2026-09-26)
+- [ ] Manual smoke pass on production host — [SMOKE.md](SMOKE.md) (public checks OK; **admin Access + review slug** still Chris)
+- [x] Remote D1 journal matches repo (`npx wrangler d1 migrations list photography --remote`) — confirmed via production D1 + CI deploy migrate step (2026-09-26)
 
 ## DNS and domain
 
 **Workers production host:** `https://photography.chrislawson.dev`  
-**Legacy public site:** [lawsonphotography.me](https://www.lawsonphotography.me/) — visitors receive **301** to the new host.
+**Legacy public site:** [lawsonphotography.me](https://www.lawsonphotography.me/) — intended **301** to the new host; **re-verify** Redirect Rules (agent saw WordPress **200** on `www`, 2026-09-26).
 
 | Step | Owner | Notes |
 | --- | --- | --- |
 | Workers custom domain + SSL for `photography.chrislawson.dev` | **Done** | Live on Workers (Chris, 2026-09-26) |
 | Access application covers `/admin*` on `photography.chrislawson.dev` | Verify | Self-hosted Public DNS app; path `/admin*` ([DEPLOY.md](DEPLOY.md#2-cloudflare-access-admin)) |
-| **301 redirect** `lawsonphotography.me` (+ `www`) → `photography.chrislawson.dev` | **Done** | Redirect Rules on legacy zone; preserve path/query per rule config |
-| Lower TTL on legacy DNS | _Optional_ | Already redirected; note if origin DNS changes again |
+| **301 redirect** `lawsonphotography.me` (+ `www`) → `photography.chrislawson.dev` | **Re-verify** | T6 spot-check 2026-09-26: `www` still WordPress **200**; fix or enable Redirect Rules on legacy zone |
+| Lower TTL on legacy DNS | _Optional_ | Note if origin DNS changes again |
 
 WordPress-specific paths may still need a small redirect map — see [Chris input needed](#chris-input-needed).
 
@@ -104,7 +104,7 @@ Run [SMOKE.md](SMOKE.md) against `https://photography.chrislawson.dev`:
 
 ### 5. Legacy traffic
 
-- [x] Zone **301** from `lawsonphotography.me` → new host (done early)
+- [ ] Zone **301** from `lawsonphotography.me` → new host — **failed spot-check** 2026-09-26 (`www` still WordPress 200); fix Redirect Rules then re-test
 - [ ] Spot-check deep links, query strings, and `/review/{slug}` on the new host **after migration** (not legacy Picu paths)
 
 ### 6. Post-cutover monitoring
