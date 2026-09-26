@@ -5,7 +5,7 @@ import { ReviewPhotosDAO } from '../dao/review-photos-dao.ts';
 import type { SelectionStatus } from '../../db/schema/review/selection-status.ts';
 import { AppError } from '../http/app-error.ts';
 import { photoIngestObjectKeys } from '../ingest/keys.ts';
-import { reviewVariantPublicUrl } from '../media/review-public-url.ts';
+import { reviewVariantAdminUrl, reviewVariantPublicUrl } from '../media/review-public-url.ts';
 import { resolveReviewCollectionAccess } from '../review/collection-access.ts';
 export { updateReviewSelection } from '../review/update-selection.ts';
 import { buildReviewSlug } from '../review/slug.ts';
@@ -110,8 +110,8 @@ export class ReviewService {
         mimeType: row.mimeType,
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
-        thumbUrl: ready ? reviewVariantPublicUrl(row.id, 'thumb.webp', row.updatedAt) : null,
-        galleryUrl: ready ? reviewVariantPublicUrl(row.id, 'gallery.webp', row.updatedAt) : null,
+        thumbUrl: ready ? reviewVariantAdminUrl(row.id, 'thumb.webp', row.updatedAt) : null,
+        galleryUrl: ready ? reviewVariantAdminUrl(row.id, 'gallery.webp', row.updatedAt) : null,
         width: row.width,
         height: row.height,
       };
@@ -231,7 +231,7 @@ export async function resolveReviewPageState(
       title: access.collection.title,
       photos: ready.map((photo) => ({
         id: photo.id,
-        galleryUrl: `/media/review/${photo.id}/gallery.webp`,
+        galleryUrl: reviewVariantPublicUrl(photo.id, 'gallery.webp', photo.updatedAt),
         selectionStatus: photo.selectionStatus,
         width: photo.width,
         height: photo.height,

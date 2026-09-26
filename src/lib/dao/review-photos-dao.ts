@@ -5,7 +5,7 @@ import * as schema from '../../db/schema/index.ts';
 import { ReviewPhotos } from '../../db/schema/review/photos.ts';
 import type { PhotoStatus } from '../../db/schema/photo-status.ts';
 import type { SelectionStatus } from '../../db/schema/review/selection-status.ts';
-import { mergeDefined } from '../utils/merge-defined.ts';
+import { definedProps } from '../utils/merge-defined.ts';
 
 type Db = DrizzleD1Database<typeof schema>;
 
@@ -86,23 +86,37 @@ export class ReviewPhotosDAO {
       height?: number | null;
     },
   ) {
-    const existing = await this.getById(id);
-    if (!existing) return null;
-    const next = mergeDefined(
-      {
-        collectionId: existing.collectionId,
-        status: existing.status,
-        mimeType: existing.mimeType,
-        selectionStatus: existing.selectionStatus,
-        width: existing.width,
-        height: existing.height,
-      },
-      patch,
-    );
+    const set = definedProps(patch);
+    if (Object.keys(set).length === 0) {
+      return this.getById(id);
+    }
     const updated = await this.db
       .update(ReviewPhotos)
-      .set(next)
+      .set(set)
       .where(eq(ReviewPhotos.id, id))
+      .returning();
+    return updated[0] ?? null;
+  }
+
+  /**
+   * Public selection write — only touches selectionStatus when the photo is still
+   * ready in the expected collection (avoids racing ingest markFailed/markReady).
+   */
+  async updateSelectionIfReady(
+    photoId: string,
+    collectionId: string,
+    selectionStatus: SelectionStatus,
+  ) {
+    const updated = await this.db
+      .update(ReviewPhotos)
+      .set({ selectionStatus })
+      .where(
+        and(
+          eq(ReviewPhotos.id, photoId),
+          eq(ReviewPhotos.collectionId, collectionId),
+          eq(ReviewPhotos.status, 'ready'),
+        ),
+      )
       .returning();
     return updated[0] ?? null;
   }

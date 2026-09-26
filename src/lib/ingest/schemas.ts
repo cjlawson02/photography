@@ -1,11 +1,25 @@
 import { z } from 'zod/v4';
 
-import { idSchema, optionalTrimmedString, requiredTrimmedString } from '../../db/schema/types.ts';
+import { idSchema, optionalTrimmedString } from '../../db/schema/types.ts';
 import { formatZodIssues } from '../http/app-error.ts';
 
 export const purposeBucketSchema = z.enum(['portfolio', 'review']);
 
 export type PurposeBucket = z.infer<typeof purposeBucketSchema>;
+
+/** Browser upload MIME allowlist (presign + ingest). */
+export const INGEST_CONTENT_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/heic',
+  'image/heif',
+] as const;
+
+export const ingestContentTypeSchema = z.enum(INGEST_CONTENT_TYPES);
+
+/** Soft cap before `arrayBuffer()` during ingest (availability). */
+export const INGEST_MAX_ORIGINAL_BYTES = 40 * 1024 * 1024;
 
 /**
  * Presign body — review requires `collectionId` (FK to ReviewCollections).
@@ -14,12 +28,12 @@ export type PurposeBucket = z.infer<typeof purposeBucketSchema>;
 export const presignBodySchema = z.discriminatedUnion('bucket', [
   z.object({
     bucket: z.literal('portfolio'),
-    contentType: requiredTrimmedString,
+    contentType: ingestContentTypeSchema,
     filename: optionalTrimmedString,
   }),
   z.object({
     bucket: z.literal('review'),
-    contentType: requiredTrimmedString,
+    contentType: ingestContentTypeSchema,
     collectionId: idSchema,
     filename: optionalTrimmedString,
   }),

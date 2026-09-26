@@ -28,9 +28,58 @@ test('trpcErrorToHttpStatus mirrors AppError status table', () => {
 
 const testRouter = createTRPCRouter({
   secret: adminProcedure.query(() => 'ok'),
+  notFound: adminProcedure.query(() => {
+    throw new AppError('NOT_FOUND', 'missing row');
+  }),
+  unavailable: adminProcedure.query(() => {
+    throw new AppError('SERVICE_UNAVAILABLE', 'R2 S3 secrets not configured');
+  }),
 });
 
 const createTestCaller = createCallerFactory(testRouter);
+
+function authedCtx() {
+  return {
+    request: new Request('http://localhost/admin/api/trpc'),
+    accessEnv: {
+      CF_ACCESS_TEAM_DOMAIN: 'https://example.cloudflareaccess.com',
+      CF_ACCESS_AUD: 'test-aud',
+    },
+    getAppEnv: () => {
+      throw new Error('unused');
+    },
+    getIngestAppEnv: () => {
+      throw new Error('unused');
+    },
+    ensureAccessIdentity: () => Promise.resolve({ email: 'admin@example.com', payload: {} }),
+    getAdminTrpcRateLimiter: () => undefined,
+  };
+}
+
+test('adminProcedure maps AppError NOT_FOUND through createCaller (not INTERNAL_SERVER_ERROR)', async () => {
+  const caller = createTestCaller(authedCtx());
+  await assert.rejects(
+    () => caller.notFound(),
+    (err: unknown) => {
+      assert.ok(err instanceof TRPCError);
+      assert.equal(err.code, 'NOT_FOUND');
+      assert.equal(err.message, 'missing row');
+      return true;
+    },
+  );
+});
+
+test('adminProcedure maps AppError SERVICE_UNAVAILABLE (503 path)', async () => {
+  const caller = createTestCaller(authedCtx());
+  await assert.rejects(
+    () => caller.unavailable(),
+    (err: unknown) => {
+      assert.ok(err instanceof TRPCError);
+      assert.equal(err.code, 'SERVICE_UNAVAILABLE');
+      return true;
+    },
+  );
+});
 
 test('adminProcedure is FORBIDDEN without JWT before AppEnv', async () => {
   let appEnvResolved = false;

@@ -1,8 +1,14 @@
 import type { AppEnv } from '../env.ts';
 import { AppError } from '../http/app-error.ts';
 import { originalKey, VARIANT_SPECS, variantKey } from '../ingest/keys.ts';
-import type { CompleteBody, PresignBody, ReprocessBody } from '../ingest/schemas.ts';
+import {
+  INGEST_MAX_ORIGINAL_BYTES,
+  type CompleteBody,
+  type PresignBody,
+  type ReprocessBody,
+} from '../ingest/schemas.ts';
 import type { PurposeBucket } from '../dao/r2-dao.ts';
+import type { PhotoStatus } from '../../db/schema/photo-status.ts';
 
 export type PresignResult = {
   id: string;
@@ -70,15 +76,21 @@ export class IngestService {
 
   /** After browser PUT: compress-once → put variants → mark ready (or failed). */
   async completeIngest(input: CompleteBody): Promise<IngestResult> {
-    return this.processFromOriginal(input.bucket, input.id);
+    return this.processFromOriginal(input.bucket, input.id, { allowStatuses: ['pending'] });
   }
 
   /** Re-run variants from the stored original. */
   async reprocess(input: ReprocessBody): Promise<IngestResult> {
-    return this.processFromOriginal(input.bucket, input.id);
+    return this.processFromOriginal(input.bucket, input.id, {
+      allowStatuses: ['pending', 'failed', 'ready'],
+    });
   }
 
-  private async processFromOriginal(bucket: PurposeBucket, id: string): Promise<IngestResult> {
+  private async processFromOriginal(
+    bucket: PurposeBucket,
+    id: string,
+    options: { allowStatuses: PhotoStatus[] },
+  ): Promise<IngestResult> {
     const photo =
       bucket === 'portfolio'
         ? await this.app.d1.portfolioPhotos.getById(id)
@@ -88,13 +100,32 @@ export class IngestService {
       throw new AppError('NOT_FOUND', `Photo not found: ${id}`);
     }
 
+    if (!options.allowStatuses.includes(photo.status)) {
+      throw new AppError(
+        'PRECONDITION_FAILED',
+        `Photo ${id} status is ${photo.status}; expected ${options.allowStatuses.join('|')}`,
+      );
+    }
+
+    const priorStatus = photo.status;
     const key = originalKey(id);
     const object = await this.app.r2.get(bucket, key);
     if (!object) {
       const message = `Original missing in R2 for ${bucket}/${id} (incomplete PUT?)`;
       console.error('[ingest]', message);
-      await this.markFailed(bucket, id);
+      if (priorStatus !== 'ready') {
+        await this.markFailed(bucket, id);
+      }
       throw new AppError('PRECONDITION_FAILED', message);
+    }
+
+    if (typeof object.size === 'number' && object.size > INGEST_MAX_ORIGINAL_BYTES) {
+      const message = `Original too large for ${bucket}/${id} (${object.size} bytes)`;
+      console.error('[ingest]', message);
+      if (priorStatus !== 'ready') {
+        await this.markFailed(bucket, id);
+      }
+      throw new AppError('BAD_REQUEST', message);
     }
 
     try {
@@ -117,9 +148,13 @@ export class IngestService {
       await this.markReady(bucket, id, dimensions);
       return { id, bucket, status: 'ready', variants: written };
     } catch (error) {
+      if (error instanceof AppError) throw error;
       const message = error instanceof Error ? error.message : 'Ingest failed';
       console.error('[ingest]', `Compress/put failed for ${bucket}/${id}:`, error);
-      await this.markFailed(bucket, id);
+      // Keep ready photos online if a reprocess fails mid-flight.
+      if (priorStatus !== 'ready') {
+        await this.markFailed(bucket, id);
+      }
       throw new AppError('INTERNAL_SERVER_ERROR', message);
     }
   }
@@ -133,18 +168,22 @@ export class IngestService {
       status: 'ready' as const,
       ...(dimensions ? { width: dimensions.width, height: dimensions.height } : {}),
     };
-    if (bucket === 'portfolio') {
-      await this.app.d1.portfolioPhotos.update(id, patch);
-    } else {
-      await this.app.d1.reviewPhotos.update(id, patch);
+    const updated =
+      bucket === 'portfolio'
+        ? await this.app.d1.portfolioPhotos.update(id, patch)
+        : await this.app.d1.reviewPhotos.update(id, patch);
+    if (!updated) {
+      throw new AppError('NOT_FOUND', `Photo not found during markReady: ${id}`);
     }
   }
 
   private async markFailed(bucket: PurposeBucket, id: string): Promise<void> {
-    if (bucket === 'portfolio') {
-      await this.app.d1.portfolioPhotos.update(id, { status: 'failed' });
-    } else {
-      await this.app.d1.reviewPhotos.update(id, { status: 'failed' });
+    const updated =
+      bucket === 'portfolio'
+        ? await this.app.d1.portfolioPhotos.update(id, { status: 'failed' })
+        : await this.app.d1.reviewPhotos.update(id, { status: 'failed' });
+    if (!updated) {
+      throw new AppError('NOT_FOUND', `Photo not found during markFailed: ${id}`);
     }
   }
 }
