@@ -36,6 +36,7 @@ export default function PublicHomeGallery({ photos }: Props) {
         galleryUrl: photo.galleryUrl,
         alt: photo.alt,
         title: photo.title,
+        caption: photo.caption,
         width: photo.width,
         height: photo.height,
       }),
