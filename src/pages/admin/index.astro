@@ -1,29 +1,13 @@
 ---
+import AdminHome from '../../components/admin/AdminHome.tsx';
 import AdminPageHeader from '../../components/admin/AdminPageHeader.astro';
 import AdminLayout from '../../layouts/AdminLayout.astro';
-
-/** Admin dashboard — links into portfolio and review sections. */
 ---
 
 <AdminLayout title="Admin — Dashboard" current="dashboard">
 	<AdminPageHeader
-		title="Dashboard"
-		lede="Access-gated admin shell (Phase 2). Portfolio publish flows and public gallery remain later phases."
+		title="Home"
+		lede="Active shoots and portfolio at a glance. Attention banners sit on the relevant card."
 	/>
-
-	<ul class="mt-8 space-y-3 text-sm admin-fg">
-		<li>
-			<a class="admin-link" href="/admin/portfolio">Portfolio</a>
-			<span class="admin-fg-muted"> — catalog and publish (_TBD_)</span>
-		</li>
-		<li>
-			<a class="admin-link" href="/admin/shoots">Client shoots</a>
-			<span class="admin-fg-muted"> — proofing jobs with step rail</span>
-		</li>
-	</ul>
-
-	<p class="admin-footnote">
-		API smoke:
-		<a class="admin-link" href="/admin/api/health">/admin/api/health</a>
-	</p>
+	<AdminHome client:load />
 </AdminLayout>
