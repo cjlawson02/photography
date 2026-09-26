@@ -1,0 +1,52 @@
+---
+import { env } from 'cloudflare:workers';
+
+import ReviewDownloadGallery from '../../../../components/public/ReviewDownloadGallery.tsx';
+import ReviewPageHeader from '../../../../components/public/ReviewPageHeader.astro';
+import { idSchema } from '../../../../db/schema/types.ts';
+import { AppEnv } from '../../../../lib/env.ts';
+import { AppError } from '../../../../lib/http/app-error.ts';
+import { downloadPreviewNotice } from '../../../../lib/review/download-preview.ts';
+import { ReviewService } from '../../../../lib/services/review-service.ts';
+import ReviewLayout from '../../../../layouts/ReviewLayout.astro';
+
+const { id } = Astro.params;
+if (!id || !idSchema.safeParse(id).success) {
+	return Astro.redirect('/admin/shoots');
+}
+
+let preview;
+try {
+	preview = await ReviewService.from(AppEnv.fromBindings(env)).getDownloadPreviewForAdmin(id);
+} catch (error) {
+	if (error instanceof AppError && error.code === 'NOT_FOUND') {
+		return Astro.redirect('/admin/shoots');
+	}
+	throw error;
+}
+
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+
+const jobPath = `/admin/shoots/${encodeURIComponent(id)}`;
+const jobName =
+	preview.collection.personName?.trim() ||
+	preview.collection.title?.trim() ||
+	preview.collection.slug;
+const notice = downloadPreviewNotice(preview.collection);
+---
+
+<ReviewLayout title={`Preview — ${jobName}`}>
+	<aside
+		class="public-wrap text-sm"
+		style="padding-block: var(--space-2); border-bottom: 1px solid var(--color-border); color: var(--color-fg-muted)"
+		aria-label="Admin preview"
+	>
+		<strong style="color: var(--color-fg)">Admin preview (download mode).</strong>
+		{' '}{notice}{' '}
+		<a class="admin-link" href={jobPath}>Back to {jobName}</a>
+	</aside>
+	<main>
+		<ReviewPageHeader title={preview.collection.title} mode="download" />
+		<ReviewDownloadGallery client:load photos={preview.downloadPhotos} />
+	</main>
+</ReviewLayout>

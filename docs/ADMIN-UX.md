@@ -164,7 +164,7 @@ Each workflow: trigger → steps → end state → edge cases.
 | **Trigger** | Finals exported from Lightroom for the submitted picks. |
 | **Steps** | On same job, upload finals → match to picks where filenames line up → **Preview as client** (download mode) → notify (copy message; email `_TBD_`) → mark **Finals delivered**. |
 | **End state** | Public page in download mode; client can download per file (and optionally all — `_TBD_`). |
-| **Edge cases** | Unmatched filenames: show unmatched list; allow manual link or leave unmatched. Replacing a final: re-upload; keep download URL stable if same id. Partial upload: stay in Editing until primary “Mark delivered.” |
+| **Edge cases** | Unmatched filenames: show unmatched list; allow manual link or leave unmatched. Matching compares against **picks only** (selected / approved proofs), case-insensitive, ignoring extension and common Lightroom / Photoshop export suffixes (`-Edit`, `-Edit-2`, `-2`, `_edit`, ` copy`); an exact basename wins over a suffix-stripped one, and more than one candidate pick stays unmatched. Preview before delivery is **admin-only** (behind Access) and shows the download page with the real files; the client link keeps showing locked picks until “Mark delivered.” Finals upload only in Editing or Finals delivered. Replacing a final: re-upload; keep download URL stable if same id. **Replace finals** moves Finals delivered back to Editing (confirm first) — the client link leaves download mode until re-delivered. Partial upload: stay in Editing until primary “Mark delivered.” |
 
 ### 4. Close out
 

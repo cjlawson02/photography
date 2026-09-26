@@ -2,7 +2,8 @@ import type { ReviewJobStatus } from '../../db/schema/review/job-status.ts';
 import {
   buildJobStepRail,
   jobStepLabel,
-  jobStepSecondaryAction,
+  jobStepLeadingAction,
+  jobStepSecondaryActions,
   type JobStepPrimaryAction,
 } from '../../lib/review/job-steps.ts';
 import { adminClass } from './admin-styles.ts';
@@ -11,6 +12,8 @@ import AdminPrimaryButton from './AdminPrimaryButton.tsx';
 type AdminJobStepRailProps = {
   status: ReviewJobStatus;
   reviewPath: string;
+  adminPreviewPath?: string;
+  hasReadyFinals?: boolean;
   primaryAction: JobStepPrimaryAction;
   onMarkShared?: () => void;
   markSharedPending?: boolean;
@@ -20,6 +23,8 @@ type AdminJobStepRailProps = {
   reopenPicksPending?: boolean;
   onMarkDelivered?: () => void;
   markDeliveredPending?: boolean;
+  onReplaceFinals?: () => void;
+  replaceFinalsPending?: boolean;
   onMarkClosed?: () => void;
   markClosedPending?: boolean;
   onCopyDeliveryMessage?: () => void;
@@ -32,25 +37,73 @@ export function AdminJobStatusBadge({ status }: { status: ReviewJobStatus }) {
   );
 }
 
-export default function AdminJobStepRail({
-  status,
-  reviewPath,
-  primaryAction,
-  onMarkShared,
-  markSharedPending,
-  onCopyFilenames,
-  copyFilenamesPending,
-  onReopenPicks,
-  reopenPicksPending,
-  onMarkDelivered,
-  markDeliveredPending,
-  onMarkClosed,
-  markClosedPending,
-  onCopyDeliveryMessage,
-  copyDeliveryMessagePending,
-}: AdminJobStepRailProps) {
+export default function AdminJobStepRail(props: AdminJobStepRailProps) {
+  const { status, reviewPath, adminPreviewPath, hasReadyFinals = false, primaryAction } = props;
   const steps = buildJobStepRail(status);
-  const secondaryAction = jobStepSecondaryAction(status, reviewPath);
+  const leadingAction = adminPreviewPath
+    ? jobStepLeadingAction({ status, adminPreviewPath, hasReadyFinals })
+    : null;
+  const secondaryActions = jobStepSecondaryActions(status, reviewPath);
+
+  const renderAction = (action: JobStepPrimaryAction, className?: string) => {
+    const button = (onClick: (() => void) | undefined, pending: boolean | undefined) => (
+      <AdminPrimaryButton
+        key={action.kind}
+        type="button"
+        className={className}
+        disabled={pending}
+        onClick={() => onClick?.()}
+      >
+        {action.label}
+      </AdminPrimaryButton>
+    );
+    switch (action.kind) {
+      case 'upload_proofs':
+      case 'upload_finals':
+        return (
+          <a
+            key={action.kind}
+            className={`${adminClass.btnPrimary} ${className ?? ''}`.trim()}
+            href={action.href}
+          >
+            {action.label}
+          </a>
+        );
+      case 'preview_client':
+      case 'preview_download':
+        return (
+          <a
+            key={`${action.kind}:${action.href}`}
+            className={`${adminClass.btnPrimary} ${className ?? ''}`.trim()}
+            href={action.href}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {action.label}
+          </a>
+        );
+      case 'mark_shared':
+        return button(props.onMarkShared, props.markSharedPending);
+      case 'copy_filenames':
+        return button(props.onCopyFilenames, props.copyFilenamesPending);
+      case 'reopen_picks':
+        return button(props.onReopenPicks, props.reopenPicksPending);
+      case 'mark_delivered':
+        return button(props.onMarkDelivered, props.markDeliveredPending);
+      case 'replace_finals':
+        return button(props.onReplaceFinals, props.replaceFinalsPending);
+      case 'mark_closed':
+        return button(props.onMarkClosed, props.markClosedPending);
+      case 'copy_delivery_message':
+        return button(props.onCopyDeliveryMessage, props.copyDeliveryMessagePending);
+      case 'none':
+        return (
+          <p key={action.kind} className={`text-sm ${adminClass.fgMuted}`}>
+            {action.label}
+          </p>
+        );
+    }
+  };
 
   return (
     <section className="admin-job-rail" aria-label="Shoot job steps">
@@ -74,99 +127,9 @@ export default function AdminJobStepRail({
       </ol>
 
       <div className="admin-job-rail__action">
-        {primaryAction.kind === 'upload_proofs' || primaryAction.kind === 'upload_finals' ? (
-          <a className={adminClass.btnPrimary} href={primaryAction.href}>
-            {primaryAction.label}
-          </a>
-        ) : null}
-        {primaryAction.kind === 'mark_shared' ? (
-          <AdminPrimaryButton
-            type="button"
-            disabled={markSharedPending}
-            onClick={() => onMarkShared?.()}
-          >
-            {primaryAction.label}
-          </AdminPrimaryButton>
-        ) : null}
-        {primaryAction.kind === 'preview_client' || primaryAction.kind === 'preview_download' ? (
-          <a
-            className={adminClass.btnPrimary}
-            href={primaryAction.href}
-            target="_blank"
-            rel="noreferrer"
-          >
-            {primaryAction.label}
-          </a>
-        ) : null}
-        {primaryAction.kind === 'mark_closed' ? (
-          <AdminPrimaryButton
-            type="button"
-            disabled={markClosedPending}
-            onClick={() => onMarkClosed?.()}
-          >
-            {primaryAction.label}
-          </AdminPrimaryButton>
-        ) : null}
-        {primaryAction.kind === 'mark_delivered' ? (
-          <AdminPrimaryButton
-            type="button"
-            disabled={markDeliveredPending}
-            onClick={() => onMarkDelivered?.()}
-          >
-            {primaryAction.label}
-          </AdminPrimaryButton>
-        ) : null}
-        {primaryAction.kind === 'copy_delivery_message' ? (
-          <AdminPrimaryButton
-            type="button"
-            disabled={copyDeliveryMessagePending}
-            onClick={() => onCopyDeliveryMessage?.()}
-          >
-            {primaryAction.label}
-          </AdminPrimaryButton>
-        ) : null}
-        {primaryAction.kind === 'copy_filenames' ? (
-          <AdminPrimaryButton
-            type="button"
-            disabled={copyFilenamesPending}
-            onClick={() => onCopyFilenames?.()}
-          >
-            {primaryAction.label}
-          </AdminPrimaryButton>
-        ) : null}
-        {primaryAction.kind === 'none' ? (
-          <p className={`text-sm ${adminClass.fgMuted}`}>{primaryAction.label}</p>
-        ) : null}
-        {secondaryAction?.kind === 'reopen_picks' ? (
-          <AdminPrimaryButton
-            type="button"
-            className="ml-3"
-            disabled={reopenPicksPending}
-            onClick={() => onReopenPicks?.()}
-          >
-            {secondaryAction.label}
-          </AdminPrimaryButton>
-        ) : null}
-        {secondaryAction?.kind === 'preview_download' ? (
-          <a
-            className={`${adminClass.btnPrimary} ml-3`}
-            href={secondaryAction.href}
-            target="_blank"
-            rel="noreferrer"
-          >
-            {secondaryAction.label}
-          </a>
-        ) : null}
-        {secondaryAction?.kind === 'copy_delivery_message' ? (
-          <AdminPrimaryButton
-            type="button"
-            className="ml-3"
-            disabled={copyDeliveryMessagePending}
-            onClick={() => onCopyDeliveryMessage?.()}
-          >
-            {secondaryAction.label}
-          </AdminPrimaryButton>
-        ) : null}
+        {leadingAction ? renderAction(leadingAction, 'mr-3') : null}
+        {renderAction(primaryAction)}
+        {secondaryActions.map((action) => renderAction(action, 'ml-3'))}
       </div>
     </section>
   );
