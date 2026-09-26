@@ -1,0 +1,2 @@
+CREATE INDEX `PortfolioPhotos_published_status_idx` ON `PortfolioPhotos` (`published`,`status`);--> statement-breakpoint
+CREATE INDEX `ReviewPhotos_collectionId_idx` ON `ReviewPhotos` (`collectionId`);
