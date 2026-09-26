@@ -9,6 +9,7 @@ import {
 } from '../ingest/schemas.ts';
 import type { PurposeBucket } from '../dao/r2-dao.ts';
 import type { PhotoStatus } from '../../db/schema/photo-status.ts';
+import { canUploadFinals, FINALS_UPLOAD_STATUSES, jobStepLabel } from '../review/job-steps.ts';
 import { findMatchedPickId } from '../review/match-final-to-pick.ts';
 
 export type PresignResult = {
@@ -46,6 +47,13 @@ export class IngestService {
       const collection = await this.app.d1.reviewCollections.getById(input.collectionId);
       if (!collection) {
         throw new AppError('NOT_FOUND', `Review collection not found: ${input.collectionId}`);
+      }
+      if (input.round === 'final' && !canUploadFinals(collection.status)) {
+        const allowed = FINALS_UPLOAD_STATUSES.map(jobStepLabel).join(' or ');
+        throw new AppError(
+          'PRECONDITION_FAILED',
+          `Finals can only be uploaded while the shoot is in ${allowed} (current step: ${jobStepLabel(collection.status)}).`,
+        );
       }
     }
 

@@ -16,7 +16,7 @@ import type {
   AdminReviewCollectionDetailPhoto,
 } from '../../lib/admin/trpc-types.ts';
 import { requestReprocess } from '../../lib/ingest/browser-upload.ts';
-import { jobStepPrimaryAction } from '../../lib/review/job-steps.ts';
+import { canUploadFinals, jobStepPrimaryAction } from '../../lib/review/job-steps.ts';
 import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
 import AdminJobStepRail, { AdminJobStatusBadge } from './AdminJobStepRail.tsx';
 import {
@@ -377,6 +377,7 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
   );
 
   const reviewPath = collection ? `/review/${encodeURIComponent(collection.slug)}` : '/review';
+  const adminPreviewPath = `/admin/shoots/${encodeURIComponent(collectionId)}/preview`;
   const hasReadyFinals = (finalsSummary?.readyCount ?? 0) > 0;
 
   const primaryAction = useMemo(
@@ -413,6 +414,8 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
         <AdminJobStepRail
           status={collection.status}
           reviewPath={reviewPath}
+          adminPreviewPath={adminPreviewPath}
+          hasReadyFinals={hasReadyFinals}
           primaryAction={primaryAction}
           markSharedPending={transitionMutation.isPending}
           onMarkShared={() => {
@@ -450,6 +453,18 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
             }
             setEditStatus('Updating step…');
             void markDeliveredMutation.mutateAsync({ id: collectionId });
+          }}
+          replaceFinalsPending={transitionMutation.isPending}
+          onReplaceFinals={() => {
+            if (
+              !confirm(
+                'Replace finals? The client link stops offering downloads and shows their locked picks again until you mark finals delivered again. Existing finals stay until you remove them.',
+              )
+            ) {
+              return;
+            }
+            setEditStatus('Updating step…');
+            void transitionMutation.mutateAsync({ id: collectionId, to: 'editing' });
           }}
           markClosedPending={transitionMutation.isPending}
           onMarkClosed={() => {
@@ -560,9 +575,7 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
             </div>
           </section>
 
-          {collection.status === 'editing' ||
-          collection.status === 'finals_delivered' ||
-          collection.status === 'closed' ? (
+          {canUploadFinals(collection.status) ? (
             <section
               id="upload-finals"
               className={`mt-8 scroll-mt-8 ${adminClass.uploadSection}`}

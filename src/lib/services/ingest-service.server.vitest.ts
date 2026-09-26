@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import type { ReviewJobStatus } from '../../db/schema/review/job-status.ts';
 import type { AppEnv } from '../env.ts';
 import { AppError } from '../http/app-error.ts';
 import { VARIANT_SPECS, variantKey } from '../ingest/keys.ts';
@@ -80,6 +81,82 @@ function createIngestApp(overrides: {
     },
   } as unknown as AppEnv;
 }
+
+function createPresignApp(collectionStatus: ReviewJobStatus): AppEnv {
+  return {
+    d1: {
+      reviewCollections: {
+        getById: vi.fn(async () => ({ id: 'col-1', status: collectionStatus })),
+      },
+      reviewPhotos: { insert: vi.fn(async () => ({ id: PHOTO_ID })) },
+    },
+    r2: {
+      createPresignedPutUrl: vi.fn(async () => ({
+        uploadUrl: 'https://r2.example/put',
+        expiresInSeconds: 3600,
+      })),
+    },
+  } as unknown as AppEnv;
+}
+
+describe('IngestService.createPresign finals gate', () => {
+  it.each(['editing', 'finals_delivered'] as const)('allows finals while %s', async (status) => {
+    const app = createPresignApp(status);
+    const result = await new IngestService(app).createPresign({
+      bucket: 'review',
+      collectionId: 'col-1',
+      contentType: 'image/jpeg',
+      filename: 'DSC_1234.jpg',
+      round: 'final',
+    });
+    expect(result.id).toBe(PHOTO_ID);
+    expect(app.d1.reviewPhotos.insert).toHaveBeenCalledWith(
+      expect.objectContaining({ round: 'final' }),
+    );
+  });
+
+  it.each(['setup', 'proofs_uploaded', 'shared', 'picks_submitted', 'closed'] as const)(
+    'rejects finals while %s without inserting a row',
+    async (status) => {
+      const app = createPresignApp(status);
+      const error = await new IngestService(app)
+        .createPresign({
+          bucket: 'review',
+          collectionId: 'col-1',
+          contentType: 'image/jpeg',
+          round: 'final',
+        })
+        .catch((e) => e);
+      expect(error).toBeInstanceOf(AppError);
+      expect((error as AppError).code).toBe('PRECONDITION_FAILED');
+      expect((error as AppError).message).toMatch(/Editing or Finals delivered/);
+      expect(app.d1.reviewPhotos.insert).not.toHaveBeenCalled();
+      expect(app.r2.createPresignedPutUrl).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(['setup', 'closed', 'editing'] as const)(
+    'leaves proof uploads unaffected while %s',
+    async (status) => {
+      const app = createPresignApp(status);
+      await expect(
+        new IngestService(app).createPresign({
+          bucket: 'review',
+          collectionId: 'col-1',
+          contentType: 'image/jpeg',
+        }),
+      ).resolves.toMatchObject({ id: PHOTO_ID });
+      await expect(
+        new IngestService(app).createPresign({
+          bucket: 'review',
+          collectionId: 'col-1',
+          contentType: 'image/jpeg',
+          round: 'proof',
+        }),
+      ).resolves.toMatchObject({ id: PHOTO_ID });
+    },
+  );
+});
 
 describe('IngestService.processFromOriginal', () => {
   it('deletes orphaned variants when markReady finds a deleted row', async () => {

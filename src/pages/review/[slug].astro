@@ -3,6 +3,7 @@ import { env } from 'cloudflare:workers';
 
 import ReviewDownloadGallery from '../../components/public/ReviewDownloadGallery.tsx';
 import ReviewGallery from '../../components/public/ReviewGallery.tsx';
+import ReviewPageHeader from '../../components/public/ReviewPageHeader.astro';
 import ReviewLayout from '../../layouts/ReviewLayout.astro';
 import { resolveReviewPageState } from '../../lib/services/review-service.ts';
 
@@ -55,16 +56,7 @@ const pageDescription =
 	) : state.kind === 'ok' ? (
 		<ReviewLayout title={pageTitle} description={pageDescription}>
 			<main>
-				<header class="public-wrap text-center" style="padding-top: var(--space-5)">
-					<h1 class="public-section-title">
-						{state.collection.title?.trim() || 'Client review'}
-					</h1>
-					<p class="mt-3 text-sm" style="color: var(--color-fg-muted)">
-						{state.collection.mode === 'download'
-							? 'Download each full-resolution file below.'
-							: 'Select your favorites, then submit when you are done. Your choices save automatically.'}
-					</p>
-				</header>
+				<ReviewPageHeader title={state.collection.title} mode={state.collection.mode} />
 				{state.collection.mode === 'download' ? (
 					<ReviewDownloadGallery client:load photos={state.collection.downloadPhotos} />
 				) : (

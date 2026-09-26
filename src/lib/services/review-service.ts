@@ -10,6 +10,7 @@ import type { ReviewJobStatus } from '../../db/schema/review/job-status.ts';
 import { AppError } from '../http/app-error.ts';
 import { GALLERY_VARIANT, THUMB_VARIANT, photoIngestObjectKeys } from '../ingest/keys.ts';
 import {
+  reviewOriginalAdminUrl,
   reviewOriginalPublicUrl,
   reviewVariantAdminUrl,
   reviewVariantPublicUrl,
@@ -18,6 +19,7 @@ import {
   isReviewDownloadMode,
   resolveReviewCollectionAccess,
 } from '../review/collection-access.ts';
+import { stripFilenameExtension } from '../review/filename-match.ts';
 import { isTransitionAllowed } from '../review/job-steps.ts';
 import { areClientPicksLocked } from '../review/picks-lock.ts';
 export { updateReviewSelection } from '../review/update-selection.ts';
@@ -40,6 +42,46 @@ export type PublicReviewDownloadPhoto = {
   originalFilename: string | null;
   width: number | null;
   height: number | null;
+};
+
+type DownloadPhotoRow = {
+  id: string;
+  updatedAt: number;
+  originalFilename: string | null;
+  width: number | null;
+  height: number | null;
+};
+
+function toDownloadPhoto(
+  photo: DownloadPhotoRow,
+  audience: 'client' | 'admin',
+): PublicReviewDownloadPhoto {
+  return {
+    id: photo.id,
+    thumbUrl:
+      audience === 'admin'
+        ? reviewVariantAdminUrl(photo.id, THUMB_VARIANT.suffix, photo.updatedAt)
+        : reviewVariantPublicUrl(photo.id, THUMB_VARIANT.suffix, photo.updatedAt),
+    downloadUrl:
+      audience === 'admin'
+        ? reviewOriginalAdminUrl(photo.id, photo.updatedAt)
+        : reviewOriginalPublicUrl(photo.id, photo.updatedAt),
+    originalFilename: photo.originalFilename,
+    width: photo.width,
+    height: photo.height,
+  };
+}
+
+export type AdminReviewDownloadPreview = {
+  collection: {
+    id: string;
+    slug: string;
+    title: string | null;
+    personName: string | null;
+    status: ReviewJobStatus;
+    expiresAt: number | null;
+  };
+  downloadPhotos: PublicReviewDownloadPhoto[];
 };
 
 export type AdminReviewCollectionPhoto = {
@@ -292,6 +334,26 @@ export class ReviewService {
     };
   }
 
+  /** Download-mode page as the client will see it, with admin media URLs (any job step). */
+  async getDownloadPreviewForAdmin(id: string): Promise<AdminReviewDownloadPreview> {
+    const collection = await this.app.d1.reviewCollections.getById(id);
+    if (!collection) {
+      throw new AppError('NOT_FOUND', `Review collection not found: ${id}`);
+    }
+    const finals = await this.app.d1.reviewPhotos.listReadyByCollectionIdAndRound(id, 'final');
+    return {
+      collection: {
+        id: collection.id,
+        slug: collection.slug,
+        title: collection.title,
+        personName: collection.personName,
+        status: collection.status,
+        expiresAt: collection.expiresAt,
+      },
+      downloadPhotos: finals.map((photo) => toDownloadPhoto(photo, 'admin')),
+    };
+  }
+
   async linkFinalToPick(input: {
     collectionId: string;
     finalPhotoId: string;
@@ -439,11 +501,7 @@ export class ReviewService {
       (photo) => photo.selectionStatus === 'selected' || photo.selectionStatus === 'approved',
     );
     const filenames = picks
-      .map((photo) => {
-        const raw = photo.originalFilename?.trim() || photo.id;
-        const base = raw.replace(/\.[^./\\]+$/, '');
-        return base.length > 0 ? base : raw;
-      })
+      .map((photo) => stripFilenameExtension(photo.originalFilename?.trim() || photo.id))
       .toSorted((a, b) => a.localeCompare(b));
     if (detail.collection.status === 'picks_submitted') {
       await this.transitionJobStatus(id, 'editing');
@@ -570,14 +628,7 @@ export async function resolveReviewPageState(
         width: photo.width,
         height: photo.height,
       })),
-      downloadPhotos: finalRows.map((photo) => ({
-        id: photo.id,
-        thumbUrl: reviewVariantPublicUrl(photo.id, THUMB_VARIANT.suffix, photo.updatedAt),
-        downloadUrl: reviewOriginalPublicUrl(photo.id, photo.updatedAt),
-        originalFilename: photo.originalFilename,
-        width: photo.width,
-        height: photo.height,
-      })),
+      downloadPhotos: finalRows.map((photo) => toDownloadPhoto(photo, 'client')),
     },
   };
 }

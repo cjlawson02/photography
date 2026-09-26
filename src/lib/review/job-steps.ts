@@ -63,6 +63,13 @@ export const ADMIN_JOB_TRANSITION_TARGETS: Partial<Record<ReviewJobStatus, Revie
   finals_delivered: ['editing', 'closed'],
 };
 
+/** Steps where `ingest.presign` accepts `round: 'final'` (Workflow 3). */
+export const FINALS_UPLOAD_STATUSES: ReviewJobStatus[] = ['editing', 'finals_delivered'];
+
+export function canUploadFinals(status: ReviewJobStatus): boolean {
+  return FINALS_UPLOAD_STATUSES.includes(status);
+}
+
 export function isTransitionAllowed(from: ReviewJobStatus, to: ReviewJobStatus): boolean {
   if (from === to) return true;
   const allowed = ADMIN_JOB_TRANSITION_TARGETS[from];
@@ -92,6 +99,7 @@ export type JobStepPrimaryAction =
   | { kind: 'mark_closed'; label: string; targetStatus: 'closed' }
   | { kind: 'copy_delivery_message'; label: string }
   | { kind: 'reopen_picks'; label: string; targetStatus: 'shared' }
+  | { kind: 'replace_finals'; label: string; targetStatus: 'editing' }
   | { kind: 'none'; label: string };
 
 export function jobStepPrimaryAction(input: {
@@ -132,19 +140,37 @@ export function jobStepPrimaryAction(input: {
   }
 }
 
-/** Secondary admin action on job page when picks are locked. */
-export function jobStepSecondaryAction(
-  status: ReviewJobStatus,
-  reviewPath: string,
-): JobStepPrimaryAction | null {
-  if (status === 'picks_submitted' || status === 'editing') {
-    return { kind: 'reopen_picks', label: 'Reopen picks', targetStatus: 'shared' };
-  }
-  if (status === 'finals_delivered') {
-    return { kind: 'preview_download', label: 'Preview download mode', href: reviewPath };
-  }
-  if (status === 'closed') {
-    return { kind: 'copy_delivery_message', label: 'Copy notify message' };
+/**
+ * Shown before the primary action while Editing with ready finals: the admin-only download-mode
+ * preview (the public link does not switch until Mark finals delivered).
+ */
+export function jobStepLeadingAction(input: {
+  status: ReviewJobStatus;
+  adminPreviewPath: string;
+  hasReadyFinals: boolean;
+}): JobStepPrimaryAction | null {
+  if (input.status === 'editing' && input.hasReadyFinals) {
+    return { kind: 'preview_download', label: 'Preview as client', href: input.adminPreviewPath };
   }
   return null;
+}
+
+/** Secondary admin actions after the primary one (reopen, preview, replace, notify). */
+export function jobStepSecondaryActions(
+  status: ReviewJobStatus,
+  reviewPath: string,
+): JobStepPrimaryAction[] {
+  if (status === 'picks_submitted' || status === 'editing') {
+    return [{ kind: 'reopen_picks', label: 'Reopen picks', targetStatus: 'shared' }];
+  }
+  if (status === 'finals_delivered') {
+    return [
+      { kind: 'preview_download', label: 'Preview download mode', href: reviewPath },
+      { kind: 'replace_finals', label: 'Replace finals', targetStatus: 'editing' },
+    ];
+  }
+  if (status === 'closed') {
+    return [{ kind: 'copy_delivery_message', label: 'Copy notify message' }];
+  }
+  return [];
 }
