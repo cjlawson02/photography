@@ -39,5 +39,8 @@ console.log(`[legacy:inventory] sources:`, {
 });
 
 const outPath = resolve(exportRoot, 'inventory.json');
-writeFileSync(outPath, JSON.stringify({ generatedAt: new Date().toISOString(), candidates: withCategory }, null, 2));
+writeFileSync(
+  outPath,
+  JSON.stringify({ generatedAt: new Date().toISOString(), candidates: withCategory }, null, 2),
+);
 console.log(`[legacy:inventory] wrote ${outPath}`);

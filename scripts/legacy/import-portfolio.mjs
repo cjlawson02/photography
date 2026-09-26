@@ -54,7 +54,8 @@ async function encodeVariants(sourcePath) {
     variants,
     width: meta.width ?? null,
     height: meta.height ?? null,
-    mimeType: meta.format === 'jpeg' ? 'image/jpeg' : meta.format ? `image/${meta.format}` : 'image/jpeg',
+    mimeType:
+      meta.format === 'jpeg' ? 'image/jpeg' : meta.format ? `image/${meta.format}` : 'image/jpeg',
   };
 }
 
@@ -93,7 +94,9 @@ async function main() {
   console.log(`[legacy:import] uploads root: ${uploadsRoot}`);
 
   if (!existsSync(uploadsRoot) && !dryRun) {
-    throw new Error(`Uploads not staged at ${uploadsRoot}. Run npm run migrate:legacy:stage -- --execute first.`);
+    throw new Error(
+      `Uploads not staged at ${uploadsRoot}. Run npm run migrate:legacy:stage -- --execute first.`,
+    );
   }
 
   let candidates;

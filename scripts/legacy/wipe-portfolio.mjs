@@ -4,13 +4,7 @@
  * Default dry-run. Pass --execute. D1_TARGET=local|remote (default local).
  */
 import { spawnSync } from 'node:child_process';
-import {
-  d1Target,
-  isDryRun,
-  loadLegacyEnv,
-  photoIngestObjectKeys,
-  REPO_ROOT,
-} from './env.mjs';
+import { d1Target, isDryRun, loadLegacyEnv, photoIngestObjectKeys, REPO_ROOT } from './env.mjs';
 import { deleteRemoteObject, listRemoteKeys, wranglerOauthToken } from './r2.mjs';
 
 const BUCKET = 'photography-portfolio';
@@ -66,11 +60,10 @@ async function wipeLocalR2(ids, dryRun) {
   console.log(`[legacy:wipe] local R2 keys to remove: ${keys.length}`);
   if (dryRun) return;
   for (const key of keys) {
-    spawnSync(
-      'npx',
-      ['wrangler', 'r2', 'object', 'delete', `${BUCKET}/${key}`, '--local', '-y'],
-      { cwd: REPO_ROOT, encoding: 'utf8' },
-    );
+    spawnSync('npx', ['wrangler', 'r2', 'object', 'delete', `${BUCKET}/${key}`, '--local', '-y'], {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+    });
   }
 }
 
