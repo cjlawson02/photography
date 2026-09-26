@@ -33,11 +33,12 @@ describe('ReviewGallery', () => {
   beforeEach(() => {
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () =>
-        new Response(JSON.stringify({ ok: true }), {
-          status: 200,
-          headers: { 'content-type': 'application/json' },
-        }),
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ ok: true }), {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+          }),
       ),
     );
   });
@@ -71,20 +72,16 @@ describe('ReviewGallery', () => {
     const user = userEvent.setup();
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () =>
-        new Response('<html>bad gateway</html>', {
-          status: 502,
-          headers: { 'content-type': 'text/html' },
-        }),
+      vi.fn(
+        async () =>
+          new Response('<html>bad gateway</html>', {
+            status: 502,
+            headers: { 'content-type': 'text/html' },
+          }),
       ),
     );
 
-    render(
-      <ReviewGallery
-        slug="client-slug"
-        photos={[{ ...photo, selectionStatus: 'none' }]}
-      />,
-    );
+    render(<ReviewGallery slug="client-slug" photos={[{ ...photo, selectionStatus: 'none' }]} />);
 
     await user.click(screen.getByRole('button', { name: 'Select' }));
 

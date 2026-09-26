@@ -73,7 +73,11 @@ export class IngestMaintenanceService {
     try {
       await this.r2.deleteObjects(bucket, photoIngestObjectKeys(id));
     } catch (error) {
-      console.error('[ingest-maintenance] R2 cleanup failed; leaving D1 row', { bucket, id, error });
+      console.error('[ingest-maintenance] R2 cleanup failed; leaving D1 row', {
+        bucket,
+        id,
+        error,
+      });
       return false;
     }
 

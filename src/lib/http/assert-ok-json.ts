@@ -25,7 +25,8 @@ export async function assertOkJsonResponse(res: Response, fallbackError: string)
   }
 
   if (!res.ok || !json.ok) {
-    const message = typeof json.error === 'string' && json.error.trim() ? json.error : fallbackError;
+    const message =
+      typeof json.error === 'string' && json.error.trim() ? json.error : fallbackError;
     throw new Error(message);
   }
 }
