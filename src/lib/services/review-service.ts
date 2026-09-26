@@ -4,7 +4,7 @@ import { ReviewCollectionsDAO } from '../dao/review-collections-dao.ts';
 import { ReviewPhotosDAO } from '../dao/review-photos-dao.ts';
 import type { SelectionStatus } from '../../db/schema/review/selection-status.ts';
 import { AppError } from '../http/app-error.ts';
-import { originalKey, VARIANT_SPECS, variantKey } from '../ingest/keys.ts';
+import { photoIngestObjectKeys } from '../ingest/keys.ts';
 import { reviewVariantPublicUrl } from '../media/review-public-url.ts';
 import { resolveReviewCollectionAccess } from '../review/collection-access.ts';
 import { buildReviewSlug } from '../review/slug.ts';
@@ -115,6 +115,10 @@ export class ReviewService {
     };
   }
 
+  /**
+   * Revoke collection: optional R2 purge (batch) before D1 batch removes photos + collection.
+   * Matches HLD review cache hygiene — purge storage before catalog rows disappear.
+   */
   async revokeCollection(id: string, options: { cleanupR2: boolean }) {
     const existing = await this.app.d1.reviewCollections.getById(id);
     if (!existing) {
@@ -123,28 +127,21 @@ export class ReviewService {
 
     const photos = await this.app.d1.reviewPhotos.listByCollectionId(id);
     if (options.cleanupR2) {
-      for (const photo of photos) {
-        await this.cleanupR2Objects(photo.id);
-      }
-    }
-
-    await this.app.d1.reviewPhotos.deleteByCollectionId(id);
-    const deleted = await this.app.d1.reviewCollections.deleteById(id);
-    if (!deleted) {
-      throw new AppError('NOT_FOUND', `Review collection not found: ${id}`);
-    }
-    return deleted;
-  }
-
-  private async cleanupR2Objects(id: string): Promise<void> {
-    const keys = [originalKey(id), ...VARIANT_SPECS.map((spec) => variantKey(id, spec.suffix))];
-    for (const key of keys) {
+      const keys = photos.flatMap((photo) => photoIngestObjectKeys(photo.id));
       try {
-        await this.app.r2.deleteObject('review', key);
+        await this.app.r2.deleteObjects('review', keys);
       } catch (error) {
-        console.error('[review-revoke] R2 delete failed', { id, key, error });
+        console.error('[review-revoke] R2 batch delete failed', {
+          id,
+          keyCount: keys.length,
+          error,
+        });
+        throw new AppError('INTERNAL_SERVER_ERROR', 'Failed to delete review objects from storage');
       }
     }
+
+    await this.app.d1.reviewCollections.deleteWithPhotos(id);
+    return existing;
   }
 }
 
