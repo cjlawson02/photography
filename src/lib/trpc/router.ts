@@ -26,7 +26,6 @@ import { IngestMaintenanceService } from '../services/ingest-maintenance-service
 import { IngestService } from '../services/ingest-service.ts';
 import { DashboardService } from '../services/dashboard-service.ts';
 import { PortfolioService } from '../services/portfolio-service.ts';
-import { DashboardService } from '../services/dashboard-service.ts';
 import { ReviewService } from '../services/review-service.ts';
 import { createTRPCRouter } from './init.ts';
 import { adminProcedure, rateLimitedAdminProcedure } from './middleware.ts';

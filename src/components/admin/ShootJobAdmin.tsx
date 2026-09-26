@@ -172,7 +172,6 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
   const queryClient = useQueryClient();
   const { pushToast } = useAdminToast();
   const [editStatus, setEditStatus] = useState<string | null>(null);
-  const [busyPhotoId, setBusyPhotoId] = useState<string | null>(null);
   const [initialDataUpdatedAt] = useState(() => Date.now());
   const detailQuery = useQuery({
     ...trpc.review.collections.detail.queryOptions({ id: collectionId }),
@@ -274,19 +273,6 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
     }),
   );
 
-  const deletePhotoMutation = useMutation(
-    trpc.review.collections.deletePhoto.mutationOptions({
-      onSuccess: async () => {
-        setEditStatus(null);
-        pushToast('Photo deleted.');
-        await queryClient.invalidateQueries(trpc.review.collections.detail.queryFilter());
-      },
-      onError: (error) => {
-        setEditStatus(errorMessage(error));
-      },
-    }),
-  );
-
   const patchCollection = async (data: ReviewCollectionAdminUpdateBody) => {
     setEditStatus('Saving…');
     try {
@@ -296,30 +282,15 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
     }
   };
 
-  const deletePhoto = async (photoId: string) => {
-    if (!confirm(`Delete review photo ${photoId}? Storage objects will be removed.`)) return;
-    setBusyPhotoId(photoId);
-    setEditStatus('Deleting…');
-    try {
-      await deletePhotoMutation.mutateAsync({ collectionId, photoId });
-    } catch {
-      /* onError sets editStatus */
-    } finally {
-      setBusyPhotoId(null);
-    }
-  };
-
   const photoActionsBusy =
     updateMutation.isPending ||
-    deletePhotoMutation.isPending ||
     transitionMutation.isPending ||
     reopenPicksMutation.isPending ||
     exportPickFilenamesMutation.isPending ||
     markDeliveredMutation.isPending ||
     promoteFinalMutation.isPending ||
     purgeRoundsMutation.isPending ||
-    linkFinalMutation.isPending ||
-    busyPhotoId !== null;
+    linkFinalMutation.isPending;
 
   const copyFilenames = async () => {
     setEditStatus('Preparing filenames…');
@@ -589,7 +560,6 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
               <AdminTableHeaderCell>Selection</AdminTableHeaderCell>
               <AdminTableHeaderCell>Updated</AdminTableHeaderCell>
               <AdminTableHeaderCell>Id</AdminTableHeaderCell>
-              <AdminTableHeaderCell className="py-2">Actions</AdminTableHeaderCell>
             </AdminTableHead>
             <tbody>
               {photos.map((photo) => (
@@ -628,42 +598,6 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
                   </td>
                   <td className={`py-2 pr-4 align-middle font-mono text-xs ${adminClass.fgMuted}`}>
                     {photo.id}
-                  </td>
-                  <td className="py-2 align-middle">
-                    <div className="flex flex-col gap-1">
-                      {photo.status === 'failed' || photo.status === 'pending' ? (
-                        <button
-                          type="button"
-                          className={`text-xs ${adminClass.linkMuted}`}
-                          disabled={photoActionsBusy}
-                          onClick={() => {
-                            setBusyPhotoId(photo.id);
-                            setEditStatus('Reprocessing…');
-                            void requestReprocess({ id: photo.id, bucket: 'review' })
-                              .then(async () => {
-                                setEditStatus('Reprocess started.');
-                                await queryClient.invalidateQueries(
-                                  trpc.review.collections.detail.queryFilter(),
-                                );
-                              })
-                              .catch((error) => setEditStatus(errorMessage(error)))
-                              .finally(() => setBusyPhotoId(null));
-                          }}
-                        >
-                          Retry
-                        </button>
-                      ) : null}
-                      <button
-                        type="button"
-                        className={`text-xs ${adminClass.linkMuted} ${adminClass.accent}`}
-                        disabled={photoActionsBusy}
-                        onClick={() => {
-                          void deletePhoto(photo.id);
-                        }}
-                      >
-                        Remove
-                      </button>
-                    </div>
                   </td>
                 </AdminTableRow>
               ))}
@@ -727,44 +661,23 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
                     </td>
                     <td className="py-2 pr-4 align-middle font-mono text-xs">{photo.status}</td>
                     <td className="py-2 align-middle">
-                      <div className="flex flex-col gap-1">
-                        {photo.status === 'failed' || photo.status === 'pending' ? (
-                          <button
-                            type="button"
-                            className={`text-xs ${adminClass.linkMuted}`}
-                            disabled={photoActionsBusy}
-                            onClick={() => {
-                              setBusyPhotoId(photo.id);
-                              void requestReprocess({ id: photo.id, bucket: 'review' })
-                                .then(async () => {
-                                  setEditStatus('Reprocess started.');
-                                  await queryClient.invalidateQueries(
-                                    trpc.review.collections.detail.queryFilter(),
-                                  );
-                                })
-                                .catch((error) => setEditStatus(errorMessage(error)))
-                                .finally(() => setBusyPhotoId(null));
-                            }}
-                          >
-                            Retry
-                          </button>
-                        ) : null}
-                        {photo.status === 'ready' ? (
-                          <button
-                            type="button"
-                            className={`text-xs ${adminClass.linkMuted}`}
-                            disabled={photoActionsBusy}
-                            onClick={() => {
-                              void promoteFinalMutation.mutateAsync({
-                                collectionId,
-                                finalPhotoId: photo.id,
-                              });
-                            }}
-                          >
-                            Promote
-                          </button>
-                        ) : null}
-                      </div>
+                      {photo.status === 'ready' ? (
+                        <button
+                          type="button"
+                          className={`text-xs ${adminClass.linkMuted}`}
+                          disabled={photoActionsBusy}
+                          onClick={() => {
+                            void promoteFinalMutation.mutateAsync({
+                              collectionId,
+                              finalPhotoId: photo.id,
+                            });
+                          }}
+                        >
+                          Promote
+                        </button>
+                      ) : (
+                        <span className={`text-xs ${adminClass.fgMuted}`}>—</span>
+                      )}
                     </td>
                   </AdminTableRow>
                 ))}
