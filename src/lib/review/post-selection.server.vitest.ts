@@ -1,16 +1,15 @@
-import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
-
 import { createId } from '@paralleldrive/cuid2';
+import { describe, expect, it } from 'vitest';
 
+import { REVIEW_SELECTION_MAX_JSON_BYTES } from '../admin/http.ts';
 import { postReviewSelection } from './post-selection.ts';
 
 function jsonRequest(body: unknown, init?: RequestInit): Request {
   return new Request('https://photography.example/review/api/selection', {
     method: 'POST',
+    ...init,
     headers: { 'content-type': 'application/json', ...init?.headers },
     body: JSON.stringify(body),
-    ...init,
   });
 }
 
@@ -24,10 +23,45 @@ describe('postReviewSelection', () => {
       }),
     );
 
-    assert.equal(response.status, 400);
-    assert.deepEqual(await response.json(), {
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
       ok: false,
       error: 'Content-Type must be application/json',
+    });
+  });
+
+  it('returns 400 when Content-Length exceeds the size cap', async () => {
+    const response = await postReviewSelection(
+      { db: {} as D1Database, rateLimiter: undefined },
+      jsonRequest(
+        { slug: 'x', photoId: createId(), selectionStatus: 'selected' },
+        { headers: { 'content-length': String(REVIEW_SELECTION_MAX_JSON_BYTES + 1) } },
+      ),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      error: 'Request body too large',
+    });
+  });
+
+  it('returns 400 when JSON body exceeds the size cap', async () => {
+    const padding = 'x'.repeat(REVIEW_SELECTION_MAX_JSON_BYTES);
+    const response = await postReviewSelection(
+      { db: {} as D1Database, rateLimiter: undefined },
+      jsonRequest({
+        slug: 'client-review-secret-slug',
+        photoId: createId(),
+        selectionStatus: 'selected',
+        _padding: padding,
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      error: 'Request body too large',
     });
   });
 
@@ -43,8 +77,8 @@ describe('postReviewSelection', () => {
       ),
     );
 
-    assert.equal(response.status, 429);
-    assert.deepEqual(await response.json(), {
+    expect(response.status).toBe(429);
+    await expect(response.json()).resolves.toEqual({
       ok: false,
       error: 'Too many selection updates. Please wait a moment and try again.',
     });
@@ -73,10 +107,10 @@ describe('postReviewSelection', () => {
       jsonRequest({ slug: 'client-review-secret-slug', photoId, selectionStatus: 'selected' }),
     );
 
-    assert.equal(response.status, 200);
+    expect(response.status).toBe(200);
     const json = (await response.json()) as { ok: boolean; photo: typeof photo };
-    assert.equal(json.ok, true);
-    assert.equal(json.photo.id, photo.id);
-    assert.equal(json.photo.selectionStatus, photo.selectionStatus);
+    expect(json.ok).toBe(true);
+    expect(json.photo.id).toBe(photo.id);
+    expect(json.photo.selectionStatus).toBe(photo.selectionStatus);
   });
 });

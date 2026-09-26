@@ -33,12 +33,41 @@ export function requireJsonContentType(request: Request): void {
   }
 }
 
-export async function parseJsonBody<T>(request: Request, schema: z.ZodType<T>): Promise<T> {
+/** Max JSON body for public review selection POST (slug + photoId + status). */
+export const REVIEW_SELECTION_MAX_JSON_BYTES = 4 * 1024;
+
+async function readJsonTextWithByteLimit(request: Request, maxBytes: number): Promise<string> {
+  const contentLength = request.headers.get('content-length');
+  if (contentLength !== null) {
+    const declared = Number(contentLength);
+    if (!Number.isFinite(declared) || declared < 0 || declared > maxBytes) {
+      throw new AppError('BAD_REQUEST', 'Request body too large');
+    }
+  }
+
+  const text = await request.text();
+  if (new TextEncoder().encode(text).byteLength > maxBytes) {
+    throw new AppError('BAD_REQUEST', 'Request body too large');
+  }
+  return text;
+}
+
+export async function parseJsonBody<T>(
+  request: Request,
+  schema: z.ZodType<T>,
+  options?: { maxBytes?: number },
+): Promise<T> {
   requireJsonContentType(request);
   let raw: unknown;
   try {
-    raw = await request.json();
-  } catch {
+    if (options?.maxBytes !== undefined) {
+      const text = await readJsonTextWithByteLimit(request, options.maxBytes);
+      raw = JSON.parse(text) as unknown;
+    } else {
+      raw = await request.json();
+    }
+  } catch (error) {
+    if (error instanceof AppError) throw error;
     throw new AppError('BAD_REQUEST', 'Invalid JSON body');
   }
   const parsed = schema.safeParse(raw);

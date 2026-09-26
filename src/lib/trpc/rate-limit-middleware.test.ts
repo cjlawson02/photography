@@ -3,12 +3,14 @@ import test from 'node:test';
 
 import { TRPCError } from '@trpc/server';
 
+import { setRateLimitBindingEnforcementForTests } from '../rate-limit/binding.ts';
 import { hashString } from '../util/hash-string.ts';
+import { appErrorMiddleware } from './middleware.ts';
 import { createCallerFactory, createTRPCRouter, publicProcedure } from './init.ts';
 import { isLimited } from './rate-limit-middleware.ts';
 import type { TrpcContext } from './context.ts';
 
-const limitedProcedure = publicProcedure.use(isLimited);
+const limitedProcedure = publicProcedure.use(appErrorMiddleware).use(isLimited);
 
 const testRouter = createTRPCRouter({
   ping: limitedProcedure.query(() => 'pong'),
@@ -37,6 +39,20 @@ function baseContext(overrides: Partial<TrpcContext> = {}): TrpcContext {
 test('isLimited skips when admin rate limiter binding is missing', async () => {
   const caller = createCaller(baseContext());
   assert.equal(await caller.ping(), 'pong');
+});
+
+test('isLimited returns SERVICE_UNAVAILABLE when binding missing and enforcement required', async () => {
+  setRateLimitBindingEnforcementForTests(true);
+  const caller = createCaller(baseContext());
+  await assert.rejects(
+    () => caller.ping(),
+    (error: unknown) => {
+      assert.ok(error instanceof TRPCError);
+      assert.equal(error.code, 'SERVICE_UNAVAILABLE');
+      return true;
+    },
+  );
+  setRateLimitBindingEnforcementForTests(undefined);
 });
 
 test('isLimited uses Access email in the rate-limit key', async () => {

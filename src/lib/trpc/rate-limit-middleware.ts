@@ -1,5 +1,6 @@
 import { TRPCError } from '@trpc/server';
 
+import { resolveRateLimiterBinding, type RateLimiterBinding } from '../rate-limit/binding.ts';
 import { hashString } from '../util/hash-string.ts';
 import type { TrpcContext } from './context.ts';
 import { trpc } from './init.ts';
@@ -19,7 +20,10 @@ async function rateLimitIdentifier(ctx: TrpcContext): Promise<string> {
 
 /** Per-procedure admin tRPC limits (Workers rate-limit binding). */
 export const isLimited = trpc.middleware(async ({ ctx, path, next }) => {
-  const limiter = ctx.getAdminTrpcRateLimiter();
+  const limiter = resolveRateLimiterBinding(
+    ctx.getAdminTrpcRateLimiter() as RateLimiterBinding | undefined,
+    'ADMIN_TRPC_RATE_LIMITER',
+  );
   if (!limiter) {
     return next();
   }
