@@ -10,16 +10,16 @@ import { bindingHealth } from '../../../lib/env.ts';
  * Verifies Access JWT (defense in depth). Does not require R2 S3 secrets.
  */
 export const GET: APIRoute = async ({ request }) => {
-	try {
-		const identity = await verifyAccessJwt(request, accessEnvFrom(env));
-		const snapshot = bindingHealth(env);
-		return Response.json({
-			ok: true,
-			admin: true,
-			email: identity.email ?? null,
-			...snapshot,
-		});
-	} catch (error) {
-		return accessDeniedResponse(error);
-	}
+  try {
+    const identity = await verifyAccessJwt(request, accessEnvFrom(env));
+    const snapshot = bindingHealth(env);
+    return Response.json({
+      ok: true,
+      admin: true,
+      email: identity.email ?? null,
+      ...snapshot,
+    });
+  } catch (error) {
+    return accessDeniedResponse(error);
+  }
 };

@@ -10,30 +10,30 @@ import { getAdminQueryClient } from './query-client.ts';
 export const { TRPCProvider, useTRPC } = createTRPCContext<AppRouter>();
 
 export function makeAdminTrpcClient() {
-	return createTRPCClient<AppRouter>({
-		links: [
-			httpBatchLink({
-				url: TRPC_URL,
-				fetch: adminTrpcFetch,
-			}),
-		],
-	});
+  return createTRPCClient<AppRouter>({
+    links: [
+      httpBatchLink({
+        url: TRPC_URL,
+        fetch: adminTrpcFetch,
+      }),
+    ],
+  });
 }
 
 type AdminTrpcProviderProps = {
-	children: ReactNode;
+  children: ReactNode;
 };
 
 /** Wrap each admin island that uses TanStack Query + tRPC v11 hooks. */
 export function AdminTrpcProvider({ children }: AdminTrpcProviderProps) {
-	const queryClient = getAdminQueryClient();
-	const [trpcClient] = useState(() => makeAdminTrpcClient());
+  const queryClient = getAdminQueryClient();
+  const [trpcClient] = useState(() => makeAdminTrpcClient());
 
-	return (
-		<QueryClientProvider client={queryClient}>
-			<TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
-				{children}
-			</TRPCProvider>
-		</QueryClientProvider>
-	);
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
+        {children}
+      </TRPCProvider>
+    </QueryClientProvider>
+  );
 }

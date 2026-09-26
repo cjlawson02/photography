@@ -11,80 +11,73 @@ type Db = DrizzleD1Database<typeof schema>;
 
 /** Review photo DAO — ingest + selection fields. */
 export class ReviewPhotosDAO {
-	constructor(private readonly db: Db) {}
+  constructor(private readonly db: Db) {}
 
-	async insert(values: {
-		collectionId: string;
-		status?: PhotoStatus;
-		mimeType?: string | null;
-		selectionStatus?: SelectionStatus;
-		id?: string;
-	}) {
-		const row = {
-			collectionId: values.collectionId,
-			status: values.status ?? ('pending' as const),
-			mimeType: values.mimeType ?? null,
-			selectionStatus: values.selectionStatus ?? ('none' as const),
-			...(values.id ? { id: values.id } : {}),
-		};
-		const inserted = await this.db.insert(ReviewPhotos).values(row).returning();
-		return inserted[0]!;
-	}
+  async insert(values: {
+    collectionId: string;
+    status?: PhotoStatus;
+    mimeType?: string | null;
+    selectionStatus?: SelectionStatus;
+    id?: string;
+  }) {
+    const row = {
+      collectionId: values.collectionId,
+      status: values.status ?? ('pending' as const),
+      mimeType: values.mimeType ?? null,
+      selectionStatus: values.selectionStatus ?? ('none' as const),
+      ...(values.id ? { id: values.id } : {}),
+    };
+    const inserted = await this.db.insert(ReviewPhotos).values(row).returning();
+    return inserted[0]!;
+  }
 
-	async getById(id: string) {
-		const rows = await this.db
-			.select()
-			.from(ReviewPhotos)
-			.where(eq(ReviewPhotos.id, id))
-			.limit(1);
-		return rows[0] ?? null;
-	}
+  async getById(id: string) {
+    const rows = await this.db.select().from(ReviewPhotos).where(eq(ReviewPhotos.id, id)).limit(1);
+    return rows[0] ?? null;
+  }
 
-	async listByCollectionId(collectionId: string) {
-		return this.db
-			.select()
-			.from(ReviewPhotos)
-			.where(eq(ReviewPhotos.collectionId, collectionId));
-	}
+  async listByCollectionId(collectionId: string) {
+    return this.db.select().from(ReviewPhotos).where(eq(ReviewPhotos.collectionId, collectionId));
+  }
 
-	/** Public review grid — ingest-ready rows for one collection. */
-	async listReadyByCollectionId(collectionId: string) {
-		return this.db
-			.select()
-			.from(ReviewPhotos)
-			.where(and(eq(ReviewPhotos.collectionId, collectionId), eq(ReviewPhotos.status, 'ready')))
-			.orderBy(asc(ReviewPhotos.createdAt));
-	}
+  /** Public review grid — ingest-ready rows for one collection. */
+  async listReadyByCollectionId(collectionId: string) {
+    return this.db
+      .select()
+      .from(ReviewPhotos)
+      .where(and(eq(ReviewPhotos.collectionId, collectionId), eq(ReviewPhotos.status, 'ready')))
+      .orderBy(asc(ReviewPhotos.createdAt));
+  }
 
-	async deleteByCollectionId(collectionId: string) {
-		return this.db.delete(ReviewPhotos).where(eq(ReviewPhotos.collectionId, collectionId));
-	}
+  async deleteByCollectionId(collectionId: string) {
+    return this.db.delete(ReviewPhotos).where(eq(ReviewPhotos.collectionId, collectionId));
+  }
 
-	async update(
-		id: string,
-		patch: {
-			collectionId?: string;
-			status?: PhotoStatus;
-			mimeType?: string | null;
-			selectionStatus?: SelectionStatus;
-		},
-	) {
-		const existing = await this.getById(id);
-		if (!existing) return null;
-		const next = mergeDefined(
-			{
-				collectionId: existing.collectionId,
-				status: existing.status,
-				mimeType: existing.mimeType,
-				selectionStatus: existing.selectionStatus,
-			},
-			patch,
-		);
-		const updated = await this.db
-			.update(ReviewPhotos)
-			.set(next)
-			.where(eq(ReviewPhotos.id, id))
-			.returning();
-		return updated[0] ?? null;
-	}
+  async update(
+    id: string,
+    patch: {
+      collectionId?: string;
+      status?: PhotoStatus;
+      mimeType?: string | null;
+      selectionStatus?: SelectionStatus;
+    },
+  ) {
+    const existing = await this.getById(id);
+    if (!existing) return null;
+    const next = mergeDefined(
+      {
+        collectionId: existing.collectionId,
+        status: existing.status,
+        mimeType: existing.mimeType,
+        selectionStatus: existing.selectionStatus,
+      },
+      patch,
+    );
+    const updated = await this.db
+      .update(ReviewPhotos)
+      .set(next)
+      .where(eq(ReviewPhotos.id, id))
+      .returning();
+    return updated[0] ?? null;
+  }
 }

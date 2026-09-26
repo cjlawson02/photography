@@ -4,7 +4,7 @@ import * as schema from './schema/index.ts';
 
 /** Typed Drizzle client bound to the Worker D1 database. */
 export function createDb(d1: D1Database) {
-	return drizzle(d1, { schema });
+  return drizzle(d1, { schema });
 }
 
 export type Db = ReturnType<typeof createDb>;

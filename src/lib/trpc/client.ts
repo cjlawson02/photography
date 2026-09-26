@@ -7,10 +7,10 @@ export { TRPC_URL };
 
 /** Imperative tRPC client (ingest upload, legacy api helpers). */
 export const adminTrpc = createTRPCClient<AppRouter>({
-	links: [
-		httpBatchLink({
-			url: TRPC_URL,
-			fetch: adminTrpcFetch,
-		}),
-	],
+  links: [
+    httpBatchLink({
+      url: TRPC_URL,
+      fetch: adminTrpcFetch,
+    }),
+  ],
 });

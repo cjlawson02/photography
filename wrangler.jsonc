@@ -1,49 +1,49 @@
 {
-	"$schema": "./node_modules/wrangler/config-schema.json",
-	"name": "lawson-photography",
-	"main": "@astrojs/cloudflare/entrypoints/server",
-	"compatibility_date": "2026-09-25",
-	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
-	"assets": {
-		"directory": "./dist",
-		"binding": "ASSETS"
-	},
-	"observability": {
-		"enabled": true
-	},
-	// Custom domain — DNS auto-provisioned when chrislawson.dev is on the same account (see docs/DEPLOY.md).
-	"routes": [
-		{
-			"pattern": "photography.chrislawson.dev",
-			"custom_domain": true
-		}
-	],
-	// Access JWT config — not credentials; set via vars (see docs/DEPLOY.md).
-	"vars": {
-		"CF_ACCESS_TEAM_DOMAIN": "https://chrislawson.cloudflareaccess.com",
-		"CF_ACCESS_AUD": "7e0315ba56e4516f80e07ae1b2343c0ec4fbc1c0b32b42848c657b7bc7ba09f4"
-	},
-	"d1_databases": [
-		{
-			"binding": "DB",
-			"database_name": "photography",
-			"database_id": "4f01bd2c-355d-4501-914d-7cb9cf68a70c",
-			"migrations_dir": "src/db/migrations"
-		}
-	],
-	// Private R2 purpose buckets (bindings match HLD).
-	"r2_buckets": [
-		{
-			"binding": "PORTFOLIO",
-			"bucket_name": "photography-portfolio"
-		},
-		{
-			"binding": "REVIEW",
-			"bucket_name": "photography-review"
-		}
-	],
-	// Images Free binding — compress-once at ingest (not hosted Images storage).
-	"images": {
-		"binding": "IMAGES"
-	}
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "lawson-photography",
+  "main": "@astrojs/cloudflare/entrypoints/server",
+  "compatibility_date": "2026-09-25",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+  },
+  "observability": {
+    "enabled": true,
+  },
+  // Custom domain — DNS auto-provisioned when chrislawson.dev is on the same account (see docs/DEPLOY.md).
+  "routes": [
+    {
+      "pattern": "photography.chrislawson.dev",
+      "custom_domain": true,
+    },
+  ],
+  // Access JWT config — not credentials; set via vars (see docs/DEPLOY.md).
+  "vars": {
+    "CF_ACCESS_TEAM_DOMAIN": "https://chrislawson.cloudflareaccess.com",
+    "CF_ACCESS_AUD": "7e0315ba56e4516f80e07ae1b2343c0ec4fbc1c0b32b42848c657b7bc7ba09f4",
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "photography",
+      "database_id": "4f01bd2c-355d-4501-914d-7cb9cf68a70c",
+      "migrations_dir": "src/db/migrations",
+    },
+  ],
+  // Private R2 purpose buckets (bindings match HLD).
+  "r2_buckets": [
+    {
+      "binding": "PORTFOLIO",
+      "bucket_name": "photography-portfolio",
+    },
+    {
+      "binding": "REVIEW",
+      "bucket_name": "photography-review",
+    },
+  ],
+  // Images Free binding — compress-once at ingest (not hosted Images storage).
+  "images": {
+    "binding": "IMAGES",
+  },
 }

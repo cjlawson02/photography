@@ -1,0 +1,26 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "react", "jsx-a11y"],
+  "env": {
+    "builtin": true,
+    "browser": true
+  },
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn"
+  },
+  "ignorePatterns": ["dist/**", "node_modules/**", "**/*.astro", "worker-configuration.d.ts"],
+  "rules": {
+    "react/react-in-jsx-scope": "off",
+    "react/set-state-in-effect": "off"
+  },
+  "overrides": [
+    {
+      "files": ["src/components/public/HeroCarousel.tsx"],
+      "rules": {
+        "jsx-a11y/no-noninteractive-element-interactions": "off",
+        "jsx-a11y/no-noninteractive-tabindex": "off"
+      }
+    }
+  ]
+}

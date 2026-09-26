@@ -15,10 +15,13 @@ Requires Node `>=24.0.0` (Astro 7). CI uses Node 24.
 ```bash
 npm install
 npm run generate-types   # wrangler types → worker-configuration.d.ts (needs valid wrangler.jsonc)
+npm run lint             # oxlint (react, jsx-a11y, typescript)
+npm run format           # oxfmt --write (TS/TSX/JSON; not .astro)
+npm run format:check     # oxfmt --check
 npm run typecheck        # wrangler types && astro check
 npm run build            # astro build (Workers SSR bundle + static assets in dist/)
 npm run dev              # astro dev (workerd via @astrojs/cloudflare)
-npm run ci               # test + typecheck + build + wrangler deploy --dry-run
+npm run ci               # lint + format:check + test + typecheck + build + wrangler deploy --dry-run
 ```
 
 ### D1 / Drizzle
@@ -55,7 +58,8 @@ npx wrangler deploy
 
 ## Code style guidelines
 
-_TBD — only rules that differ from language/tool defaults._
+- **Lint:** [oxlint](https://oxc.rs/docs/guide/usage/linter.html) via `npm run lint` — config `.oxlintrc.json` (react, jsx-a11y, typescript). `.astro` files are excluded (no Astro parser).
+- **Format:** [oxfmt](https://oxc.rs/docs/guide/usage/formatter.html) via `npm run format` / `format:check` — config `.oxfmtrc.json` (100 cols, single quotes). `.astro` is excluded until oxfmt supports it.
 
 ### Public client UI
 
@@ -112,15 +116,15 @@ Phase 1 ingest (JWT + Zod body → `IngestService` via tRPC):
 
 ### Pointer map
 
-| Need | Read |
-| --- | --- |
-| Human overview / doc index | [README.md](README.md) |
-| Architecture / design | [docs/HLD.md](docs/HLD.md) |
-| Implementation plan | [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md) |
-| Estimates | [docs/LOE.md](docs/LOE.md) |
-| Status, Gantt schedule, changelog | [docs/PROGRESS.md](docs/PROGRESS.md) |
-| Public React islands | [docs/FRONTEND.md](docs/FRONTEND.md) |
-| Manual smoke checklist | [docs/SMOKE.md](docs/SMOKE.md) |
-| Agent instructions | This file |
+| Need                              | Read                                             |
+| --------------------------------- | ------------------------------------------------ |
+| Human overview / doc index        | [README.md](README.md)                           |
+| Architecture / design             | [docs/HLD.md](docs/HLD.md)                       |
+| Implementation plan               | [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md) |
+| Estimates                         | [docs/LOE.md](docs/LOE.md)                       |
+| Status, Gantt schedule, changelog | [docs/PROGRESS.md](docs/PROGRESS.md)             |
+| Public React islands              | [docs/FRONTEND.md](docs/FRONTEND.md)             |
+| Manual smoke checklist            | [docs/SMOKE.md](docs/SMOKE.md)                   |
+| Agent instructions                | This file                                        |
 
 Treat this file as living documentation: prune stale rules and fill `_TBD_` sections when decided.

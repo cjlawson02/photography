@@ -13,7 +13,7 @@ import { defineConfig } from 'drizzle-kit';
  * Known D1: name `photography`, id `4f01bd2c-355d-4501-914d-7cb9cf68a70c`
  */
 export default defineConfig({
-	schema: './src/db/schema/kit.ts',
-	out: './src/db/migrations',
-	dialect: 'sqlite',
+  schema: './src/db/schema/kit.ts',
+  out: './src/db/migrations',
+  dialect: 'sqlite',
 });
