@@ -61,6 +61,11 @@ export class ReviewPhotosDAO {
     return this.db.delete(ReviewPhotos).where(eq(ReviewPhotos.collectionId, collectionId));
   }
 
+  async deleteById(id: string) {
+    const deleted = await this.db.delete(ReviewPhotos).where(eq(ReviewPhotos.id, id)).returning();
+    return deleted[0] ?? null;
+  }
+
   async update(
     id: string,
     patch: {
