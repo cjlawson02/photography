@@ -1,31 +1,22 @@
 ---
-import { env } from 'cloudflare:workers';
-
 import AdminPageHeader from '../../../components/admin/AdminPageHeader.astro';
-import PortfolioAdminTable from '../../../components/admin/PortfolioAdminTable.tsx';
-import {
-	loadPortfolioAdminFirstPage,
-	scheduleStalePendingCleanupAfterAdminListLoad,
-} from '../../../lib/admin/ssr-initial-reads.ts';
-import { AppEnv } from '../../../lib/env.ts';
 import AdminLayout from '../../../layouts/AdminLayout.astro';
-
-const app = AppEnv.fromBindings(env);
-const waitUntil = Astro.locals.cfContext?.waitUntil.bind(Astro.locals.cfContext);
-const initialPortfolioPage = await loadPortfolioAdminFirstPage(app);
-scheduleStalePendingCleanupAfterAdminListLoad(app, waitUntil);
 ---
 
 <AdminLayout title="Admin — Portfolio" current="portfolio">
 	<AdminPageHeader
 		title="Portfolio"
-		lede="Publish ready photos to the public home grid. Upload new originals with the form below the heading."
+		lede="Two surfaces: curate the public front page, or browse and edit the full library."
 	/>
 
-	<PortfolioAdminTable client:load initialPortfolioPage={initialPortfolioPage} />
-
-	<p class="admin-footnote">
-		API: <code class="admin-code">/admin/api/trpc</code> (<code class="admin-code">portfolio.list</code>,
-		<code class="admin-code">portfolio.update</code>, <code class="admin-code">portfolio.delete</code>)
-	</p>
+	<ul class="mt-8 space-y-3 text-sm admin-fg">
+		<li>
+			<a class="admin-link" href="/admin/portfolio/front-page">Front page</a>
+			<span class="admin-fg-muted"> — ordered set + hero</span>
+		</li>
+		<li>
+			<a class="admin-link" href="/admin/portfolio/library">Library</a>
+			<span class="admin-fg-muted"> — grid + inspector</span>
+		</li>
+	</ul>
 </AdminLayout>

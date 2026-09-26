@@ -1,6 +1,6 @@
 import { z } from 'zod/v4';
 
-import { portfolioPhotoUpdateSchema } from '../../db/schema/types.ts';
+import { idSchema, portfolioPhotoUpdateSchema } from '../../db/schema/types.ts';
 
 /** Admin PATCH body — catalog metadata only (not ingest `status`). */
 export const portfolioPhotoAdminUpdateBodySchema = portfolioPhotoUpdateSchema
@@ -26,3 +26,12 @@ export const portfolioListInputSchema = z.object({
 });
 
 export type PortfolioListInput = z.infer<typeof portfolioListInputSchema>;
+
+export const portfolioFrontPageReorderInputSchema = z.object({
+  orderedIds: z.array(idSchema).min(1),
+});
+
+export const portfolioBulkUpdateInputSchema = z.object({
+  ids: z.array(idSchema).min(1).max(50),
+  data: portfolioPhotoAdminUpdateBodySchema,
+});

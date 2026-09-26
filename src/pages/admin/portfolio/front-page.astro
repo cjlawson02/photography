@@ -1,0 +1,13 @@
+---
+import AdminPageHeader from '../../../components/admin/AdminPageHeader.astro';
+import PortfolioFrontPageAdmin from '../../../components/admin/PortfolioFrontPageAdmin.tsx';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Admin — Front page" current="portfolio">
+	<AdminPageHeader
+		title="Portfolio — Front page"
+		lede="Curated, ordered best-of for the public home page. Hero carousel uses photos flagged hero in this set."
+	/>
+	<PortfolioFrontPageAdmin client:load />
+</AdminLayout>

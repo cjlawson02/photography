@@ -1,0 +1,25 @@
+---
+import { env } from 'cloudflare:workers';
+
+import AdminPageHeader from '../../../components/admin/AdminPageHeader.astro';
+import PortfolioLibraryAdmin from '../../../components/admin/PortfolioLibraryAdmin.tsx';
+import {
+	loadPortfolioAdminFirstPage,
+	scheduleStalePendingCleanupAfterAdminListLoad,
+} from '../../../lib/admin/ssr-initial-reads.ts';
+import { AppEnv } from '../../../lib/env.ts';
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+
+const app = AppEnv.fromBindings(env);
+const waitUntil = Astro.locals.cfContext?.waitUntil.bind(Astro.locals.cfContext);
+const initialPortfolioPage = await loadPortfolioAdminFirstPage(app);
+scheduleStalePendingCleanupAfterAdminListLoad(app, waitUntil);
+---
+
+<AdminLayout title="Admin — Library" current="portfolio">
+	<AdminPageHeader
+		title="Portfolio — Library"
+		lede="All portfolio photos with a thumbnail grid and inspector. Publish and fill details before adding to the front page."
+	/>
+	<PortfolioLibraryAdmin client:load initialPortfolioPage={initialPortfolioPage} />
+</AdminLayout>

@@ -1,6 +1,8 @@
 import { z } from 'zod/v4';
 
 import {
+  portfolioBulkUpdateInputSchema,
+  portfolioFrontPageReorderInputSchema,
   portfolioListInputSchema,
   portfolioPhotoAdminUpdateBodySchema,
 } from '../admin/portfolio-schemas.ts';
@@ -58,6 +60,34 @@ export const appRouter = createTRPCRouter({
         })
         .then(() => ({ id: input.id })),
     ),
+    bulkUpdate: adminProcedure
+      .input(portfolioBulkUpdateInputSchema)
+      .mutation(async ({ ctx, input }) =>
+        PortfolioService.from(ctx.getAppEnv()).bulkUpdateMetadata(input.ids, input.data),
+      ),
+    frontPage: createTRPCRouter({
+      list: adminProcedure.query(async ({ ctx }) =>
+        PortfolioService.from(ctx.getAppEnv()).listFrontPageForAdmin(),
+      ),
+      reorder: adminProcedure
+        .input(portfolioFrontPageReorderInputSchema)
+        .mutation(async ({ ctx, input }) =>
+          PortfolioService.from(ctx.getAppEnv()).reorderFrontPage(input.orderedIds),
+        ),
+      setMembership: adminProcedure
+        .input(
+          z.object({
+            id: idSchema,
+            onFrontPage: z.boolean(),
+          }),
+        )
+        .mutation(async ({ ctx, input }) =>
+          PortfolioService.from(ctx.getAppEnv()).setFrontPageMembership(
+            input.id,
+            input.onFrontPage,
+          ),
+        ),
+    }),
   }),
   review: createTRPCRouter({
     collections: createTRPCRouter({

@@ -1262,6 +1262,41 @@ h6 {
   text-decoration: underline;
 }
 
+.admin-photo-grid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-photo-grid__tile {
+  background: color-mix(in oklab, var(--color-fg) 4%, transparent);
+  border: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+}
+
+.admin-photo-grid__tile--selected {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent);
+}
+
+.admin-photo-grid__img {
+  aspect-ratio: 4 / 3;
+  height: auto;
+  object-fit: cover;
+  width: 100%;
+}
+
+.admin-photo-grid__meta {
+  display: flex;
+  flex-direction: column;
+}
+
 .admin-field--sm {
   font-size: 0.75rem;
   padding: 0.25rem 0.5rem;

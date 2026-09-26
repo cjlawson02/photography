@@ -25,6 +25,8 @@ export class PortfolioPhotosDAO {
     category?: PortfolioCategory | null;
     sortOrder?: number | null;
     hero?: boolean;
+    frontPage?: boolean;
+    frontPageOrder?: number | null;
     width?: number | null;
     height?: number | null;
   }) {
@@ -35,6 +37,8 @@ export class PortfolioPhotosDAO {
       category: values.category ?? null,
       sortOrder: values.sortOrder ?? null,
       hero: values.hero ?? false,
+      frontPage: values.frontPage ?? false,
+      frontPageOrder: values.frontPageOrder ?? null,
       width: values.width ?? null,
       height: values.height ?? null,
       ...(values.id ? { id: values.id } : {}),
@@ -92,6 +96,30 @@ export class PortfolioPhotosDAO {
       .limit(limit);
   }
 
+  /** Front-page set — published, ready, flagged frontPage. */
+  async listFrontPagePublishedReady(limit = 200) {
+    return this.db
+      .select()
+      .from(PortfolioPhotos)
+      .where(
+        and(
+          eq(PortfolioPhotos.published, true),
+          eq(PortfolioPhotos.status, 'ready'),
+          eq(PortfolioPhotos.frontPage, true),
+        ),
+      )
+      .orderBy(
+        sql`CASE WHEN ${PortfolioPhotos.frontPageOrder} IS NULL THEN 1 ELSE 0 END`,
+        asc(PortfolioPhotos.frontPageOrder),
+        desc(PortfolioPhotos.createdAt),
+      )
+      .limit(limit);
+  }
+
+  async listFrontPageForAdmin() {
+    return this.listFrontPagePublishedReady(500);
+  }
+
   /** Public home grid — published ingest-ready rows only. */
   async listPublishedReady(limit = 500) {
     return this.db
@@ -115,6 +143,8 @@ export class PortfolioPhotosDAO {
       category?: PortfolioCategory | null;
       sortOrder?: number | null;
       hero?: boolean;
+      frontPage?: boolean;
+      frontPageOrder?: number | null;
       width?: number | null;
       height?: number | null;
       alt?: string | null;
@@ -145,6 +175,8 @@ export class PortfolioPhotosDAO {
       category?: PortfolioCategory | null;
       sortOrder?: number | null;
       hero?: boolean;
+      frontPage?: boolean;
+      frontPageOrder?: number | null;
       width?: number | null;
       height?: number | null;
       alt?: string | null;
