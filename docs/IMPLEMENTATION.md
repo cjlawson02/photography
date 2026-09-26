@@ -67,7 +67,7 @@ Original upload via browser presigned PUT, compress-once via Images Free, Worker
 - [x] Ingest completion handler: Images Free compress-once → Worker puts variant bytes beside original under key prefixes
 - [x] D1 writes for portfolio domain metadata (ids, status, pending/ready/failed) — exact columns `_TBD_` in HLD *(DAO schema: cuid2 `id` / `status` / `mimeType` / timestamps; R2 keys derived from `id`; review photos same + `collectionId`)*
 - [x] Reprocess path from original for failed photos (no full status state machine in v1)
-- [ ] Failure/retry behavior for incomplete PUT or compress failures (details `_TBD_`) — *minimal: log + mark `failed` + reprocess*
+- [x] Failure/retry behavior for incomplete PUT or compress failures — log + mark `failed`; reprocess API + portfolio admin **Reprocess** for `pending`/`failed`
 
 ### Phase 2 — Admin
 
@@ -76,8 +76,8 @@ Access-gated admin UI and mutations for managing portfolio and (as review lands)
 **Tasks**
 
 - [x] Admin shell/layout behind Access ([PR #8](https://github.com/cjlawson02/photography/pull/8))
-- [ ] Portfolio CRUD/list/publish/hero/sort flows (exact fields `_TBD_`)
-- [x] Trigger/monitor ingest from admin (including reprocess) — `/admin/ingest` smoke UI ([PR #8](https://github.com/cjlawson02/photography/pull/8))
+- [x] Portfolio CRUD/list/publish/hero/sort flows — `/admin/portfolio` + `/admin/api/portfolio/photos`
+- [x] Trigger/monitor ingest from admin — `/admin/ingest` smoke UI ([PR #8](https://github.com/cjlawson02/photography/pull/8)); reprocess also on portfolio admin for failed rows
 - [x] Review-collection management (create/list/revoke; attach uploads via ingest `collectionId`) — API + admin UI ([PR #8](https://github.com/cjlawson02/photography/pull/8)); revoke in Phase 4
 - [x] Confirm no admin mutations exist outside `/admin/*`
 
@@ -90,9 +90,9 @@ Public portfolio pages served from Astro/Workers, reading portfolio D1 + deliver
 - [x] Public home hero carousel (Embla + autoplay) + masonry gallery + PhotoSwipe lightbox (`gallery.webp`; published/ready D1, `/media/portfolio` variants) — [PR #13](https://github.com/cjlawson02/photography/pull/13)
 - [ ] Public routes matching live UX DNA beyond home; exact page inventory `_TBD_`
 - [x] Public home shell: `PublicLayout`, header/footer, placeholder hero + gallery grid, static category filter chips ([PR #10](https://github.com/cjlawson02/photography/pull/10))
-- [ ] Portfolio queries (published-only) from D1 portfolio domain
+- [x] Portfolio queries (published-only) from D1 portfolio domain — `listPublishedPortfolioPhotos` on home
 - [x] Worker route `/media/portfolio/{id}/{variant}` — allowlisted variant suffixes only; long `Cache-Control` / CDN cache ([PR #10](https://github.com/cjlawson02/photography/pull/10))
-- [ ] SEO basics for public portfolio pages (review `noindex` — Phase 4)
+- [x] SEO basics for public portfolio pages — home meta description, canonical, Open Graph (`src/lib/site/public-meta.ts`); review `noindex` in Phase 4
 - [x] Responsive layout using tokens from Phase 0 (public shell slice — [PR #10](https://github.com/cjlawson02/photography/pull/10))
 
 ### Phase 4 — Client review (phase 1)
@@ -117,7 +117,7 @@ Move traffic/content from the current site to the new Workers deployment. Exact 
 
 - [ ] Content/asset migration plan from legacy source (`_TBD_`)
 - [ ] DNS / custom domain / Access production checklist (`_TBD_`)
-- [ ] Smoke tests: public portfolio, admin Access, upload→ingest→variants, review link + media + purge
+- [x] Smoke tests checklist — [SMOKE.md](SMOKE.md) (manual; automation `_TBD_`)
 - [ ] Rollback notes (`_TBD_`)
 
 ## Dependencies

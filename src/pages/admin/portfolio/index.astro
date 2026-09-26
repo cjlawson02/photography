@@ -43,6 +43,8 @@ import { PORTFOLIO_CATEGORIES } from '../../../lib/portfolio/categories.ts';
 </AdminLayout>
 
 <script define:vars={{ categories: [...PORTFOLIO_CATEGORIES] }}>
+	import { requestReprocess } from '../../../lib/ingest/browser-upload.ts';
+
 	const statusEl = document.getElementById('portfolio-status');
 	const tbody = document.getElementById('portfolio-rows');
 
@@ -130,9 +132,16 @@ import { PORTFOLIO_CATEGORIES } from '../../../lib/portfolio/categories.ts';
 				photo.updatedAt,
 			)}</td>
 			<td class="py-3 align-middle">
-				<button type="button" data-action="delete" class="text-xs underline" style="color: var(--color-accent)">
-					Delete
-				</button>
+				<div class="flex flex-wrap gap-2">
+					${
+						photo.status === 'failed' || photo.status === 'pending'
+							? `<button type="button" data-action="reprocess" class="text-xs underline" style="color: var(--color-fg)">Reprocess</button>`
+							: ''
+					}
+					<button type="button" data-action="delete" class="text-xs underline" style="color: var(--color-accent)">
+						Delete
+					</button>
+				</div>
 			</td>
 		`;
 
@@ -191,6 +200,18 @@ import { PORTFOLIO_CATEGORIES } from '../../../lib/portfolio/categories.ts';
 			} catch (error) {
 				statusEl.textContent = error instanceof Error ? error.message : String(error);
 				heroInput.checked = !heroInput.checked;
+			}
+		});
+
+		const reprocessBtn = tr.querySelector('[data-action="reprocess"]');
+		reprocessBtn?.addEventListener('click', async () => {
+			statusEl.textContent = 'Reprocessing from original…';
+			try {
+				await requestReprocess({ id: photo.id, bucket: 'portfolio' });
+				statusEl.textContent = 'Reprocess complete.';
+				await loadPhotos();
+			} catch (error) {
+				statusEl.textContent = error instanceof Error ? error.message : String(error);
 			}
 		});
 

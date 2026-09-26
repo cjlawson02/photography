@@ -121,6 +121,7 @@ Phase 1 ingest (JWT + Zod body → `IngestService`):
 | Estimates | [docs/LOE.md](docs/LOE.md) |
 | Status, Gantt schedule, changelog | [docs/PROGRESS.md](docs/PROGRESS.md) |
 | Public React islands | [docs/FRONTEND.md](docs/FRONTEND.md) |
+| Manual smoke checklist | [docs/SMOKE.md](docs/SMOKE.md) |
 | Agent instructions | This file |
 
 Treat this file as living documentation: prune stale rules and fill `_TBD_` sections when decided.

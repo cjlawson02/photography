@@ -5,13 +5,23 @@ import HeroCarousel from '../components/public/HeroCarousel.tsx';
 import PublicHomeGallery from '../components/public/PublicHomeGallery.tsx';
 import PublicLayout from '../layouts/PublicLayout.astro';
 import { selectHeroPhotos } from '../lib/portfolio/hero-photos.ts';
+import { canonicalUrl, DEFAULT_SITE_DESCRIPTION, SITE_NAME } from '../lib/site/public-meta.ts';
 import { listPublishedPortfolioPhotos } from '../lib/services/portfolio-service.ts';
 
 const photos = await listPublishedPortfolioPhotos(env.DB);
 const heroPhotos = selectHeroPhotos(photos);
+const ogImage =
+	heroPhotos[0]?.galleryUrl != null
+		? canonicalUrl(heroPhotos[0].galleryUrl)
+		: undefined;
 ---
 
-<PublicLayout title="Lawson Photography">
+<PublicLayout
+	title={SITE_NAME}
+	description={DEFAULT_SITE_DESCRIPTION}
+	canonical={canonicalUrl('/')}
+	ogImage={ogImage}
+>
 	<HeroCarousel client:load photos={heroPhotos} />
 	<PublicHomeGallery client:visible photos={photos} />
 </PublicLayout>

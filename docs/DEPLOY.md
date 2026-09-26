@@ -105,6 +105,8 @@ Optional: create a GitHub **environment** named `production` on the repo if you 
 
 ## Smoke checks
 
+Full manual checklist: [SMOKE.md](SMOKE.md).
+
 - `GET /health` — public bindings JSON (no R2 S3 secrets required)
 - `GET /admin/api/health` — Access login redirect (302) without JWT; OK after Access session
 - `/admin` — sign in via Access, then ingest / portfolio UI
