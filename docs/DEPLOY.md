@@ -87,17 +87,17 @@ Workflow: [`.github/workflows/ci-cd.yml`](../.github/workflows/ci-cd.yml).
 
 | Trigger | What runs |
 | --- | --- |
-| Pull request | Node 24 — `npm test`, `npm run typecheck`, `npm run build`, `wrangler deploy --dry-run` |
-| Push to `main` | Same checks, then `wrangler deploy` to production |
+| Pull request | Node 24 — lint, format check, `npm test`, `npm run typecheck`, `npm run build`, `wrangler deploy --dry-run` |
+| Push to `main` | Same checks, then `wrangler d1 migrations apply photography --remote`, then `wrangler deploy` to production |
 
 **Repository secrets** (Settings → Secrets and variables → Actions):
 
 | Secret | Purpose |
 | --- | --- |
-| `CLOUDFLARE_API_TOKEN` | API token with **Workers Scripts Edit** (and account access to D1/R2 bindings used by the Worker) |
+| `CLOUDFLARE_API_TOKEN` | API token with **Workers Scripts Edit**, **D1 Edit** (or permission to apply migrations on `photography`), and account access to D1/R2 bindings used by the Worker |
 | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account id (R2 / Workers overview) |
 
-Worker **secrets** (`R2_*`) and **vars** (`CF_ACCESS_*` in `wrangler.jsonc`) stay on Cloudflare; CI does not upload them. Apply D1 migrations manually when schema changes (`wrangler d1 migrations apply photography --remote`).
+Worker **secrets** (`R2_*`) and **vars** (`CF_ACCESS_*` in `wrangler.jsonc`) stay on Cloudflare; CI does not upload them. **Push to `main`** runs remote D1 migrations in the deploy job before the Worker deploy. For local or emergency apply without deploy: `npx wrangler d1 migrations apply photography --remote`.
 
 Local parity: `npm run ci`.
 

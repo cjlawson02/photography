@@ -49,6 +49,7 @@ gantt
 
 | Date | Update |
 | --- | --- |
+| 2026-09-26 | CD: `wrangler d1 migrations apply photography --remote` before Worker deploy on push to `main`; [DEPLOY.md](DEPLOY.md) |
 | 2026-09-26 | Phase 2.5 S6 security headers (CSP middleware) + T5 D1 indexes (`ReviewPhotos.collectionId`, `PortfolioPhotos` published/status) |
 | 2026-09-26 | B3: admin review collection detail — `review.collections.detail`, `/admin/review/collections/{id}` inspect UI |
 | 2026-09-26 | Post-MVP hardening PR: media D1 gate, portfolio cache-bust, hero pause, admin fetch/tRPC polish; [IMPLEMENTATION.md](IMPLEMENTATION.md) Phase 2.5 backlog |
