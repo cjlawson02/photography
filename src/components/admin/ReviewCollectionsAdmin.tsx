@@ -1,6 +1,13 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 
+import {
+  reviewCollectionCreateFormSchema,
+  type ReviewCollectionCreateFormValues,
+} from '../../lib/admin/admin-form-schemas.ts';
+import type { z } from 'zod/v4';
 import type { AdminReviewCollection } from '../../lib/admin/trpc-types.ts';
 import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
 import { errorMessage, formatAdminTime } from './admin-format.ts';
@@ -11,6 +18,12 @@ import AdminPrimaryButton from './AdminPrimaryButton.tsx';
 import AdminSectionHeading from './AdminSectionHeading.tsx';
 import AdminStatusLine from './AdminStatusLine.tsx';
 import { AdminTable, AdminTableHead, AdminTableHeaderCell, AdminTableRow } from './AdminTable.tsx';
+
+const createCollectionDefaultValues: ReviewCollectionCreateFormValues = {
+  slugPrefix: '',
+  title: '',
+  expiresAtLocal: '',
+};
 
 async function copyText(label: string, text: string, onStatus: (message: string) => void) {
   try {
@@ -32,6 +45,17 @@ function ReviewCollectionsAdminInner({ initialCollections }: ReviewCollectionsAd
   const [createStatus, setCreateStatus] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [initialDataUpdatedAt] = useState(() => Date.now());
+
+  type ReviewCollectionCreatePayload = z.infer<typeof reviewCollectionCreateFormSchema>;
+
+  const createForm = useForm<
+    ReviewCollectionCreateFormValues,
+    unknown,
+    ReviewCollectionCreatePayload
+  >({
+    resolver: zodResolver(reviewCollectionCreateFormSchema),
+    defaultValues: createCollectionDefaultValues,
+  });
 
   const listQuery = useQuery({
     ...trpc.review.collections.list.queryOptions(),
@@ -58,6 +82,7 @@ function ReviewCollectionsAdminInner({ initialCollections }: ReviewCollectionsAd
     trpc.review.collections.create.mutationOptions({
       onSuccess: async () => {
         setCreateStatus('Created.');
+        createForm.reset(createCollectionDefaultValues);
         await queryClient.invalidateQueries(trpc.review.collections.list.queryFilter());
       },
       onError: (error) => {
@@ -78,50 +103,40 @@ function ReviewCollectionsAdminInner({ initialCollections }: ReviewCollectionsAd
     }),
   );
 
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = createForm;
+
+  const firstCreateError =
+    errors.slugPrefix?.message ?? errors.title?.message ?? errors.expiresAtLocal?.message;
+
   return (
     <>
       <section className="mt-8">
         <AdminSectionHeading>New collection</AdminSectionHeading>
         <form
           className="mt-3 grid gap-3 sm:grid-cols-2"
-          onSubmit={async (event) => {
-            event.preventDefault();
-            const form = event.currentTarget;
-            const data = new FormData(form);
-            const slugPrefixRaw = String(data.get('slugPrefix') ?? '').trim();
-            const titleRaw = String(data.get('title') ?? '').trim();
-            const expiresRaw = String(data.get('expiresAt') ?? '').trim();
-
-            const payload: { slugPrefix?: string; title?: string; expiresAt?: number } = {};
-            if (slugPrefixRaw) payload.slugPrefix = slugPrefixRaw;
-            if (titleRaw) payload.title = titleRaw;
-            if (expiresRaw) {
-              const ms = new Date(expiresRaw).getTime();
-              if (Number.isNaN(ms)) {
-                setCreateStatus('Invalid expiry date.');
-                return;
-              }
-              payload.expiresAt = ms;
-            }
-
+          onSubmit={handleSubmit(async (payload) => {
             setCreateStatus('Creating…');
             try {
               await createMutation.mutateAsync(payload);
-              form.reset();
             } catch {
               /* onError sets createStatus */
             }
-          }}
+          })}
+          noValidate
         >
           <AdminFieldLabel label="Slug prefix (optional)" className="block text-sm sm:col-span-2">
             <input
               type="text"
-              name="slugPrefix"
-              pattern="[a-zA-Z0-9][a-zA-Z0-9-]*"
               placeholder="smith-wedding"
               className="mt-1 block w-full border px-3 py-2 text-sm"
               style={adminFieldStyle}
               autoComplete="off"
+              aria-invalid={errors.slugPrefix ? true : undefined}
+              {...register('slugPrefix')}
             />
             <span className="mt-1 block text-xs" style={adminFgMutedStyle}>
               The review URL slug is generated on the server; an optional prefix is added before a
@@ -131,17 +146,19 @@ function ReviewCollectionsAdminInner({ initialCollections }: ReviewCollectionsAd
           <AdminFieldLabel label="Title (optional)">
             <input
               type="text"
-              name="title"
               className="mt-1 block w-full border px-3 py-2 text-sm"
               style={adminFieldStyle}
+              aria-invalid={errors.title ? true : undefined}
+              {...register('title')}
             />
           </AdminFieldLabel>
           <AdminFieldLabel label="Expires (optional)">
             <input
               type="datetime-local"
-              name="expiresAt"
               className="mt-1 block w-full border px-3 py-2 text-sm"
               style={adminFieldStyle}
+              aria-invalid={errors.expiresAtLocal ? true : undefined}
+              {...register('expiresAtLocal')}
             />
           </AdminFieldLabel>
           <div className="sm:col-span-2">
@@ -150,7 +167,7 @@ function ReviewCollectionsAdminInner({ initialCollections }: ReviewCollectionsAd
             </AdminPrimaryButton>
           </div>
         </form>
-        <AdminStatusLine className="mt-3">{createStatus}</AdminStatusLine>
+        <AdminStatusLine className="mt-3">{firstCreateError ?? createStatus}</AdminStatusLine>
       </section>
 
       <section className="mt-10">

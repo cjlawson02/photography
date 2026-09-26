@@ -1,10 +1,17 @@
-import { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Controller, useForm } from 'react-hook-form';
 
+import {
+  portfolioPhotoAdminRowFormSchema,
+  portfolioRowFormValuesFromPhoto,
+  portfolioRowPatchFromField,
+  type PortfolioPhotoAdminRowFormValues,
+} from '../../lib/admin/admin-form-schemas.ts';
 import type { PortfolioPhotoAdminUpdateBody } from '../../lib/admin/portfolio-schemas.ts';
 import type { AdminPortfolioPhoto } from '../../lib/admin/trpc-types.ts';
 import { isStalePendingIngest } from '../../lib/ingest/stale-pending.ts';
 import { portfolioVariantPublicUrl } from '../../lib/media/portfolio-public-url.ts';
-import { isPortfolioCategory, PORTFOLIO_CATEGORIES } from '../../lib/portfolio/categories.ts';
+import { PORTFOLIO_CATEGORIES } from '../../lib/portfolio/categories.ts';
 import { formatAdminDimensions, formatAdminTime, normalizeNullableText } from './admin-format.ts';
 import {
   adminAccentStyle,
@@ -15,44 +22,33 @@ import {
   adminTableRowStyle,
 } from './admin-styles.ts';
 
-function formatSortValue(sortOrder: number | null | undefined): string {
-  return sortOrder == null ? '' : String(sortOrder);
-}
-
-type NullableTextInputProps = {
-  label: string;
-  value: string | null;
-  busy: boolean;
-  className?: string;
-  onSave: (next: string | null) => void;
-};
-
-function NullableTextInput({ label, value, busy, className, onSave }: NullableTextInputProps) {
-  const [draft, setDraft] = useState(() => value ?? '');
-  const [syncedValue, setSyncedValue] = useState(value);
-
-  if (value !== syncedValue) {
-    setSyncedValue(value);
-    setDraft(value ?? '');
+function fieldChanged(
+  field: keyof PortfolioPhotoAdminRowFormValues,
+  photo: AdminPortfolioPhoto,
+  values: PortfolioPhotoAdminRowFormValues,
+): boolean {
+  switch (field) {
+    case 'published':
+      return values.published !== photo.published;
+    case 'alt':
+      return normalizeNullableText(values.alt) !== normalizeNullableText(photo.alt);
+    case 'title':
+      return normalizeNullableText(values.title) !== normalizeNullableText(photo.title);
+    case 'caption':
+      return normalizeNullableText(values.caption) !== normalizeNullableText(photo.caption);
+    case 'category':
+      return (values.category === '' ? null : values.category) !== photo.category;
+    case 'sortOrder': {
+      const trimmed = values.sortOrder.trim();
+      const parsed = trimmed === '' ? null : Number.parseInt(trimmed, 10);
+      if (trimmed !== '' && Number.isNaN(parsed)) return true;
+      return parsed !== photo.sortOrder;
+    }
+    case 'hero':
+      return values.hero !== photo.hero;
+    default:
+      return false;
   }
-
-  return (
-    <input
-      type="text"
-      className={className}
-      style={adminFieldStyle}
-      aria-label={label}
-      value={draft}
-      placeholder="—"
-      disabled={busy}
-      onChange={(event) => setDraft(event.target.value)}
-      onBlur={() => {
-        const next = normalizeNullableText(draft);
-        if (next === normalizeNullableText(value)) return;
-        onSave(next);
-      }}
-    />
-  );
 }
 
 type Props = {
@@ -68,13 +64,32 @@ type Props = {
 };
 
 export default function PortfolioRow({ photo, busy, onPatch, onDelete, onReprocess }: Props) {
-  const [sortDraft, setSortDraft] = useState(() => formatSortValue(photo.sortOrder));
-  const [syncedSortOrder, setSyncedSortOrder] = useState(photo.sortOrder);
+  const form = useForm({
+    resolver: zodResolver(portfolioPhotoAdminRowFormSchema),
+    values: portfolioRowFormValuesFromPhoto(photo),
+  });
 
-  if (photo.sortOrder !== syncedSortOrder) {
-    setSyncedSortOrder(photo.sortOrder);
-    setSortDraft(formatSortValue(photo.sortOrder));
-  }
+  const { register, control, getValues, trigger, reset } = form;
+
+  const saveField = async (field: keyof PortfolioPhotoAdminRowFormValues, statusLabel: string) => {
+    const valid = await trigger(field);
+    if (!valid) {
+      reset(portfolioRowFormValuesFromPhoto(photo));
+      return;
+    }
+    const values = getValues();
+    if (!fieldChanged(field, photo, values)) return;
+    try {
+      const patch = portfolioRowPatchFromField(field, values) as PortfolioPhotoAdminUpdateBody;
+      await onPatch(photo.id, patch, statusLabel);
+    } catch {
+      reset(portfolioRowFormValuesFromPhoto(photo));
+    }
+  };
+
+  const savePatch = async (patch: PortfolioPhotoAdminUpdateBody, statusLabel: string) => {
+    await onPatch(photo.id, patch, statusLabel).catch(() => undefined);
+  };
 
   const thumbUrl =
     photo.status === 'ready'
@@ -83,6 +98,8 @@ export default function PortfolioRow({ photo, busy, onPatch, onDelete, onReproce
   const canPublish = photo.status === 'ready';
   const canReprocess = photo.status === 'failed' || photo.status === 'pending';
   const stalePending = photo.status === 'pending' && isStalePendingIngest(photo.createdAt);
+
+  const textFieldClass = 'min-w-[8rem] border px-2 py-1 text-xs';
 
   return (
     <tr style={adminTableRowStyle}>
@@ -122,74 +139,102 @@ export default function PortfolioRow({ photo, busy, onPatch, onDelete, onReproce
         {formatAdminDimensions(photo.width, photo.height)}
       </td>
       <td className="py-3 pr-4 align-middle">
-        <label className="inline-flex items-center gap-2 text-xs">
-          <input
-            type="checkbox"
-            aria-label="Published"
-            checked={photo.published}
-            disabled={!canPublish || busy}
-            title={canPublish ? undefined : 'Ingest must be ready'}
-            onChange={(event) => {
-              const published = event.target.checked;
-              void onPatch(photo.id, { published }, 'Saving publish…').catch(() => undefined);
-            }}
-          />
-          <span>{photo.published ? 'Yes' : 'No'}</span>
-        </label>
-      </td>
-      <td className="py-3 pr-4 align-middle">
-        <NullableTextInput
-          label="Alt text"
-          className="min-w-[8rem] border px-2 py-1 text-xs"
-          value={photo.alt}
-          busy={busy}
-          onSave={(alt) => {
-            void onPatch(photo.id, { alt }, 'Saving alt…').catch(() => undefined);
-          }}
+        <Controller
+          name="published"
+          control={control}
+          render={({ field }) => (
+            <label className="inline-flex items-center gap-2 text-xs">
+              <input
+                type="checkbox"
+                aria-label="Published"
+                checked={field.value}
+                disabled={!canPublish || busy}
+                title={canPublish ? undefined : 'Ingest must be ready'}
+                onChange={(event) => {
+                  const published = event.target.checked;
+                  field.onChange(published);
+                  if (published === photo.published) return;
+                  void savePatch({ published }, 'Saving publish…');
+                }}
+              />
+              <span>{field.value ? 'Yes' : 'No'}</span>
+            </label>
+          )}
         />
       </td>
       <td className="py-3 pr-4 align-middle">
-        <NullableTextInput
-          label="Title"
-          className="min-w-[6rem] border px-2 py-1 text-xs"
-          value={photo.title}
-          busy={busy}
-          onSave={(title) => {
-            void onPatch(photo.id, { title }, 'Saving title…').catch(() => undefined);
-          }}
-        />
-      </td>
-      <td className="py-3 pr-4 align-middle">
-        <NullableTextInput
-          label="Caption"
-          className="min-w-[8rem] border px-2 py-1 text-xs"
-          value={photo.caption}
-          busy={busy}
-          onSave={(caption) => {
-            void onPatch(photo.id, { caption }, 'Saving caption…').catch(() => undefined);
-          }}
-        />
-      </td>
-      <td className="py-3 pr-4 align-middle">
-        <select
-          className="border px-2 py-1 text-xs"
+        <input
+          type="text"
+          className={`${textFieldClass} min-w-[8rem]`}
           style={adminFieldStyle}
-          aria-label="Category"
-          value={photo.category ?? ''}
+          aria-label="Alt text"
+          placeholder="—"
           disabled={busy}
-          onChange={(event) => {
-            const value = event.target.value;
-            const category = value === '' ? null : isPortfolioCategory(value) ? value : null;
-            void onPatch(photo.id, { category }, 'Saving category…').catch(() => undefined);
-          }}
-        >
-          <option value="">—</option>
-          {PORTFOLIO_CATEGORIES.map((category) => (
-            <option key={category} value={category}>
-              {category}
-            </option>
-          ))}
-        </select>
+          {...register('alt', {
+            onBlur: () => {
+              void saveField('alt', 'Saving alt…');
+            },
+          })}
+        />
+      </td>
+      <td className="py-3 pr-4 align-middle">
+        <input
+          type="text"
+          className={`${textFieldClass} min-w-[6rem]`}
+          style={adminFieldStyle}
+          aria-label="Title"
+          placeholder="—"
+          disabled={busy}
+          {...register('title', {
+            onBlur: () => {
+              void saveField('title', 'Saving title…');
+            },
+          })}
+        />
+      </td>
+      <td className="py-3 pr-4 align-middle">
+        <input
+          type="text"
+          className={`${textFieldClass} min-w-[8rem]`}
+          style={adminFieldStyle}
+          aria-label="Caption"
+          placeholder="—"
+          disabled={busy}
+          {...register('caption', {
+            onBlur: () => {
+              void saveField('caption', 'Saving caption…');
+            },
+          })}
+        />
+      </td>
+      <td className="py-3 pr-4 align-middle">
+        <Controller
+          name="category"
+          control={control}
+          render={({ field }) => (
+            <select
+              className="border px-2 py-1 text-xs"
+              style={adminFieldStyle}
+              aria-label="Category"
+              value={field.value}
+              disabled={busy}
+              onChange={(event) => {
+                const value = event.target.value as PortfolioPhotoAdminRowFormValues['category'];
+                field.onChange(value);
+                const category = value === '' ? null : value;
+                if (category === photo.category) return;
+                void savePatch({ category }, 'Saving category…');
+              }}
+            >
+              <option value="">—</option>
+              {PORTFOLIO_CATEGORIES.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          )}
+        />
       </td>
       <td className="py-3 pr-4 align-middle">
         <input
@@ -197,36 +242,37 @@ export default function PortfolioRow({ photo, busy, onPatch, onDelete, onReproce
           className="w-20 border px-2 py-1 text-xs"
           style={adminFieldStyle}
           aria-label="Sort order"
-          value={sortDraft}
           placeholder="—"
           disabled={busy}
-          onChange={(event) => setSortDraft(event.target.value)}
-          onBlur={() => {
-            const raw = sortDraft.trim();
-            const parsed = raw === '' ? null : Number.parseInt(raw, 10);
-            if (raw !== '' && Number.isNaN(parsed)) {
-              setSortDraft(formatSortValue(photo.sortOrder));
-              return;
-            }
-            if (parsed === photo.sortOrder) return;
-            void onPatch(photo.id, { sortOrder: parsed }, 'Saving sort…').catch(() => undefined);
-          }}
+          {...register('sortOrder', {
+            onBlur: () => {
+              void saveField('sortOrder', 'Saving sort…');
+            },
+          })}
         />
       </td>
       <td className="py-3 pr-4 align-middle">
-        <label className="inline-flex items-center gap-2 text-xs">
-          <input
-            type="checkbox"
-            aria-label="Hero image"
-            checked={photo.hero}
-            disabled={busy}
-            onChange={(event) => {
-              const hero = event.target.checked;
-              void onPatch(photo.id, { hero }, 'Saving hero…').catch(() => undefined);
-            }}
-          />
-          <span>{photo.hero ? 'Yes' : 'No'}</span>
-        </label>
+        <Controller
+          name="hero"
+          control={control}
+          render={({ field }) => (
+            <label className="inline-flex items-center gap-2 text-xs">
+              <input
+                type="checkbox"
+                aria-label="Hero image"
+                checked={field.value}
+                disabled={busy}
+                onChange={(event) => {
+                  const hero = event.target.checked;
+                  field.onChange(hero);
+                  if (hero === photo.hero) return;
+                  void savePatch({ hero }, 'Saving hero…');
+                }}
+              />
+              <span>{field.value ? 'Yes' : 'No'}</span>
+            </label>
+          )}
+        />
       </td>
       <td className="py-3 pr-4 align-middle text-xs" style={adminFgMutedStyle}>
         {formatAdminTime(photo.updatedAt)}

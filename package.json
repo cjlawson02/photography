@@ -29,6 +29,7 @@
   "dependencies": {
     "@astrojs/cloudflare": "^14.3.3",
     "@astrojs/react": "^7.0.0",
+    "@hookform/resolvers": "^5.9.1",
     "@paralleldrive/cuid2": "^3.3.0",
     "@sentry/cloudflare": "^10.75.3",
     "@sentry/react": "^10.75.3",
@@ -47,6 +48,7 @@
     "photoswipe": "^5.4.4",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
+    "react-hook-form": "^7.89.0",
     "tailwindcss": "^4.3.3",
     "wrangler": "^4.139.0",
     "zod": "^4.6.5"

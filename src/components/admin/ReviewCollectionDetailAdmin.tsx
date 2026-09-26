@@ -1,6 +1,13 @@
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 
+import { expiresAtToDatetimeLocal } from '../../lib/admin/admin-form-datetime.ts';
+import {
+  reviewCollectionExpiresFieldSchema,
+  reviewCollectionTitleFieldSchema,
+} from '../../lib/admin/admin-form-schemas.ts';
 import type { ReviewCollectionAdminUpdateBody } from '../../lib/admin/review-collection-schemas.ts';
 import type {
   AdminReviewCollectionDetail,
@@ -25,23 +32,6 @@ import AdminSectionHeading from './AdminSectionHeading.tsx';
 import AdminStatusLine from './AdminStatusLine.tsx';
 import { AdminTable, AdminTableHead, AdminTableHeaderCell, AdminTableRow } from './AdminTable.tsx';
 
-function expiresAtToDatetimeLocal(ms: number | null | undefined): string {
-  if (ms == null) return '';
-  const date = new Date(ms);
-  const pad = (part: number) => String(part).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
-function parseDatetimeLocal(value: string): number | null {
-  const trimmed = value.trim();
-  if (trimmed === '') return null;
-  const ms = new Date(trimmed).getTime();
-  if (Number.isNaN(ms)) {
-    throw new Error('Invalid expiry date.');
-  }
-  return ms;
-}
-
 function selectionLabel(status: AdminReviewCollectionDetailPhoto['selectionStatus']): string {
   switch (status) {
     case 'none':
@@ -62,13 +52,10 @@ type CollectionTitleInputProps = {
 };
 
 function CollectionTitleInput({ value, busy, onSave }: CollectionTitleInputProps) {
-  const [draft, setDraft] = useState(() => value ?? '');
-  const [syncedValue, setSyncedValue] = useState(value);
-
-  if (value !== syncedValue) {
-    setSyncedValue(value);
-    setDraft(value ?? '');
-  }
+  const { register, handleSubmit } = useForm({
+    resolver: zodResolver(reviewCollectionTitleFieldSchema),
+    values: { title: value ?? '' },
+  });
 
   return (
     <input
@@ -76,15 +63,16 @@ function CollectionTitleInput({ value, busy, onSave }: CollectionTitleInputProps
       className="block w-full max-w-md border px-3 py-2 text-sm"
       style={adminFieldStyle}
       aria-label="Collection title"
-      value={draft}
       placeholder="—"
       disabled={busy}
-      onChange={(event) => setDraft(event.target.value)}
-      onBlur={() => {
-        const next = normalizeNullableText(draft);
-        if (next === normalizeNullableText(value)) return;
-        onSave(next);
-      }}
+      {...register('title', {
+        onBlur: () => {
+          void handleSubmit((data) => {
+            if (data.title === normalizeNullableText(value)) return;
+            onSave(data.title);
+          })();
+        },
+      })}
     />
   );
 }
@@ -97,13 +85,10 @@ type CollectionExpiresInputProps = {
 };
 
 function CollectionExpiresInput({ value, busy, onSave, onInvalid }: CollectionExpiresInputProps) {
-  const [draft, setDraft] = useState(() => expiresAtToDatetimeLocal(value));
-  const [syncedValue, setSyncedValue] = useState(value);
-
-  if (value !== syncedValue) {
-    setSyncedValue(value);
-    setDraft(expiresAtToDatetimeLocal(value));
-  }
+  const { register, handleSubmit, reset } = useForm({
+    resolver: zodResolver(reviewCollectionExpiresFieldSchema),
+    values: { expiresAtLocal: expiresAtToDatetimeLocal(value) },
+  });
 
   return (
     <input
@@ -111,19 +96,22 @@ function CollectionExpiresInput({ value, busy, onSave, onInvalid }: CollectionEx
       className="block w-full max-w-md border px-3 py-2 text-sm"
       style={adminFieldStyle}
       aria-label="Collection expiry"
-      value={draft}
       disabled={busy}
-      onChange={(event) => setDraft(event.target.value)}
-      onBlur={() => {
-        try {
-          const next = parseDatetimeLocal(draft);
-          if (next === value) return;
-          onSave(next);
-        } catch (error) {
-          setDraft(expiresAtToDatetimeLocal(value));
-          onInvalid(errorMessage(error));
-        }
-      }}
+      {...register('expiresAtLocal', {
+        onBlur: () => {
+          void handleSubmit(
+            (data) => {
+              if (data.expiresAt === value) return;
+              onSave(data.expiresAt);
+            },
+            (errors) => {
+              const message = errors.expiresAtLocal?.message;
+              reset({ expiresAtLocal: expiresAtToDatetimeLocal(value) });
+              onInvalid(typeof message === 'string' ? message : 'Invalid expiry date.');
+            },
+          )();
+        },
+      })}
     />
   );
 }
