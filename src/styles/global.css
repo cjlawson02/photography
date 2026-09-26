@@ -105,22 +105,38 @@ h6 {
 }
 
 .public-header__brand {
+  align-items: center;
   color: var(--color-fg);
   display: inline-flex;
-  align-items: center;
+  gap: 0.75rem;
   padding: 10px;
   text-decoration: none;
 }
 
-.public-header__logo {
+.public-header__mark {
   display: block;
+  flex-shrink: 0;
   height: 2.5rem;
-  width: auto;
+  width: 2.5rem;
 }
 
-.public-header__brand:hover .public-header__logo,
-.public-header__brand:focus-visible .public-header__logo {
-  opacity: 0.85;
+.public-header__wordmark {
+  font-family: var(--font-sans);
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.public-header__brand:hover,
+.public-header__brand:focus-visible {
+  color: var(--color-accent);
+}
+
+.public-header__brand:hover .public-header__mark,
+.public-header__brand:focus-visible .public-header__mark {
+  opacity: 0.9;
 }
 
 .public-header__nav {
