@@ -116,7 +116,7 @@ Workflow: [`.github/workflows/ci-cd.yml`](../.github/workflows/ci-cd.yml).
 
 | Trigger | What runs |
 | --- | --- |
-| Pull request | Node 24 — lint, format check, `npm test`, `npm run typecheck`, `npm run build`, `wrangler deploy --dry-run` |
+| Pull request | Node 24 — lint, format check, **`npm run db:migrate:check`** (local D1 apply + unapplied SQL gate), `npm test`, `npm run typecheck`, `npm run build`, `wrangler deploy --dry-run` |
 | Push to `main` | Same checks, then `wrangler d1 migrations apply photography --remote`, then `wrangler deploy` to production |
 
 **Repository secrets** (Settings → Secrets and variables → Actions):

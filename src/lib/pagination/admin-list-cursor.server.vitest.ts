@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { describe, expect, it } from 'vitest';
 
 import {
   decodeAdminListCursor,
@@ -12,11 +11,11 @@ describe('admin list cursor', () => {
 
   it('round-trips encode/decode', () => {
     const encoded = encodeAdminListCursor(sample);
-    assert.deepEqual(decodeAdminListCursor(encoded), sample);
+    expect(decodeAdminListCursor(encoded)).toEqual(sample);
   });
 
   it('returns null for garbage', () => {
-    assert.equal(decodeAdminListCursor('not-valid'), null);
-    assert.equal(decodeAdminListCursor(btoa(JSON.stringify({ updatedAt: 'x', id: 1 }))), null);
+    expect(decodeAdminListCursor('not-valid')).toBeNull();
+    expect(decodeAdminListCursor(btoa(JSON.stringify({ updatedAt: 'x', id: 1 })))).toBeNull();
   });
 });

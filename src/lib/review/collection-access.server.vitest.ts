@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { describe, expect, it } from 'vitest';
 
 import { resolveReviewCollectionAccess } from './collection-access.ts';
 
@@ -14,16 +13,16 @@ describe('resolveReviewCollectionAccess', () => {
   };
 
   it('rejects missing collection', () => {
-    assert.deepEqual(resolveReviewCollectionAccess(null), { ok: false, reason: 'not_found' });
+    expect(resolveReviewCollectionAccess(null)).toEqual({ ok: false, reason: 'not_found' });
   });
 
   it('rejects expired collection', () => {
     const result = resolveReviewCollectionAccess({ ...base, expiresAt: 1_000 }, 2_000);
-    assert.deepEqual(result, { ok: false, reason: 'expired' });
+    expect(result).toEqual({ ok: false, reason: 'expired' });
   });
 
   it('accepts active collection', () => {
     const result = resolveReviewCollectionAccess({ ...base, expiresAt: 5_000 }, 2_000);
-    assert.equal(result.ok, true);
+    expect(result.ok).toBe(true);
   });
 });

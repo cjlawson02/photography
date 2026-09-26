@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { describe, expect, it } from 'vitest';
 
 import { R2ConfigError } from './dao/r2-dao.ts';
 import { accessEnvFrom, getCloudflareBindings, getCloudflareEnv } from './cloudflare-env.ts';
@@ -14,21 +13,20 @@ const bindings = {
 describe('getCloudflareBindings', () => {
   it('accepts Worker bindings without R2 secrets', () => {
     const parsed = getCloudflareBindings(bindings);
-    assert.equal(parsed.DB, bindings.DB);
-    assert.equal(parsed.PORTFOLIO, bindings.PORTFOLIO);
+    expect(parsed.DB).toBe(bindings.DB);
+    expect(parsed.PORTFOLIO).toBe(bindings.PORTFOLIO);
   });
 
   it('rejects missing bindings', () => {
-    assert.throws(() => getCloudflareBindings({ DB: bindings.DB }));
+    expect(() => getCloudflareBindings({ DB: bindings.DB })).toThrow();
   });
 });
 
 describe('getCloudflareEnv', () => {
   it('requires non-empty R2 S3 secrets', () => {
-    assert.throws(
-      () => getCloudflareEnv({ ...bindings, R2_ACCOUNT_ID: '', R2_ACCESS_KEY_ID: 'a' }),
-      (error: unknown) => error instanceof R2ConfigError,
-    );
+    expect(() =>
+      getCloudflareEnv({ ...bindings, R2_ACCOUNT_ID: '', R2_ACCESS_KEY_ID: 'a' }),
+    ).toThrow(R2ConfigError);
   });
 
   it('returns bindings + secrets when R2_* are set', () => {
@@ -40,17 +38,17 @@ describe('getCloudflareEnv', () => {
       CF_ACCESS_TEAM_DOMAIN: '',
       CF_ACCESS_AUD: '',
     });
-    assert.equal(parsed.R2_ACCOUNT_ID, 'acct');
-    assert.equal(parsed.R2_ACCESS_KEY_ID, 'key');
-    assert.equal(parsed.R2_SECRET_ACCESS_KEY, 'secret');
+    expect(parsed.R2_ACCOUNT_ID).toBe('acct');
+    expect(parsed.R2_ACCESS_KEY_ID).toBe('key');
+    expect(parsed.R2_SECRET_ACCESS_KEY).toBe('secret');
   });
 });
 
 describe('accessEnvFrom', () => {
   it('treats empty Access placeholders as unset', () => {
     const access = accessEnvFrom({ CF_ACCESS_TEAM_DOMAIN: '', CF_ACCESS_AUD: '  ' });
-    assert.equal(access.CF_ACCESS_TEAM_DOMAIN, '');
-    assert.equal(access.CF_ACCESS_AUD, '');
+    expect(access.CF_ACCESS_TEAM_DOMAIN).toBe('');
+    expect(access.CF_ACCESS_AUD).toBe('');
   });
 
   it('keeps configured Access strings', () => {
@@ -58,7 +56,7 @@ describe('accessEnvFrom', () => {
       CF_ACCESS_TEAM_DOMAIN: 'https://team.cloudflareaccess.com',
       CF_ACCESS_AUD: 'aud-value',
     });
-    assert.equal(access.CF_ACCESS_TEAM_DOMAIN, 'https://team.cloudflareaccess.com');
-    assert.equal(access.CF_ACCESS_AUD, 'aud-value');
+    expect(access.CF_ACCESS_TEAM_DOMAIN).toBe('https://team.cloudflareaccess.com');
+    expect(access.CF_ACCESS_AUD).toBe('aud-value');
   });
 });
