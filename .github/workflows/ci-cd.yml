@@ -14,7 +14,11 @@ on:
 
 concurrency:
   group: ci-cd-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Never cancel an in-flight main deploy mid migrate/deploy (schema/code skew risk).
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
 
 jobs:
   ci:
@@ -54,8 +58,6 @@ jobs:
     needs: ci
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     environment: production
     steps:
       - uses: actions/checkout@v7

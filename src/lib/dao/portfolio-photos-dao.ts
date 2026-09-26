@@ -7,7 +7,7 @@ import { PortfolioPhotos } from '../../db/schema/portfolio/photos.ts';
 import type { PhotoStatus } from '../../db/schema/photo-status.ts';
 import type { AdminListCursor } from '../pagination/admin-list-cursor.ts';
 import { pendingIngestStaleCutoffMs } from '../ingest/stale-pending.ts';
-import { mergeDefined } from '../utils/merge-defined.ts';
+import { definedProps } from '../utils/merge-defined.ts';
 
 type Db = DrizzleD1Database<typeof schema>;
 
@@ -117,26 +117,18 @@ export class PortfolioPhotosDAO {
       hero?: boolean;
       width?: number | null;
       height?: number | null;
+      alt?: string | null;
+      title?: string | null;
+      caption?: string | null;
     },
   ) {
-    const existing = await this.getById(id);
-    if (!existing) return null;
-    const next = mergeDefined(
-      {
-        status: existing.status,
-        mimeType: existing.mimeType,
-        published: existing.published,
-        category: existing.category,
-        sortOrder: existing.sortOrder,
-        hero: existing.hero,
-        width: existing.width,
-        height: existing.height,
-      },
-      patch,
-    );
+    const set = definedProps(patch);
+    if (Object.keys(set).length === 0) {
+      return this.getById(id);
+    }
     const updated = await this.db
       .update(PortfolioPhotos)
-      .set(next)
+      .set(set)
       .where(eq(PortfolioPhotos.id, id))
       .returning();
     return updated[0] ?? null;

@@ -4,7 +4,7 @@ import type { DrizzleD1Database } from 'drizzle-orm/d1';
 import * as schema from '../../db/schema/index.ts';
 import { ReviewCollections } from '../../db/schema/review/collections.ts';
 import { ReviewPhotos } from '../../db/schema/review/photos.ts';
-import { mergeDefined } from '../utils/merge-defined.ts';
+import { definedProps } from '../utils/merge-defined.ts';
 
 type Db = DrizzleD1Database<typeof schema>;
 
@@ -74,19 +74,13 @@ export class ReviewCollectionsDAO {
     id: string,
     patch: { slug?: string; title?: string | null; expiresAt?: number | null },
   ) {
-    const existing = await this.getById(id);
-    if (!existing) return null;
-    const next = mergeDefined(
-      {
-        slug: existing.slug,
-        title: existing.title,
-        expiresAt: existing.expiresAt,
-      },
-      patch,
-    );
+    const set = definedProps(patch);
+    if (Object.keys(set).length === 0) {
+      return this.getById(id);
+    }
     const updated = await this.db
       .update(ReviewCollections)
-      .set(next)
+      .set(set)
       .where(eq(ReviewCollections.id, id))
       .returning();
     return updated[0] ?? null;

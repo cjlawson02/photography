@@ -5,15 +5,29 @@ import { appErrorToTrpc } from './errors.ts';
 import { isLimited } from './rate-limit-middleware.ts';
 import { publicProcedure, trpc } from './init.ts';
 
+/**
+ * tRPC v11 `next()` does not throw on procedure failure — it returns `{ ok: false, error }`.
+ * Remap AppError (and known causes like R2ConfigError → 503) so clients get the right code.
+ */
 const mapAppErrors = trpc.middleware(async ({ next }) => {
   try {
-    return await next();
-  } catch (error) {
-    if (error instanceof AppError) {
-      throw appErrorToTrpc(error);
+    const result = await next();
+    if (!result.ok && result.error.cause) {
+      if (result.error.cause instanceof AppError) {
+        throw appErrorToTrpc(result.error.cause);
+      }
+      const mapped = AppError.fromUnknown(result.error.cause);
+      if (mapped.code !== 'INTERNAL_SERVER_ERROR') {
+        throw appErrorToTrpc(mapped);
+      }
     }
+    return result;
+  } catch (error) {
     if (error instanceof TRPCError) {
       throw error;
+    }
+    if (error instanceof AppError) {
+      throw appErrorToTrpc(error);
     }
     throw appErrorToTrpc(AppError.fromUnknown(error));
   }

@@ -22,18 +22,16 @@ export async function updateReviewSelection(
     throw new AppError('NOT_FOUND', 'Review collection not found');
   }
 
-  const photo = await photos.getById(input.photoId);
-  if (!photo || photo.collectionId !== access.collection.id) {
-    throw new AppError('NOT_FOUND', 'Review photo not found');
-  }
-  if (photo.status !== 'ready') {
-    throw new AppError('PRECONDITION_FAILED', 'Photo is not ready for review');
-  }
-
-  const updated = await photos.update(input.photoId, {
-    selectionStatus: input.selectionStatus,
-  });
+  const updated = await photos.updateSelectionIfReady(
+    input.photoId,
+    access.collection.id,
+    input.selectionStatus,
+  );
   if (!updated) {
+    const photo = await photos.getById(input.photoId);
+    if (photo && photo.collectionId === access.collection.id && photo.status !== 'ready') {
+      throw new AppError('PRECONDITION_FAILED', 'Photo is not ready for review');
+    }
     throw new AppError('NOT_FOUND', 'Review photo not found');
   }
   return updated;

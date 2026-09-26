@@ -14,3 +14,12 @@ export async function isReviewMediaAllowed(db: D1Database, photoId: string): Pro
   const access = resolveReviewCollectionAccess(collection);
   return access.ok;
 }
+
+/** Admin delivery — ready photo only (collection may be expired; revoke still deletes the row). */
+export async function isReviewMediaAllowedForAdmin(
+  db: D1Database,
+  photoId: string,
+): Promise<boolean> {
+  const photo = await new ReviewPhotosDAO(createDb(db)).getById(photoId);
+  return photo !== null && photo.status === 'ready';
+}

@@ -27,6 +27,8 @@ describe('applySecurityHeaders', () => {
     assert.ok(csp.includes('https://fonts.gstatic.com'));
     assert.ok(csp.includes("connect-src 'self'"));
     assert.ok(csp.includes('https://cloudflareinsights.com'));
+    assert.ok(csp.includes('https://*.ingest.sentry.io'));
+    assert.ok(csp.includes('https://*.ingest.us.sentry.io'));
     assert.ok(csp.includes("img-src 'self' data: blob:"));
   });
 });
