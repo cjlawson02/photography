@@ -102,9 +102,7 @@
       "indexes": {
         "ReviewCollections_slug_uidx": {
           "name": "ReviewCollections_slug_uidx",
-          "columns": [
-            "slug"
-          ],
+          "columns": ["slug"],
           "isUnique": true
         }
       },
@@ -175,12 +173,8 @@
           "name": "ReviewPhotos_collectionId_ReviewCollections_id_fk",
           "tableFrom": "ReviewPhotos",
           "tableTo": "ReviewCollections",
-          "columnsFrom": [
-            "collectionId"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["collectionId"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }

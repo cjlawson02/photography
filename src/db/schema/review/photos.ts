@@ -11,25 +11,22 @@ import type { SelectionStatus } from './selection-status.ts';
  * Belongs to a ReviewCollections row; ingest `status` is distinct from `selectionStatus`.
  */
 export const ReviewPhotos = sqliteTable('ReviewPhotos', {
-	id: text('id')
-		.primaryKey()
-		.$defaultFn(() => createId()),
-	collectionId: text('collectionId')
-		.notNull()
-		.references(() => ReviewCollections.id),
-	createdAt: integer('createdAt', { mode: 'number' })
-		.notNull()
-		.default(sql`(strftime('%s', 'now') * 1000)`),
-	updatedAt: integer('updatedAt', { mode: 'number' })
-		.notNull()
-		.default(sql`(strftime('%s', 'now') * 1000)`)
-		.$onUpdate(() => sql`(strftime('%s', 'now') * 1000)`),
-	/** Ingest pipeline state — not client select/approve. */
-	status: text('status').$type<PhotoStatus>().notNull(),
-	mimeType: text('mimeType'),
-	/** Client select/approve — independent of ingest `status`. */
-	selectionStatus: text('selectionStatus')
-		.$type<SelectionStatus>()
-		.notNull()
-		.default('none'),
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  collectionId: text('collectionId')
+    .notNull()
+    .references(() => ReviewCollections.id),
+  createdAt: integer('createdAt', { mode: 'number' })
+    .notNull()
+    .default(sql`(strftime('%s', 'now') * 1000)`),
+  updatedAt: integer('updatedAt', { mode: 'number' })
+    .notNull()
+    .default(sql`(strftime('%s', 'now') * 1000)`)
+    .$onUpdate(() => sql`(strftime('%s', 'now') * 1000)`),
+  /** Ingest pipeline state — not client select/approve. */
+  status: text('status').$type<PhotoStatus>().notNull(),
+  mimeType: text('mimeType'),
+  /** Client select/approve — independent of ingest `status`. */
+  selectionStatus: text('selectionStatus').$type<SelectionStatus>().notNull().default('none'),
 });

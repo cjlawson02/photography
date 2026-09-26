@@ -26,80 +26,80 @@ export const portfolioCategorySchema = z.enum(PORTFOLIO_CATEGORIES);
 export const slugSchema = requiredTrimmedString;
 
 const immutableTimestamps = {
-	id: true as const,
-	createdAt: true as const,
-	updatedAt: true as const,
+  id: true as const,
+  createdAt: true as const,
+  updatedAt: true as const,
 };
 
 const updateOmitImmutable = {
-	id: true as const,
-	createdAt: true as const,
+  id: true as const,
+  createdAt: true as const,
 };
 
 export const portfolioPhotoSelectSchema = createSelectSchema(PortfolioPhotos, {
-	status: photoStatusSchema,
-	mimeType: z.string().nullable(),
-	published: z.boolean(),
-	category: portfolioCategorySchema.nullable(),
-	sortOrder: z.number().int().nullable(),
-	hero: z.boolean(),
+  status: photoStatusSchema,
+  mimeType: z.string().nullable(),
+  published: z.boolean(),
+  category: portfolioCategorySchema.nullable(),
+  sortOrder: z.number().int().nullable(),
+  hero: z.boolean(),
 });
 
 export const portfolioPhotoInsertSchema = createInsertSchema(PortfolioPhotos, {
-	status: photoStatusSchema,
-	mimeType: optionalTrimmedString.nullable().optional(),
-	published: z.boolean().optional(),
-	category: portfolioCategorySchema.nullable().optional(),
-	sortOrder: z.number().int().nullable().optional(),
-	hero: z.boolean().optional(),
+  status: photoStatusSchema,
+  mimeType: optionalTrimmedString.nullable().optional(),
+  published: z.boolean().optional(),
+  category: portfolioCategorySchema.nullable().optional(),
+  sortOrder: z.number().int().nullable().optional(),
+  hero: z.boolean().optional(),
 }).omit(immutableTimestamps);
 
 export const portfolioPhotoUpdateSchema = createUpdateSchema(PortfolioPhotos, {
-	status: photoStatusSchema.optional(),
-	mimeType: optionalTrimmedString.nullable().optional(),
-	published: z.boolean().optional(),
-	category: portfolioCategorySchema.nullable().optional(),
-	sortOrder: z.number().int().nullable().optional(),
-	hero: z.boolean().optional(),
+  status: photoStatusSchema.optional(),
+  mimeType: optionalTrimmedString.nullable().optional(),
+  published: z.boolean().optional(),
+  category: portfolioCategorySchema.nullable().optional(),
+  sortOrder: z.number().int().nullable().optional(),
+  hero: z.boolean().optional(),
 }).omit(updateOmitImmutable);
 
 export const reviewCollectionSelectSchema = createSelectSchema(ReviewCollections, {
-	slug: slugSchema,
-	title: z.string().nullable(),
-	expiresAt: z.number().int().nullable(),
+  slug: slugSchema,
+  title: z.string().nullable(),
+  expiresAt: z.number().int().nullable(),
 });
 
 export const reviewCollectionInsertSchema = createInsertSchema(ReviewCollections, {
-	slug: slugSchema,
-	title: optionalTrimmedString.nullable().optional(),
-	expiresAt: z.number().int().nullable().optional(),
+  slug: slugSchema,
+  title: optionalTrimmedString.nullable().optional(),
+  expiresAt: z.number().int().nullable().optional(),
 }).omit(immutableTimestamps);
 
 export const reviewCollectionUpdateSchema = createUpdateSchema(ReviewCollections, {
-	slug: slugSchema.optional(),
-	title: optionalTrimmedString.nullable().optional(),
-	expiresAt: z.number().int().nullable().optional(),
+  slug: slugSchema.optional(),
+  title: optionalTrimmedString.nullable().optional(),
+  expiresAt: z.number().int().nullable().optional(),
 }).omit(updateOmitImmutable);
 
 export const reviewPhotoSelectSchema = createSelectSchema(ReviewPhotos, {
-	collectionId: idSchema,
-	status: photoStatusSchema,
-	mimeType: z.string().nullable(),
-	selectionStatus: selectionStatusSchema,
+  collectionId: idSchema,
+  status: photoStatusSchema,
+  mimeType: z.string().nullable(),
+  selectionStatus: selectionStatusSchema,
 });
 
 export const reviewPhotoInsertSchema = createInsertSchema(ReviewPhotos, {
-	collectionId: idSchema,
-	status: photoStatusSchema,
-	mimeType: optionalTrimmedString.nullable().optional(),
-	selectionStatus: selectionStatusSchema.optional(),
+  collectionId: idSchema,
+  status: photoStatusSchema,
+  mimeType: optionalTrimmedString.nullable().optional(),
+  selectionStatus: selectionStatusSchema.optional(),
 }).omit(immutableTimestamps);
 
 export const reviewPhotoUpdateSchema = createUpdateSchema(ReviewPhotos, {
-	collectionId: idSchema.optional(),
-	status: photoStatusSchema.optional(),
-	mimeType: optionalTrimmedString.nullable().optional(),
-	selectionStatus: selectionStatusSchema.optional(),
+  collectionId: idSchema.optional(),
+  status: photoStatusSchema.optional(),
+  mimeType: optionalTrimmedString.nullable().optional(),
+  selectionStatus: selectionStatusSchema.optional(),
 }).omit(updateOmitImmutable);
 
 export type PortfolioPhotoSelect = z.infer<typeof portfolioPhotoSelectSchema>;

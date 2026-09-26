@@ -8,7 +8,7 @@ Disallow: /media/review/
 `;
 
 export const GET: APIRoute = async () => {
-	return new Response(BODY, {
-		headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-	});
+  return new Response(BODY, {
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+  });
 };

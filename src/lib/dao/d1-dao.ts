@@ -12,27 +12,27 @@ type Db = DrizzleD1Database<typeof schema>;
  * No tenantId scoping (v1 is single-tenant).
  */
 export class D1DAO {
-	private static instance: D1DAO | undefined;
+  private static instance: D1DAO | undefined;
 
-	readonly portfolioPhotos: PortfolioPhotosDAO;
-	readonly reviewCollections: ReviewCollectionsDAO;
-	readonly reviewPhotos: ReviewPhotosDAO;
+  readonly portfolioPhotos: PortfolioPhotosDAO;
+  readonly reviewCollections: ReviewCollectionsDAO;
+  readonly reviewPhotos: ReviewPhotosDAO;
 
-	private constructor(db: Db) {
-		this.portfolioPhotos = new PortfolioPhotosDAO(db);
-		this.reviewCollections = new ReviewCollectionsDAO(db);
-		this.reviewPhotos = new ReviewPhotosDAO(db);
-	}
+  private constructor(db: Db) {
+    this.portfolioPhotos = new PortfolioPhotosDAO(db);
+    this.reviewCollections = new ReviewCollectionsDAO(db);
+    this.reviewPhotos = new ReviewPhotosDAO(db);
+  }
 
-	static getInstance(db: Db): D1DAO {
-		if (!D1DAO.instance) {
-			D1DAO.instance = new D1DAO(db);
-		}
-		return D1DAO.instance;
-	}
+  static getInstance(db: Db): D1DAO {
+    if (!D1DAO.instance) {
+      D1DAO.instance = new D1DAO(db);
+    }
+    return D1DAO.instance;
+  }
 
-	/** Test / local reset helper — not used in production request paths. */
-	static resetInstance(): void {
-		D1DAO.instance = undefined;
-	}
+  /** Test / local reset helper — not used in production request paths. */
+  static resetInstance(): void {
+    D1DAO.instance = undefined;
+  }
 }

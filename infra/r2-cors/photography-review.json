@@ -1,16 +1,13 @@
 {
-	"rules": [
-		{
-			"allowed": {
-				"origins": [
-					"https://photography.chrislawson.dev",
-					"http://localhost:4321"
-				],
-				"methods": ["PUT", "GET", "HEAD"],
-				"headers": ["Content-Type"]
-			},
-			"exposeHeaders": ["ETag"],
-			"maxAgeSeconds": 3600
-		}
-	]
+  "rules": [
+    {
+      "allowed": {
+        "origins": ["https://photography.chrislawson.dev", "http://localhost:4321"],
+        "methods": ["PUT", "GET", "HEAD"],
+        "headers": ["Content-Type"]
+      },
+      "exposeHeaders": ["ETag"],
+      "maxAgeSeconds": 3600
+    }
+  ]
 }

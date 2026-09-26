@@ -7,19 +7,19 @@
  *   R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY
  */
 declare global {
-	namespace Cloudflare {
-		interface Env {
-			R2_ACCOUNT_ID?: string;
-			R2_ACCESS_KEY_ID?: string;
-			R2_SECRET_ACCESS_KEY?: string;
-		}
-	}
+  namespace Cloudflare {
+    interface Env {
+      R2_ACCOUNT_ID?: string;
+      R2_ACCESS_KEY_ID?: string;
+      R2_SECRET_ACCESS_KEY?: string;
+    }
+  }
 
-	interface Env {
-		R2_ACCOUNT_ID?: string;
-		R2_ACCESS_KEY_ID?: string;
-		R2_SECRET_ACCESS_KEY?: string;
-	}
+  interface Env {
+    R2_ACCOUNT_ID?: string;
+    R2_ACCESS_KEY_ID?: string;
+    R2_SECRET_ACCESS_KEY?: string;
+  }
 }
 
 export {};

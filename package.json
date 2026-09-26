@@ -1,11 +1,8 @@
 {
   "name": "lawson-photography",
-  "type": "module",
   "version": "0.0.1",
   "private": true,
-  "engines": {
-    "node": ">=24.0.0"
-  },
+  "type": "module",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
@@ -16,8 +13,11 @@
     "generate-types": "wrangler types",
     "db:generate": "drizzle-kit generate",
     "db:migrate:local": "wrangler d1 migrations apply photography --local",
+    "lint": "oxlint .",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check .",
     "test": "node --experimental-strip-types --test src/lib/cloudflare-env.test.ts src/lib/http/app-error.test.ts src/lib/ingest/keys.test.ts src/lib/media/parse-portfolio-media-path.test.ts src/lib/media/parse-review-media-path.test.ts src/lib/portfolio/hero-photos.test.ts src/lib/review/collection-access.test.ts src/lib/trpc/errors.test.ts",
-    "ci": "npm test && npm run typecheck && npm run build && npx wrangler deploy --dry-run",
+    "ci": "npm run lint && npm run format:check && npm test && npm run typecheck && npm run build && npx wrangler deploy --dry-run",
     "r2:cors:apply": "wrangler r2 bucket cors set photography-portfolio --file infra/r2-cors/photography-portfolio.json -y && wrangler r2 bucket cors set photography-review --file infra/r2-cors/photography-review.json -y",
     "r2:cors:list": "wrangler r2 bucket cors list photography-portfolio && wrangler r2 bucket cors list photography-review",
     "cf-typegen": "wrangler types"
@@ -52,7 +52,12 @@
     "@types/react-dom": "^19.3.0",
     "@typescript/native": "npm:typescript@^7.0.2",
     "drizzle-kit": "^0.31.11",
+    "oxfmt": "^0.70.0",
+    "oxlint": "^1.85.0",
     "typescript": "npm:@typescript/typescript6@^6.0.2"
+  },
+  "engines": {
+    "node": ">=24.0.0"
   },
   "allowScripts": {
     "esbuild": true

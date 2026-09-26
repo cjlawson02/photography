@@ -11,11 +11,11 @@ import { updateReviewSelection } from '../../../lib/services/review-service.ts';
  * Future password gate: verify credential in ReviewService before mutating.
  */
 export const POST: APIRoute = async ({ request }) => {
-	try {
-		const body = await parseJsonBody(request, reviewSelectionBodySchema);
-		const photo = await ensureAppError(async () => updateReviewSelection(env.DB, body));
-		return Response.json({ ok: true, photo });
-	} catch (error) {
-		return toErrorResponse(error);
-	}
+  try {
+    const body = await parseJsonBody(request, reviewSelectionBodySchema);
+    const photo = await ensureAppError(async () => updateReviewSelection(env.DB, body));
+    return Response.json({ ok: true, photo });
+  } catch (error) {
+    return toErrorResponse(error);
+  }
 };
