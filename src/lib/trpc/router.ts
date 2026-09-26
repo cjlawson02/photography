@@ -6,6 +6,7 @@ import {
 } from '../admin/portfolio-schemas.ts';
 import {
   reviewCollectionCreateBodySchema,
+  reviewCollectionDeletePhotoInputSchema,
   reviewCollectionDetailInputSchema,
   reviewCollectionUpdateInputSchema,
 } from '../admin/review-collection-schemas.ts';
@@ -76,6 +77,15 @@ export const appRouter = createTRPCRouter({
         .input(reviewCollectionUpdateInputSchema)
         .mutation(async ({ ctx, input }) =>
           ReviewService.from(ctx.getAppEnv()).updateCollection(input.id, input.data),
+        ),
+      deletePhoto: adminProcedure
+        .input(reviewCollectionDeletePhotoInputSchema)
+        .mutation(async ({ ctx, input }) =>
+          ReviewService.from(ctx.getAppEnv())
+            .deleteCollectionPhoto(input.collectionId, input.photoId, {
+              cleanupR2: input.cleanupR2,
+            })
+            .then(() => ({ id: input.photoId })),
         ),
     }),
   }),

@@ -141,6 +141,7 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
   const trpc = useTRPC();
   const queryClient = useQueryClient();
   const [editStatus, setEditStatus] = useState<string | null>(null);
+  const [busyPhotoId, setBusyPhotoId] = useState<string | null>(null);
   const detailQuery = useQuery(trpc.review.collections.detail.queryOptions({ id: collectionId }));
 
   const updateMutation = useMutation(
@@ -156,6 +157,18 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
     }),
   );
 
+  const deletePhotoMutation = useMutation(
+    trpc.review.collections.deletePhoto.mutationOptions({
+      onSuccess: async () => {
+        setEditStatus('Photo deleted.');
+        await queryClient.invalidateQueries(trpc.review.collections.detail.queryFilter());
+      },
+      onError: (error) => {
+        setEditStatus(error instanceof Error ? error.message : String(error));
+      },
+    }),
+  );
+
   const patchCollection = async (data: ReviewCollectionAdminUpdateBody) => {
     setEditStatus('Saving…');
     try {
@@ -164,6 +177,22 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
       /* onError sets editStatus */
     }
   };
+
+  const deletePhoto = async (photoId: string) => {
+    if (!confirm(`Delete review photo ${photoId}? Storage objects will be removed.`)) return;
+    setBusyPhotoId(photoId);
+    setEditStatus('Deleting…');
+    try {
+      await deletePhotoMutation.mutateAsync({ collectionId, photoId });
+    } catch {
+      /* onError sets editStatus */
+    } finally {
+      setBusyPhotoId(null);
+    }
+  };
+
+  const photoActionsBusy =
+    updateMutation.isPending || deletePhotoMutation.isPending || busyPhotoId !== null;
 
   const statusMessage = detailQuery.isPending
     ? 'Loading…'
@@ -274,7 +303,8 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
                   <th className="py-2 pr-4 font-normal">Size</th>
                   <th className="py-2 pr-4 font-normal">Selection</th>
                   <th className="py-2 pr-4 font-normal">Updated</th>
-                  <th className="py-2 font-normal">Id</th>
+                  <th className="py-2 pr-4 font-normal">Id</th>
+                  <th className="py-2 font-normal">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -321,10 +351,23 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
                       {formatTime(photo.updatedAt)}
                     </td>
                     <td
-                      className="py-2 align-middle font-mono text-xs"
+                      className="py-2 pr-4 align-middle font-mono text-xs"
                       style={{ color: 'var(--color-fg-muted)' }}
                     >
                       {photo.id}
+                    </td>
+                    <td className="py-2 align-middle">
+                      <button
+                        type="button"
+                        className="text-xs underline"
+                        style={{ color: 'var(--color-accent)' }}
+                        disabled={photoActionsBusy}
+                        onClick={() => {
+                          void deletePhoto(photo.id);
+                        }}
+                      >
+                        Delete
+                      </button>
                     </td>
                   </tr>
                 ))}

@@ -34,3 +34,10 @@ export const reviewCollectionUpdateInputSchema = z.object({
   id: idSchema,
   data: reviewCollectionAdminUpdateBodySchema,
 });
+
+/** `review.collections.deletePhoto` — scoped to one collection. */
+export const reviewCollectionDeletePhotoInputSchema = z.object({
+  collectionId: idSchema,
+  photoId: idSchema,
+  cleanupR2: z.boolean().default(true),
+});
