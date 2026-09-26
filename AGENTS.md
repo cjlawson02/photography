@@ -32,6 +32,8 @@ Migrations: `drizzle-kit generate` → SQL in `src/db/migrations/` → wrangler 
 ```bash
 npm run db:generate      # drizzle-kit generate (no Cloudflare credentials)
 npm run db:migrate:local # wrangler d1 migrations apply photography --local
+npm run db:migrate:check # CI gate: ephemeral local apply + fail on unapplied SQL
+npm run db:migrate:check # CI gate: ephemeral local apply + fail on unapplied SQL
 # Remote (after review): npx wrangler d1 migrations apply photography --remote
 npm run r2:cors:apply    # apply infra/r2-cors/*.json to both buckets (wrangler login)
 npm run r2:cors:list     # verify bucket CORS policies
@@ -74,7 +76,7 @@ Phase 0 smoke:
 - `GET /health` — public binding + DAO presence JSON (does **not** require R2 S3 secrets)
 - `GET /admin/api/health` — requires Access JWT (`Cf-Access-Jwt-Assertion`); returns 403 without it; also bindings-only (no R2_*)
 
-Unit: `npm test` runs **node:test** (`src/**/*.test.ts`), **Vitest jsdom** (`src/**/*.vitest.{ts,tsx}` — admin UI), and **Vitest node** (`src/**/*.server.vitest.ts` — server/review modules). `GET /health` includes rate-limiter binding booleans (FIX-02). Remaining node:test server specs and **workerd** (`@cloudflare/vitest-plugin` pool) migration are tracked as FIX-28. End-to-end upload against live R2/Images `_TBD_` until Access + CORS + secrets are set.
+Unit: `npm test` runs **node:test** (`src/**/*.test.ts`), **Vitest jsdom** (`src/**/*.vitest.{ts,tsx}` — admin UI), and **Vitest node** (`src/**/*.server.vitest.ts` — server/review modules). `GET /health` includes rate-limiter binding booleans (FIX-02). **Remaining `node:test` (FIX-28):** `src/lib/dao/r2-dao.test.ts`, `src/lib/rate-limit/binding.test.ts`, `src/lib/portfolio/hero-photos.test.ts`, `src/lib/observability/sentry-config.test.ts`, `src/lib/observability/sentry.test.ts`. **Workerd pool** (`@cloudflare/vitest-plugin`) for Astro routes/bindings remains _TBD_. End-to-end upload against live R2/Images `_TBD_` until Access + CORS + secrets are set.
 
 Ingest (`AppEnv.from` on **`ingest.*` only**) **fail-fast** if `R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` are missing (503). Other admin tRPC uses bindings-only env and returns **403** without JWT even when R2_* are unset. Copy `.dev.vars.example` → `.dev.vars` and fill R2_* for `/admin` ingest preview.
 

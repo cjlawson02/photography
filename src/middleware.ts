@@ -1,7 +1,7 @@
 import { defineMiddleware } from 'astro:middleware';
 import { env } from 'cloudflare:workers';
 
-import { accessDeniedResponse, verifyAccessJwt } from './lib/access/verify-jwt.ts';
+import { guardAdminPathAccess } from './lib/access/admin-path-gate.ts';
 import { accessEnvFrom } from './lib/cloudflare-env.ts';
 import { applySecurityHeaders } from './lib/http/security-headers.ts';
 
@@ -11,18 +11,13 @@ import { applySecurityHeaders } from './lib/http/security-headers.ts';
  * and stale-pending cleanup; tRPC still re-verifies). Skips when Access vars are unset (local).
  */
 export const onRequest = defineMiddleware(async (context, next) => {
-  const { pathname } = context.url;
-  if (pathname === '/admin' || pathname.startsWith('/admin/')) {
-    const accessEnv = accessEnvFrom(env);
-    if (accessEnv.CF_ACCESS_TEAM_DOMAIN && accessEnv.CF_ACCESS_AUD) {
-      try {
-        await verifyAccessJwt(context.request, accessEnv);
-      } catch (error) {
-        const denied = accessDeniedResponse(error);
-        applySecurityHeaders(denied.headers);
-        return denied;
-      }
-    }
+  const denied = await guardAdminPathAccess(
+    context.request,
+    context.url.pathname,
+    accessEnvFrom(env),
+  );
+  if (denied) {
+    return denied;
   }
 
   const response = await next();
