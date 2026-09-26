@@ -98,6 +98,32 @@ export class ReviewPhotosDAO {
     return updated[0] ?? null;
   }
 
+  /** Atomic read-then-act guard — updates only when `status` still matches. */
+  async updateIfStatus(
+    id: string,
+    expectedStatus: PhotoStatus,
+    patch: {
+      collectionId?: string;
+      status?: PhotoStatus;
+      mimeType?: string | null;
+      selectionStatus?: SelectionStatus;
+      width?: number | null;
+      height?: number | null;
+    },
+  ) {
+    const set = definedProps(patch);
+    if (Object.keys(set).length === 0) {
+      const row = await this.getById(id);
+      return row?.status === expectedStatus ? row : null;
+    }
+    const updated = await this.db
+      .update(ReviewPhotos)
+      .set(set)
+      .where(and(eq(ReviewPhotos.id, id), eq(ReviewPhotos.status, expectedStatus)))
+      .returning();
+    return updated[0] ?? null;
+  }
+
   /**
    * Public selection write — only touches selectionStatus when the photo is still
    * ready in the expected collection (avoids racing ingest markFailed/markReady).

@@ -6,8 +6,8 @@ import { accessEnvFrom } from '../../../../../lib/cloudflare-env.ts';
 import { parseReviewMediaPath } from '../../../../../lib/media/parse-review-media-path.ts';
 import { isReviewMediaAllowedForAdmin } from '../../../../../lib/media/review-media-access.ts';
 import {
+  ADMIN_REVIEW_VARIANT_CACHE_CONTROL,
   REVIEW_ROBOTS_HEADER,
-  REVIEW_VARIANT_CACHE_CONTROL,
 } from '../../../../../lib/media/review-cache.ts';
 
 /**
@@ -40,7 +40,7 @@ export const GET: APIRoute = async ({ params, request }) => {
   }
 
   const headers = new Headers();
-  headers.set('Cache-Control', REVIEW_VARIANT_CACHE_CONTROL);
+  headers.set('Cache-Control', ADMIN_REVIEW_VARIANT_CACHE_CONTROL);
   headers.set('X-Robots-Tag', REVIEW_ROBOTS_HEADER);
   const contentType = object.httpMetadata?.contentType;
   if (contentType) {

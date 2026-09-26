@@ -114,7 +114,7 @@ export class IngestService {
       const message = `Original missing in R2 for ${bucket}/${id} (incomplete PUT?)`;
       console.error('[ingest]', message);
       if (priorStatus !== 'ready') {
-        await this.markFailed(bucket, id);
+        await this.markFailed(bucket, id, priorStatus);
       }
       throw new AppError('PRECONDITION_FAILED', message);
     }
@@ -123,14 +123,15 @@ export class IngestService {
       const message = `Original too large for ${bucket}/${id} (${object.size} bytes)`;
       console.error('[ingest]', message);
       if (priorStatus !== 'ready') {
-        await this.markFailed(bucket, id);
+        await this.markFailed(bucket, id, priorStatus);
       }
       throw new AppError('BAD_REQUEST', message);
     }
 
+    const written: string[] = [];
+
     try {
       const source = await object.arrayBuffer();
-      const written: string[] = [];
 
       for (const spec of VARIANT_SPECS) {
         const variant = variantKey(id, spec.suffix);
@@ -145,15 +146,16 @@ export class IngestService {
       }
 
       const dimensions = await this.app.images.readDimensions(new Blob([source]).stream());
-      await this.markReady(bucket, id, dimensions);
+      await this.markReady(bucket, id, dimensions, priorStatus, written);
       return { id, bucket, status: 'ready', variants: written };
     } catch (error) {
       if (error instanceof AppError) throw error;
       const message = error instanceof Error ? error.message : 'Ingest failed';
       console.error('[ingest]', `Compress/put failed for ${bucket}/${id}:`, error);
-      // Keep ready photos online if a reprocess fails mid-flight.
       if (priorStatus !== 'ready') {
-        await this.markFailed(bucket, id);
+        await this.markFailed(bucket, id, priorStatus);
+      } else if (written.length > 0) {
+        await this.deleteWrittenVariants(bucket, written);
       }
       throw new AppError('INTERNAL_SERVER_ERROR', message);
     }
@@ -163,6 +165,8 @@ export class IngestService {
     bucket: PurposeBucket,
     id: string,
     dimensions: { width: number; height: number } | null,
+    expectedStatus: PhotoStatus,
+    writtenVariants: string[],
   ): Promise<void> {
     const patch = {
       status: 'ready' as const,
@@ -170,20 +174,50 @@ export class IngestService {
     };
     const updated =
       bucket === 'portfolio'
-        ? await this.app.d1.portfolioPhotos.update(id, patch)
-        : await this.app.d1.reviewPhotos.update(id, patch);
+        ? await this.app.d1.portfolioPhotos.updateIfStatus(id, expectedStatus, patch)
+        : await this.app.d1.reviewPhotos.updateIfStatus(id, expectedStatus, patch);
     if (!updated) {
-      throw new AppError('NOT_FOUND', `Photo not found during markReady: ${id}`);
+      await this.deleteWrittenVariants(bucket, writtenVariants);
+      const row =
+        bucket === 'portfolio'
+          ? await this.app.d1.portfolioPhotos.getById(id)
+          : await this.app.d1.reviewPhotos.getById(id);
+      if (!row) {
+        throw new AppError('NOT_FOUND', `Photo not found during markReady: ${id}`);
+      }
+      throw new AppError(
+        'PRECONDITION_FAILED',
+        `Photo ${id} status changed during ingest (expected ${expectedStatus})`,
+      );
     }
   }
 
-  private async markFailed(bucket: PurposeBucket, id: string): Promise<void> {
+  private async markFailed(
+    bucket: PurposeBucket,
+    id: string,
+    expectedStatus: PhotoStatus,
+  ): Promise<void> {
     const updated =
       bucket === 'portfolio'
-        ? await this.app.d1.portfolioPhotos.update(id, { status: 'failed' })
-        : await this.app.d1.reviewPhotos.update(id, { status: 'failed' });
+        ? await this.app.d1.portfolioPhotos.updateIfStatus(id, expectedStatus, { status: 'failed' })
+        : await this.app.d1.reviewPhotos.updateIfStatus(id, expectedStatus, { status: 'failed' });
     if (!updated) {
-      throw new AppError('NOT_FOUND', `Photo not found during markFailed: ${id}`);
+      console.warn('[ingest] markFailed skipped — row missing or status changed', {
+        bucket,
+        id,
+        expectedStatus,
+      });
+    }
+  }
+
+  private async deleteWrittenVariants(bucket: PurposeBucket, keys: string[]): Promise<void> {
+    if (keys.length === 0) {
+      return;
+    }
+    try {
+      await this.app.r2.deleteObjects(bucket, keys);
+    } catch (error) {
+      console.error('[ingest] failed to delete orphaned variants', { bucket, keys, error });
     }
   }
 }

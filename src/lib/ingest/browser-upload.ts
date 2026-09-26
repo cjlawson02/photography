@@ -69,9 +69,15 @@ function trpcMessage(error: unknown, fallback: string): string {
  * Review uploads must pass `collectionId`.
  */
 export async function uploadPhoto(options: PortfolioUpload | ReviewUpload): Promise<UploadResult> {
-  const parsedType = ingestContentTypeSchema.safeParse(options.file.type || 'image/jpeg');
+  const mimeType = options.file.type.trim();
+  if (!mimeType) {
+    throw new Error(
+      'File type is missing — use a format the browser recognizes or rename with a known extension',
+    );
+  }
+  const parsedType = ingestContentTypeSchema.safeParse(mimeType);
   if (!parsedType.success) {
-    throw new Error(`Unsupported file type: ${options.file.type || '(empty)'}`);
+    throw new Error(`Unsupported file type: ${mimeType}`);
   }
   const contentType = parsedType.data;
   const presign = await requestPresign({

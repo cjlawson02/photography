@@ -134,6 +134,37 @@ export class PortfolioPhotosDAO {
     return updated[0] ?? null;
   }
 
+  /** Atomic read-then-act guard — updates only when `status` still matches. */
+  async updateIfStatus(
+    id: string,
+    expectedStatus: PhotoStatus,
+    patch: {
+      status?: PhotoStatus;
+      mimeType?: string | null;
+      published?: boolean;
+      category?: PortfolioCategory | null;
+      sortOrder?: number | null;
+      hero?: boolean;
+      width?: number | null;
+      height?: number | null;
+      alt?: string | null;
+      title?: string | null;
+      caption?: string | null;
+    },
+  ) {
+    const set = definedProps(patch);
+    if (Object.keys(set).length === 0) {
+      const row = await this.getById(id);
+      return row?.status === expectedStatus ? row : null;
+    }
+    const updated = await this.db
+      .update(PortfolioPhotos)
+      .set(set)
+      .where(and(eq(PortfolioPhotos.id, id), eq(PortfolioPhotos.status, expectedStatus)))
+      .returning();
+    return updated[0] ?? null;
+  }
+
   async deleteById(id: string) {
     const deleted = await this.db
       .delete(PortfolioPhotos)

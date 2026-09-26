@@ -55,22 +55,6 @@ export class PortfolioService {
     return { items, nextCursor };
   }
 
-  async listPublishedForPublic(): Promise<PublicPortfolioPhoto[]> {
-    const rows = await this.app.d1.portfolioPhotos.listPublishedReady();
-    return rows.map((row) => ({
-      id: row.id,
-      category: row.category,
-      sortOrder: row.sortOrder,
-      hero: row.hero,
-      alt: row.alt,
-      title: row.title,
-      caption: row.caption,
-      width: row.width,
-      height: row.height,
-      galleryUrl: portfolioVariantPublicUrl(row.id, 'gallery.webp', row.updatedAt),
-    }));
-  }
-
   async updateMetadata(id: string, patch: PortfolioPhotoAdminUpdateBody) {
     const updated = await this.app.d1.portfolioPhotos.update(id, patch);
     if (!updated) {
