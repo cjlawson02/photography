@@ -64,3 +64,16 @@ export const reviewLinkFinalToPickInputSchema = z.object({
 export const reviewMarkDeliveredInputSchema = z.object({
   id: idSchema,
 });
+
+export const reviewPromoteFinalInputSchema = z.object({
+  collectionId: idSchema,
+  finalPhotoId: idSchema,
+});
+
+export const reviewPurgeRoundsInputSchema = z.object({
+  collectionId: idSchema,
+  proofs: z.boolean(),
+  finals: z.boolean(),
+  cleanupR2: cleanupR2Field,
+  confirmSlug: z.string().min(1),
+});

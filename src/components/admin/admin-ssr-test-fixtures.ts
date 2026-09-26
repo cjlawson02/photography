@@ -73,6 +73,7 @@ export function makeAdminPortfolioPhoto(
     hero: overrides.hero ?? false,
     frontPage: overrides.frontPage ?? false,
     frontPageOrder: overrides.frontPageOrder ?? null,
+    sourceReviewPhotoId: overrides.sourceReviewPhotoId ?? null,
     alt: overrides.alt ?? null,
     title: overrides.title ?? 'Sunset',
     caption: overrides.caption ?? null,

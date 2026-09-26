@@ -29,6 +29,7 @@ export class PortfolioPhotosDAO {
     frontPageOrder?: number | null;
     width?: number | null;
     height?: number | null;
+    sourceReviewPhotoId?: string | null;
   }) {
     const row = {
       status: values.status ?? ('pending' as const),
@@ -41,6 +42,7 @@ export class PortfolioPhotosDAO {
       frontPageOrder: values.frontPageOrder ?? null,
       width: values.width ?? null,
       height: values.height ?? null,
+      sourceReviewPhotoId: values.sourceReviewPhotoId ?? null,
       ...(values.id ? { id: values.id } : {}),
     };
     const inserted = await this.db.insert(PortfolioPhotos).values(row).returning();
