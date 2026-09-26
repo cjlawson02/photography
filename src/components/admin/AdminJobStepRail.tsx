@@ -10,6 +10,7 @@ import AdminPrimaryButton from './AdminPrimaryButton.tsx';
 
 type AdminJobStepRailProps = {
   status: ReviewJobStatus;
+  reviewPath: string;
   primaryAction: JobStepPrimaryAction;
   onMarkShared?: () => void;
   markSharedPending?: boolean;
@@ -19,6 +20,8 @@ type AdminJobStepRailProps = {
   reopenPicksPending?: boolean;
   onMarkDelivered?: () => void;
   markDeliveredPending?: boolean;
+  onMarkClosed?: () => void;
+  markClosedPending?: boolean;
   onCopyDeliveryMessage?: () => void;
   copyDeliveryMessagePending?: boolean;
 };
@@ -31,6 +34,7 @@ export function AdminJobStatusBadge({ status }: { status: ReviewJobStatus }) {
 
 export default function AdminJobStepRail({
   status,
+  reviewPath,
   primaryAction,
   onMarkShared,
   markSharedPending,
@@ -40,11 +44,13 @@ export default function AdminJobStepRail({
   reopenPicksPending,
   onMarkDelivered,
   markDeliveredPending,
+  onMarkClosed,
+  markClosedPending,
   onCopyDeliveryMessage,
   copyDeliveryMessagePending,
 }: AdminJobStepRailProps) {
   const steps = buildJobStepRail(status);
-  const secondaryAction = jobStepSecondaryAction(status);
+  const secondaryAction = jobStepSecondaryAction(status, reviewPath);
 
   return (
     <section className="admin-job-rail" aria-label="Shoot job steps">
@@ -92,6 +98,15 @@ export default function AdminJobStepRail({
             {primaryAction.label}
           </a>
         ) : null}
+        {primaryAction.kind === 'mark_closed' ? (
+          <AdminPrimaryButton
+            type="button"
+            disabled={markClosedPending}
+            onClick={() => onMarkClosed?.()}
+          >
+            {primaryAction.label}
+          </AdminPrimaryButton>
+        ) : null}
         {primaryAction.kind === 'mark_delivered' ? (
           <AdminPrimaryButton
             type="button"
@@ -131,6 +146,16 @@ export default function AdminJobStepRail({
           >
             {secondaryAction.label}
           </AdminPrimaryButton>
+        ) : null}
+        {secondaryAction?.kind === 'preview_download' ? (
+          <a
+            className={`${adminClass.btnPrimary} ml-3`}
+            href={secondaryAction.href}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {secondaryAction.label}
+          </a>
         ) : null}
         {secondaryAction?.kind === 'copy_delivery_message' ? (
           <AdminPrimaryButton

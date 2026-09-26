@@ -9,6 +9,7 @@ describe('AdminJobStepRail', () => {
     render(
       <AdminJobStepRail
         status="proofs_uploaded"
+        reviewPath="/review/x"
         primaryAction={jobStepPrimaryAction({
           status: 'proofs_uploaded',
           reviewPath: '/review/x',

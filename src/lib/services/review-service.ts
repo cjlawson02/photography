@@ -6,7 +6,7 @@ import { ReviewPhotosDAO } from '../dao/review-photos-dao.ts';
 import type { SelectionStatus } from '../../db/schema/review/selection-status.ts';
 import type { ReviewJobStatus } from '../../db/schema/review/job-status.ts';
 import { AppError } from '../http/app-error.ts';
-import { GALLERY_VARIANT, THUMB_VARIANT } from '../ingest/keys.ts';
+import { GALLERY_VARIANT, THUMB_VARIANT, photoIngestObjectKeys } from '../ingest/keys.ts';
 import {
   reviewOriginalPublicUrl,
   reviewVariantAdminUrl,
@@ -191,6 +191,9 @@ export class ReviewService {
     if (to === 'editing' && from === 'finals_delivered') {
       timestamps.deliveredAt = null;
     }
+    if (to === 'closed' && collection.closedAt == null) {
+      timestamps.closedAt = now;
+    }
 
     const updated = await this.app.d1.reviewCollections.update(id, {
       status: to,
@@ -318,6 +321,59 @@ export class ReviewService {
       throw new AppError('NOT_FOUND', `Final photo not found: ${input.finalPhotoId}`);
     }
     return updated;
+  }
+
+  async promoteFinalToPortfolio(collectionId: string, finalPhotoId: string) {
+    const collection = await this.app.d1.reviewCollections.getById(collectionId);
+    if (!collection) {
+      throw new AppError('NOT_FOUND', `Review collection not found: ${collectionId}`);
+    }
+    const finalPhoto = await this.app.d1.reviewPhotos.getById(finalPhotoId);
+    if (
+      !finalPhoto ||
+      finalPhoto.collectionId !== collectionId ||
+      finalPhoto.round !== 'final' ||
+      finalPhoto.status !== 'ready'
+    ) {
+      throw new AppError('NOT_FOUND', `Final photo not found: ${finalPhotoId}`);
+    }
+
+    const portfolioPhoto = await this.app.d1.portfolioPhotos.insert({
+      status: 'ready',
+      mimeType: finalPhoto.mimeType,
+      published: false,
+      width: finalPhoto.width,
+      height: finalPhoto.height,
+      sourceReviewPhotoId: finalPhotoId,
+    });
+
+    for (const key of photoIngestObjectKeys(finalPhotoId)) {
+      const object = await this.app.r2.get('review', key);
+      if (!object?.body) continue;
+      const suffix = key.slice(finalPhotoId.length + 1);
+      const destKey = `${portfolioPhoto.id}/${suffix}`;
+      await this.app.r2.put('portfolio', destKey, object.body, {
+        httpMetadata: object.httpMetadata,
+      });
+    }
+
+    return portfolioPhoto;
+  }
+
+  async purgeCollectionRounds(
+    collectionId: string,
+    options: { proofs: boolean; finals: boolean; cleanupR2: boolean },
+  ) {
+    const rows = await this.app.d1.reviewPhotos.listByCollectionId(collectionId);
+    const targets = rows.filter((row) => {
+      if (row.round === 'proof') return options.proofs;
+      if (row.round === 'final') return options.finals;
+      return false;
+    });
+    for (const photo of targets) {
+      await this.deleteCollectionPhoto(collectionId, photo.id, { cleanupR2: options.cleanupR2 });
+    }
+    return { deleted: targets.length };
   }
 
   async markFinalsDelivered(id: string) {
