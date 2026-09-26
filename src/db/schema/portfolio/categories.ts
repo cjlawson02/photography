@@ -1,5 +1,5 @@
 /** Live-site filter labels — stored on portfolio photo rows until albums exist in HLD. */
-export const PORTFOLIO_CATEGORIES = ['Friends', 'Nature', 'Portraits', 'People', 'Beach'] as const;
+export const PORTFOLIO_CATEGORIES = ['Nature', 'Portraits', 'People', 'Beach'] as const;
 
 export type PortfolioCategory = (typeof PORTFOLIO_CATEGORIES)[number];
 

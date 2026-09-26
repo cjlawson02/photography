@@ -58,7 +58,7 @@ Entry point: [`scripts/legacy-portfolio-import.mjs`](../../scripts/legacy-portfo
 | WP | Portfolio |
 | --- | --- |
 | Featured image file | R2 `{id}/original` + sharp `gallery.webp` (1600) / `thumb.webp` (400) |
-| `post_tag` ∈ Friends/Nature/Portraits/People/Beach | `category` (priority: Portraits → Friends → People → Beach → Nature) |
+| `post_tag` ∈ Nature/Portraits/People/Beach (legacy Friends → People) | `tags` JSON (multi); historical single-category collapse preferred Portraits → People → Beach → Nature |
 | Category **Front Page Slider** | `hero = true` |
 | `post_title` / attachment title | `title` (refined after vision caption pass) |
 | `post_excerpt` | `caption` (refined after vision caption pass) |

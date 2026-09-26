@@ -51,13 +51,18 @@ export function d1Target(env) {
   return t;
 }
 
-export const PORTFOLIO_CATEGORIES = ['Friends', 'Nature', 'Portraits', 'People', 'Beach'];
+export const PORTFOLIO_CATEGORIES = ['Nature', 'Portraits', 'People', 'Beach'];
 
-/** Prefer more specific tags when a post has several. */
-const CATEGORY_PRIORITY = ['Portraits', 'Friends', 'People', 'Beach', 'Nature'];
+/** Prefer more specific tags when a post has several. Legacy Friends collapses to People. */
+const CATEGORY_PRIORITY = ['Portraits', 'People', 'Beach', 'Nature'];
 
 export function mapCategoryFromTags(tags) {
-  const set = new Set((tags || []).map((t) => String(t).trim()));
+  const set = new Set(
+    (tags || []).map((t) => {
+      const name = String(t).trim();
+      return name === 'Friends' ? 'People' : name;
+    }),
+  );
   for (const name of CATEGORY_PRIORITY) {
     if (set.has(name)) return name;
   }

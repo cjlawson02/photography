@@ -85,6 +85,13 @@
       "when": 1790420000000,
       "tag": "0011_portfolio_tags_priority",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1790421000000,
+      "tag": "0012_drop_friends_tag",
+      "breakpoints": true
     }
   ]
 }
