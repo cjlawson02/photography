@@ -2,8 +2,7 @@ import { useCallback, useOptimistic, useState, useTransition } from 'react';
 
 import type { SelectionStatus } from '../../db/schema/review/selection-status.ts';
 import {
-  DEFAULT_GALLERY_HEIGHT,
-  DEFAULT_GALLERY_WIDTH,
+  galleryDisplayDimensions,
   galleryItemFromPhoto,
   openGalleryLightbox,
 } from '../../lib/gallery/lightbox.ts';
@@ -72,8 +71,8 @@ export default function ReviewGallery({ slug, photos: initialPhotos }: Props) {
     const items = optimisticPhotos.map((photo) =>
       galleryItemFromPhoto({
         galleryUrl: photo.galleryUrl,
-        width: DEFAULT_GALLERY_WIDTH,
-        height: DEFAULT_GALLERY_HEIGHT,
+        width: photo.width,
+        height: photo.height,
       }),
     );
     const index = optimisticPhotos.findIndex((p) => p.id === photoId);
@@ -130,6 +129,7 @@ export default function ReviewGallery({ slug, photos: initialPhotos }: Props) {
             const busy = pendingIds.has(photo.id);
             const selected =
               photo.selectionStatus === 'selected' || photo.selectionStatus === 'approved';
+            const { width, height } = galleryDisplayDimensions(photo);
             return (
               <li key={photo.id} className="public-masonry-item">
                 <button
@@ -142,8 +142,9 @@ export default function ReviewGallery({ slug, photos: initialPhotos }: Props) {
                   <img
                     src={photo.galleryUrl}
                     alt=""
-                    width={DEFAULT_GALLERY_WIDTH}
-                    height={DEFAULT_GALLERY_HEIGHT}
+                    width={width}
+                    height={height}
+                    style={{ aspectRatio: `${width} / ${height}` }}
                     loading="lazy"
                     decoding="async"
                     className="public-masonry-img"

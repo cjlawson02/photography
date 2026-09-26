@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import {
-  DEFAULT_GALLERY_HEIGHT,
-  DEFAULT_GALLERY_WIDTH,
+  galleryDisplayDimensions,
   galleryItemFromPhoto,
   openGalleryLightbox,
 } from '../../lib/gallery/lightbox.ts';
@@ -35,8 +34,8 @@ export default function PublicHomeGallery({ photos }: Props) {
     const items = visiblePhotos.map((photo) =>
       galleryItemFromPhoto({
         galleryUrl: photo.galleryUrl,
-        width: DEFAULT_GALLERY_WIDTH,
-        height: DEFAULT_GALLERY_HEIGHT,
+        width: photo.width,
+        height: photo.height,
       }),
     );
     const index = visiblePhotos.findIndex((p) => p.id === photoId);
@@ -84,28 +83,32 @@ export default function PublicHomeGallery({ photos }: Props) {
         </p>
       ) : (
         <ul ref={gridRef} className="public-masonry-grid columns-2 sm:columns-3 lg:columns-4">
-          {visiblePhotos.map((photo) => (
-            <li key={photo.id} className="public-masonry-item">
-              <button
-                type="button"
-                className="block w-full cursor-pointer border-0 p-0"
-                style={{ background: 'transparent' }}
-                aria-label="View larger image"
-                onClick={() => openLightbox(photo.id)}
-              >
-                <img
-                  src={photo.galleryUrl}
-                  alt=""
-                  width={DEFAULT_GALLERY_WIDTH}
-                  height={DEFAULT_GALLERY_HEIGHT}
-                  loading="lazy"
-                  decoding="async"
-                  className="public-masonry-img"
-                  onLoad={nudgeMasonry}
-                />
-              </button>
-            </li>
-          ))}
+          {visiblePhotos.map((photo) => {
+            const { width, height } = galleryDisplayDimensions(photo);
+            return (
+              <li key={photo.id} className="public-masonry-item">
+                <button
+                  type="button"
+                  className="block w-full cursor-pointer border-0 p-0"
+                  style={{ background: 'transparent' }}
+                  aria-label="View larger image"
+                  onClick={() => openLightbox(photo.id)}
+                >
+                  <img
+                    src={photo.galleryUrl}
+                    alt=""
+                    width={width}
+                    height={height}
+                    style={{ aspectRatio: `${width} / ${height}` }}
+                    loading="lazy"
+                    decoding="async"
+                    className="public-masonry-img"
+                    onLoad={nudgeMasonry}
+                  />
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>

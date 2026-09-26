@@ -37,16 +37,27 @@ export function openGalleryLightbox(items: GalleryLightboxItem[], index: number)
   pswp.init();
 }
 
+export function galleryDisplayDimensions(photo: {
+  width?: number | null;
+  height?: number | null;
+}): { width: number; height: number } {
+  return {
+    width: photo.width ?? DEFAULT_GALLERY_WIDTH,
+    height: photo.height ?? DEFAULT_GALLERY_HEIGHT,
+  };
+}
+
 export function galleryItemFromPhoto(photo: {
   galleryUrl: string;
   title?: string;
-  width?: number;
-  height?: number;
+  width?: number | null;
+  height?: number | null;
 }): GalleryLightboxItem {
+  const { width, height } = galleryDisplayDimensions(photo);
   return {
     src: photo.galleryUrl,
-    width: photo.width ?? DEFAULT_GALLERY_WIDTH,
-    height: photo.height ?? DEFAULT_GALLERY_HEIGHT,
+    width,
+    height,
     alt: photo.title?.trim() ?? '',
   };
 }
