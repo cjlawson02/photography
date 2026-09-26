@@ -204,4 +204,12 @@ export class PortfolioPhotosDAO {
       .returning();
     return deleted[0] ?? null;
   }
+
+  async countByStatus(status: PhotoStatus) {
+    const rows = await this.db
+      .select({ count: sql<number>`count(*)` })
+      .from(PortfolioPhotos)
+      .where(eq(PortfolioPhotos.status, status));
+    return rows[0]?.count ?? 0;
+  }
 }
