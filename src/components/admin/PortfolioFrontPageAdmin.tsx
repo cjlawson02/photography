@@ -159,8 +159,8 @@ function PortfolioFrontPageAdminInner({ initialFrontPage }: PortfolioFrontPageAd
         <div className="mt-6">
           <AdminEmptyState title="No Featured set yet">
             The public gallery is fine — visitors still see published Library photos. This page only
-            curates the Featured chip and order. In the Library, select published photos with alt and
-            category filled in, then choose “Add to front page”.
+            curates the Featured chip and order. In the Library, select published photos with alt
+            and category filled in, then choose “Add to front page”.
           </AdminEmptyState>
         </div>
       ) : (
