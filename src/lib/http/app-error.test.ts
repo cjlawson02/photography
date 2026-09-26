@@ -11,6 +11,7 @@ describe('AppError', () => {
     assert.equal(new AppError('PRECONDITION_FAILED', 'put').status, 412);
     assert.equal(new AppError('INTERNAL_SERVER_ERROR', 'boom').status, 500);
     assert.equal(new AppError('SERVICE_UNAVAILABLE', 'r2').status, 503);
+    assert.equal(new AppError('TOO_MANY_REQUESTS', 'slow down').status, 429);
     assert.equal(APP_ERROR_STATUS.FORBIDDEN, 403);
   });
 

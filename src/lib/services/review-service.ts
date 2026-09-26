@@ -7,6 +7,7 @@ import { AppError } from '../http/app-error.ts';
 import { photoIngestObjectKeys } from '../ingest/keys.ts';
 import { reviewVariantPublicUrl } from '../media/review-public-url.ts';
 import { resolveReviewCollectionAccess } from '../review/collection-access.ts';
+import { buildReviewSlug } from '../review/slug.ts';
 import { isSqliteUniqueViolation } from '../sqlite-unique-violation.ts';
 import type { PhotoStatus } from '../../db/schema/photo-status.ts';
 
@@ -53,23 +54,31 @@ export class ReviewService {
   }
 
   async createCollection(input: {
-    slug: string;
+    slugPrefix?: string;
     title?: string | null;
     expiresAt?: number | null;
   }) {
     const dao = this.app.d1.reviewCollections;
-    const existing = await dao.getBySlug(input.slug);
-    if (existing) {
-      throw new AppError('CONFLICT', 'Slug already in use');
-    }
-    try {
-      return await dao.insert(input);
-    } catch (error) {
-      if (isSqliteUniqueViolation(error)) {
-        throw new AppError('CONFLICT', 'Slug already in use');
+    const maxAttempts = 5;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      const slug = buildReviewSlug(input.slugPrefix);
+      try {
+        return await dao.insert({
+          slug,
+          title: input.title,
+          expiresAt: input.expiresAt,
+        });
+      } catch (error) {
+        if (isSqliteUniqueViolation(error)) {
+          if (attempt === maxAttempts - 1) {
+            throw new AppError('CONFLICT', 'Could not allocate a unique review slug');
+          }
+          continue;
+        }
+        throw error;
       }
-      throw error;
     }
+    throw new AppError('INTERNAL_SERVER_ERROR', 'Could not create review collection');
   }
 
   async getCollectionDetailForAdmin(id: string): Promise<AdminReviewCollectionDetail> {

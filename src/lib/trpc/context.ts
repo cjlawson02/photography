@@ -15,6 +15,7 @@ export type TrpcContext = {
   ensureAccessIdentity: () => Promise<AccessIdentity>;
   getAppEnv: () => AppEnv;
   getIngestAppEnv: () => AppEnv;
+  getAdminTrpcRateLimiter: () => Cloudflare.Env['ADMIN_TRPC_RATE_LIMITER'] | undefined;
 };
 
 export function createTrpcContext(input: { request: Request }): TrpcContext {
@@ -46,6 +47,9 @@ export function createTrpcContext(input: { request: Request }): TrpcContext {
     getIngestAppEnv() {
       ingestAppEnv ??= AppEnvFactory.from(env);
       return ingestAppEnv;
+    },
+    getAdminTrpcRateLimiter() {
+      return env.ADMIN_TRPC_RATE_LIMITER;
     },
   };
 

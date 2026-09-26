@@ -46,4 +46,23 @@
   "images": {
     "binding": "IMAGES",
   },
+  // Public review selection updates — per-IP limit (see selection-rate-limit.ts).
+  "ratelimits": [
+    {
+      "name": "REVIEW_SELECTION_RATE_LIMITER",
+      "namespace_id": "1001",
+      "simple": {
+        "limit": 120,
+        "period": 60,
+      },
+    },
+    {
+      "name": "ADMIN_TRPC_RATE_LIMITER",
+      "namespace_id": "1002",
+      "simple": {
+        "limit": 300,
+        "period": 60,
+      },
+    },
+  ],
 }
