@@ -1,7 +1,10 @@
 import { z } from 'zod/v4';
 
 import { portfolioPhotoAdminUpdateBodySchema } from '../admin/portfolio-schemas.ts';
-import { reviewCollectionCreateBodySchema } from '../admin/review-collection-schemas.ts';
+import {
+  reviewCollectionCreateBodySchema,
+  reviewCollectionDetailInputSchema,
+} from '../admin/review-collection-schemas.ts';
 import { idSchema } from '../../db/schema/types.ts';
 import { completeBodySchema, presignBodySchema, reprocessBodySchema } from '../ingest/schemas.ts';
 import { IngestService } from '../services/ingest-service.ts';
@@ -58,6 +61,11 @@ export const appRouter = createTRPCRouter({
           cleanupR2: input.cleanupR2,
         }),
       ),
+      detail: adminProcedure
+        .input(reviewCollectionDetailInputSchema)
+        .query(async ({ ctx, input }) =>
+          ReviewService.from(ctx.getAppEnv()).getCollectionDetailForAdmin(input.id),
+        ),
     }),
   }),
   ingest: createTRPCRouter({
