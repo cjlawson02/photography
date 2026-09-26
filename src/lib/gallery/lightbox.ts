@@ -49,15 +49,17 @@ export function galleryDisplayDimensions(photo: {
 
 export function galleryItemFromPhoto(photo: {
   galleryUrl: string;
-  title?: string;
+  alt?: string | null;
+  title?: string | null;
   width?: number | null;
   height?: number | null;
 }): GalleryLightboxItem {
   const { width, height } = galleryDisplayDimensions(photo);
+  const alt = photo.alt?.trim() || photo.title?.trim() || '';
   return {
     src: photo.galleryUrl,
     width,
     height,
-    alt: photo.title?.trim() ?? '',
+    alt,
   };
 }

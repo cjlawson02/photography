@@ -123,6 +123,9 @@ function PortfolioAdminTableInner() {
               <th className="py-2 pr-4 font-normal">Ingest</th>
               <th className="py-2 pr-4 font-normal">Size</th>
               <th className="py-2 pr-4 font-normal">Published</th>
+              <th className="py-2 pr-4 font-normal">Alt</th>
+              <th className="py-2 pr-4 font-normal">Title</th>
+              <th className="py-2 pr-4 font-normal">Caption</th>
               <th className="py-2 pr-4 font-normal">Category</th>
               <th className="py-2 pr-4 font-normal">Sort</th>
               <th className="py-2 pr-4 font-normal">Hero</th>

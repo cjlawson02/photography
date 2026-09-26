@@ -120,9 +120,9 @@ export default function HeroCarousel({ photos }: Props) {
               >
                 <img
                   src={photo.galleryUrl}
-                  alt=""
-                  width={1600}
-                  height={900}
+                  alt={photo.alt?.trim() ?? ''}
+                  width={photo.width ?? 1600}
+                  height={photo.height ?? 900}
                   decoding="async"
                   fetchPriority={index === 0 ? 'high' : 'auto'}
                   className="block max-h-[min(70vh,720px)] w-full object-cover"

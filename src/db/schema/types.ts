@@ -45,6 +45,9 @@ export const portfolioPhotoSelectSchema = createSelectSchema(PortfolioPhotos, {
   hero: z.boolean(),
   width: z.number().int().nullable(),
   height: z.number().int().nullable(),
+  alt: z.string().nullable(),
+  title: z.string().nullable(),
+  caption: z.string().nullable(),
 });
 
 export const portfolioPhotoInsertSchema = createInsertSchema(PortfolioPhotos, {
@@ -56,6 +59,9 @@ export const portfolioPhotoInsertSchema = createInsertSchema(PortfolioPhotos, {
   hero: z.boolean().optional(),
   width: z.number().int().nullable().optional(),
   height: z.number().int().nullable().optional(),
+  alt: optionalTrimmedString.nullable().optional(),
+  title: optionalTrimmedString.nullable().optional(),
+  caption: optionalTrimmedString.nullable().optional(),
 }).omit(immutableTimestamps);
 
 export const portfolioPhotoUpdateSchema = createUpdateSchema(PortfolioPhotos, {
@@ -67,6 +73,9 @@ export const portfolioPhotoUpdateSchema = createUpdateSchema(PortfolioPhotos, {
   hero: z.boolean().optional(),
   width: z.number().int().nullable().optional(),
   height: z.number().int().nullable().optional(),
+  alt: optionalTrimmedString.nullable().optional(),
+  title: optionalTrimmedString.nullable().optional(),
+  caption: optionalTrimmedString.nullable().optional(),
 }).omit(updateOmitImmutable);
 
 export const reviewCollectionSelectSchema = createSelectSchema(ReviewCollections, {
