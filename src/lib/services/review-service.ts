@@ -86,6 +86,14 @@ export class ReviewService {
     throw new AppError('INTERNAL_SERVER_ERROR', 'Could not create review collection');
   }
 
+  async updateCollection(id: string, patch: { title?: string | null; expiresAt?: number | null }) {
+    const updated = await this.app.d1.reviewCollections.update(id, patch);
+    if (!updated) {
+      throw new AppError('NOT_FOUND', `Review collection not found: ${id}`);
+    }
+    return updated;
+  }
+
   async getCollectionDetailForAdmin(id: string): Promise<AdminReviewCollectionDetail> {
     const collection = await this.app.d1.reviewCollections.getById(id);
     if (!collection) {
