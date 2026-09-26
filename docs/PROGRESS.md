@@ -49,6 +49,7 @@ gantt
 
 | Date | Update |
 | --- | --- |
+| 2026-09-26 | Open items batch: portfolio reprocess UX, home SEO meta, [SMOKE.md](SMOKE.md); IMPLEMENTATION checklist sync |
 | 2026-09-25 | First production deploy: custom domain, Access Public DNS `/admin*`, Access vars in wrangler, R2 secrets + CORS, D1 remote; [DEPLOY.md](DEPLOY.md) updated |
 | 2026-09-25 | Phase 4 client review phase 1: public `/review/{slug}`, `/media/review`, selection UX, admin revoke |
 | 2026-09-25 | Progress/IMPLEMENTATION sync through [PR #10](https://github.com/cjlawson02/photography/pull/10): Phase 1 done; Phase 2/3 partial; Gantt + status table |
