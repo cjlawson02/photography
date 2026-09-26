@@ -129,7 +129,7 @@ Tracked after [#21](https://github.com/cjlawson02/photography/pull/21)–[#23](h
 | B3 | Admin review selections + photos view | tRPC/UI for `ReviewPhotos` / `selectionStatus`; `review.collections.detail` |
 | S1 | Review slug hardening | Server-generated or min-length URL-safe slugs |
 | S2 | Rate-limit `/review/api/selection` | Workers rate-limit binding |
-| S4 | Delete / revoke ordering | R2 batch delete; `db.batch` on revoke; portfolio R2-before-D1 or orphan tolerance |
+| S4 | Delete / revoke ordering | Done — R2 `deleteObjects` batch; revoke `db.batch`; portfolio/review R2-before-D1 |
 | S6 | Security headers | Done — Astro `src/middleware.ts` + `src/lib/http/security-headers.ts` |
 | P1–P7 | Product polish | Ingest dimensions, alt/title, empty states, review lifecycle, upload hardening, pending TTL, admin pagination — see [HLD](HLD.md) `_TBD_` |
 | M1–M4 | Frontend islands + primitives | Query islands on admin portfolio/review/ingest; **M2** — removed `lib/admin/portfolio-api.ts` and `review-collections-api.ts` (router output types in `trpc-types.ts`); shared UI primitives + optional `embla-carousel-react` `_TBD_` |

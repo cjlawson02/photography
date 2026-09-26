@@ -2,7 +2,13 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { createId } from '@paralleldrive/cuid2';
 
-import { isAllowlistedVariantSuffix, originalKey, VARIANT_SPECS, variantKey } from './keys.ts';
+import {
+  isAllowlistedVariantSuffix,
+  originalKey,
+  photoIngestObjectKeys,
+  VARIANT_SPECS,
+  variantKey,
+} from './keys.ts';
 import { isPurposeBucket, presignBodySchema } from './schemas.ts';
 
 describe('ingest keys', () => {
@@ -11,6 +17,11 @@ describe('ingest keys', () => {
     assert.equal(originalKey(id), `${id}/original`);
     assert.equal(variantKey(id, 'gallery.webp'), `${id}/gallery.webp`);
     assert.equal(variantKey(id, 'thumb.webp'), `${id}/thumb.webp`);
+    assert.deepEqual(photoIngestObjectKeys(id), [
+      `${id}/original`,
+      `${id}/gallery.webp`,
+      `${id}/thumb.webp`,
+    ]);
   });
 
   it('allowlists provisional variant suffixes only', () => {

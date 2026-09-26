@@ -22,6 +22,11 @@ export function variantKey(id: string, suffix: string): string {
   return `${id}/${suffix}`;
 }
 
+/** All ingest object keys for one photo id (original + generated variants). */
+export function photoIngestObjectKeys(photoId: string): string[] {
+  return [originalKey(photoId), ...VARIANT_SPECS.map((spec) => variantKey(photoId, spec.suffix))];
+}
+
 /** Allowlisted variant suffixes for future Worker media delivery. */
 export function isAllowlistedVariantSuffix(suffix: string): boolean {
   return VARIANT_SPECS.some((v) => v.suffix === suffix);
