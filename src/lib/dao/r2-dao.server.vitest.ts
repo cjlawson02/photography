@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { describe, expect, it } from 'vitest';
 
 import { R2DAO } from './r2-dao.ts';
 
@@ -21,7 +20,7 @@ describe('R2DAO.deleteObjects', () => {
     );
 
     await dao.deleteObjects('portfolio', ['a/1', 'a/2']);
-    assert.deepEqual(batches, [['a/1', 'a/2']]);
+    expect(batches).toEqual([['a/1', 'a/2']]);
     R2DAO.resetInstance();
   });
 });

@@ -81,8 +81,9 @@ export class AppEnv {
 }
 
 /**
- * Bindings + D1/Images DAO presence for `/health` (no R2 S3 secrets).
- * Ingest routes must use `AppEnv.from` (fail-fast if R2_* unset).
+ * Bindings + D1/Images DAO presence for `/admin/api/health` (no R2 S3 secrets).
+ * Public `/health` is smoke-only (no inventory). Ingest routes must use `AppEnv.from`
+ * (fail-fast if R2_* unset).
  */
 export function bindingHealth(raw: unknown): {
   bindings: {

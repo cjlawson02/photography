@@ -104,7 +104,7 @@ npx wrangler d1 migrations apply photography --remote
 | Sentry release | `SENTRY_RELEASE` Worker var from CI deploy (`github.sha`) |
 | R2 CORS | `npm run r2:cors:apply` (or dashboard JSON paste) |
 | Deploy | `npm run build && npx wrangler deploy` |
-| Rate limits | `wrangler.jsonc` `ratelimits` → `REVIEW_SELECTION_RATE_LIMITER` + `ADMIN_TRPC_RATE_LIMITER`; prod returns **503** if missing (`GET /health` booleans) |
+| Rate limits | `wrangler.jsonc` `ratelimits` → `REVIEW_SELECTION_RATE_LIMITER` + `ADMIN_TRPC_RATE_LIMITER`; prod returns **503** if missing (check booleans on `GET /admin/api/health`) |
 
 ## 5b. Dependency audit (`npm audit`)
 

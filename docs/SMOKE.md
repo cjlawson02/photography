@@ -4,7 +4,7 @@ Run after deploy or before cutover. Production host: `https://photography.chrisl
 
 ## Public portfolio
 
-- [ ] `GET /health` — JSON with bindings (no R2 S3 secrets required)
+- [ ] `GET /health` — JSON `{ ok, service }` only (no binding inventory)
 - [ ] Home loads: hero carousel (if hero photos published), masonry gallery, category filter, PhotoSwipe lightbox on grid images
 - [ ] `GET /media/portfolio/{id}/gallery.webp` for a published photo — `200`, long cache headers
 - [ ] Page `<title>`, meta description, canonical, and Open Graph tags on home
@@ -12,7 +12,7 @@ Run after deploy or before cutover. Production host: `https://photography.chrisl
 ## Admin (Cloudflare Access)
 
 - [ ] `/admin` redirects to Access login when unauthenticated
-- [ ] After login: `/admin/api/health` returns OK with JWT
+- [ ] After login: `/admin/api/health` returns OK with JWT + binding/DAO booleans
 - [ ] Portfolio / review list / review collection detail: first paint shows data without a loading spinner (SSR + TanStack `initialData`; see [FRONTEND.md](FRONTEND.md#hydration-choices))
 - [ ] Upload via tRPC (`/admin/api/trpc` → `ingest.*`): presign → PUT → complete; photo reaches `ready` on portfolio admin (inline upload on portfolio + review detail)
 - [ ] Portfolio admin: publish, category, sort, hero; changes appear on public home when published; optional **Stale pending only** filter and lazy stale cleanup on list load

@@ -14,7 +14,7 @@
 | Admin UX v2 | Done | A1–A7 + RHF/zod forms; [ADMIN-UX.md](ADMIN-UX.md); open product decisions D1/D3–D6 remain `_TBD_` there |
 | Phase 3 — Public site | Done (MVP) | Home + React islands, SEO meta on home; extra public routes + brand tokens `_TBD_` |
 | Phase 4 — Client review | Done (phase 1) | `/review/{slug}`, React gallery, selection API, admin revoke, `noindex` + robots |
-| Post-MVP hardening | In progress | O1 Sentry, security audit ([#51](https://github.com/cjlawson02/photography/pull/51)–[#52](https://github.com/cjlawson02/photography/pull/52)); open backlog Phase 2.5 |
+| Post-MVP hardening | In progress | S8 micro + T1 `node:test` migration done; open: CSP nonces, ingest E2E, workerd pool, P8/P9, R1 ([IMPLEMENTATION.md](IMPLEMENTATION.md#phase-25--post-mvp-backlog)) |
 | Phase 5 — Cutover | Done | Traffic cutover, legacy decommission, monitoring setup, rollback/RTO-RPO ([CUTOVER.md](CUTOVER.md)); Picu/review import _TBD_ if needed |
 
 Production host live (`photography.chrislawson.dev`): Access `/admin*`, D1 remote migrations, R2 CORS, Access vars + R2 secrets — [DEPLOY.md](DEPLOY.md).
@@ -55,6 +55,7 @@ gantt
 
 | Date | Update |
 | --- | --- |
+| 2026-09-26 | Phase 2.5 S8 micro (EU Sentry `connect-src`, public `/health` trim) + T1 `node:test` → Vitest complete; remaining: CSP nonces, ingest E2E, workerd pool, P8/P9, R1 |
 | 2026-09-26 | Phase 2.6 **Done**: A1–A7 + RHF/zod on v2 surfaces (incl. close-out purge); open decisions stay in [ADMIN-UX.md](ADMIN-UX.md#open-decisions) |
 | 2026-09-26 | Phase 5 **Done**: monitoring setup + rollback/RTO-RPO in [CUTOVER.md](CUTOVER.md); IMPLEMENTATION T6–T7 closed |
 | 2026-09-25 | Admin UX v2 spec: [ADMIN-UX.md](ADMIN-UX.md); Phase 2.6 planned in [IMPLEMENTATION.md](IMPLEMENTATION.md#phase-26--admin-ux-v2) |

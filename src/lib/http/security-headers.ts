@@ -23,7 +23,7 @@ function buildContentSecurityPolicy(): string {
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob:",
     // Sentry browser SDK (admin) — regional ingest hosts; tunnel optional later.
-    "connect-src 'self' https://cloudflareinsights.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io",
+    "connect-src 'self' https://cloudflareinsights.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.ingest.de.sentry.io",
   ];
   return directives.join('; ');
 }

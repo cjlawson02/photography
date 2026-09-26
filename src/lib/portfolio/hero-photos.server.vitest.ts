@@ -1,5 +1,4 @@
-import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { describe, expect, it } from 'vitest';
 
 import type { PublicPortfolioPhoto } from '../services/portfolio-service.ts';
 import { selectHeroPhotos } from './hero-photos.ts';
@@ -27,10 +26,7 @@ describe('selectHeroPhotos', () => {
       base({ id: '3', hero: true }),
     ];
     const heroes = selectHeroPhotos(photos);
-    assert.deepEqual(
-      heroes.map((p) => p.id),
-      ['1', '3'],
-    );
+    expect(heroes.map((p) => p.id)).toEqual(['1', '3']);
   });
 
   it('preserves list order (sortOrder from DAO)', () => {
@@ -39,9 +35,6 @@ describe('selectHeroPhotos', () => {
       base({ id: 'early', hero: true, sortOrder: 1 }),
     ];
     const heroes = selectHeroPhotos(photos);
-    assert.deepEqual(
-      heroes.map((p) => p.id),
-      ['late', 'early'],
-    );
+    expect(heroes.map((p) => p.id)).toEqual(['late', 'early']);
   });
 });
