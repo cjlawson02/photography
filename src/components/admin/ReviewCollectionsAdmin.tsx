@@ -2,18 +2,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
+import { errorMessage, formatAdminTime } from './admin-format.ts';
+import { adminAccentStyle, adminFieldStyle, adminFgMutedStyle } from './admin-styles.ts';
 import AdminEmptyState from './AdminEmptyState.tsx';
-
-const fieldStyle = {
-  borderColor: 'var(--color-border)',
-  background: 'var(--color-bg)',
-  color: 'var(--color-fg)',
-};
-
-function formatExpires(ms: number | null): string {
-  if (ms == null) return '—';
-  return new Date(ms).toLocaleString();
-}
+import AdminFieldLabel from './AdminFieldLabel.tsx';
+import AdminPrimaryButton from './AdminPrimaryButton.tsx';
+import AdminSectionHeading from './AdminSectionHeading.tsx';
+import AdminStatusLine from './AdminStatusLine.tsx';
+import { AdminTable, AdminTableHead, AdminTableHeaderCell, AdminTableRow } from './AdminTable.tsx';
 
 async function copyText(label: string, text: string, onStatus: (message: string) => void) {
   try {
@@ -37,9 +33,7 @@ function ReviewCollectionsAdminInner() {
   const listStatus = listQuery.isPending
     ? 'Loading…'
     : listQuery.isError
-      ? listQuery.error instanceof Error
-        ? listQuery.error.message
-        : String(listQuery.error)
+      ? errorMessage(listQuery.error)
       : collections.length === 0
         ? 'No collections yet.'
         : `${collections.length} collection(s).`;
@@ -56,7 +50,7 @@ function ReviewCollectionsAdminInner() {
         await queryClient.invalidateQueries(trpc.review.collections.list.queryFilter());
       },
       onError: (error) => {
-        setCreateStatus(error instanceof Error ? error.message : String(error));
+        setCreateStatus(errorMessage(error));
       },
     }),
   );
@@ -68,7 +62,7 @@ function ReviewCollectionsAdminInner() {
         await queryClient.invalidateQueries(trpc.review.collections.list.queryFilter());
       },
       onError: (error) => {
-        setActionStatus(error instanceof Error ? error.message : String(error));
+        setActionStatus(errorMessage(error));
       },
     }),
   );
@@ -76,12 +70,7 @@ function ReviewCollectionsAdminInner() {
   return (
     <>
       <section className="mt-8">
-        <h2
-          className="text-sm font-medium uppercase tracking-wide"
-          style={{ color: 'var(--color-fg-muted)' }}
-        >
-          New collection
-        </h2>
+        <AdminSectionHeading>New collection</AdminSectionHeading>
         <form
           className="mt-3 grid gap-3 sm:grid-cols-2"
           onSubmit={async (event) => {
@@ -113,71 +102,54 @@ function ReviewCollectionsAdminInner() {
             }
           }}
         >
-          <label className="block text-sm sm:col-span-2" style={{ color: 'var(--color-fg)' }}>
-            Slug prefix (optional)
+          <AdminFieldLabel label="Slug prefix (optional)" className="block text-sm sm:col-span-2">
             <input
               type="text"
               name="slugPrefix"
               pattern="[a-zA-Z0-9][a-zA-Z0-9-]*"
               placeholder="smith-wedding"
               className="mt-1 block w-full border px-3 py-2 text-sm"
-              style={fieldStyle}
+              style={adminFieldStyle}
               autoComplete="off"
             />
-            <span className="mt-1 block text-xs" style={{ color: 'var(--color-fg-muted)' }}>
+            <span className="mt-1 block text-xs" style={adminFgMutedStyle}>
               The review URL slug is generated on the server; an optional prefix is added before a
               secret segment.
             </span>
-          </label>
-          <label className="block text-sm" style={{ color: 'var(--color-fg)' }}>
-            Title (optional)
+          </AdminFieldLabel>
+          <AdminFieldLabel label="Title (optional)">
             <input
               type="text"
               name="title"
               className="mt-1 block w-full border px-3 py-2 text-sm"
-              style={fieldStyle}
+              style={adminFieldStyle}
             />
-          </label>
-          <label className="block text-sm" style={{ color: 'var(--color-fg)' }}>
-            Expires (optional)
+          </AdminFieldLabel>
+          <AdminFieldLabel label="Expires (optional)">
             <input
               type="datetime-local"
               name="expiresAt"
               className="mt-1 block w-full border px-3 py-2 text-sm"
-              style={fieldStyle}
+              style={adminFieldStyle}
             />
-          </label>
+          </AdminFieldLabel>
           <div className="sm:col-span-2">
-            <button
-              type="submit"
-              className="px-4 py-2 text-sm"
-              style={{ background: 'var(--color-accent)', color: 'var(--color-bg)' }}
-              disabled={createMutation.isPending}
-            >
+            <AdminPrimaryButton type="submit" disabled={createMutation.isPending}>
               Create collection
-            </button>
+            </AdminPrimaryButton>
           </div>
         </form>
-        <p className="mt-3 text-xs" style={{ color: 'var(--color-fg-muted)' }} aria-live="polite">
-          {createStatus}
-        </p>
+        <AdminStatusLine className="mt-3">{createStatus}</AdminStatusLine>
       </section>
 
       <section className="mt-10">
-        <h2
-          className="text-sm font-medium uppercase tracking-wide"
-          style={{ color: 'var(--color-fg-muted)' }}
-        >
-          Collections
-        </h2>
-        <p className="mt-2 text-xs" style={{ color: 'var(--color-fg-muted)' }} aria-live="polite">
-          {statusMessage}
-        </p>
+        <AdminSectionHeading>Collections</AdminSectionHeading>
+        <AdminStatusLine className="mt-2">{statusMessage}</AdminStatusLine>
         {showCollectionsEmpty ? (
           <AdminEmptyState title="No review collections yet">
             <p>
               Use the form above to create a collection, then upload review photos on{' '}
-              <a href="/admin/ingest" style={{ color: 'var(--color-accent)' }}>
+              <a href="/admin/ingest" style={adminAccentStyle}>
                 Upload
               </a>{' '}
               (choose the <strong>review</strong> bucket and pick this collection). Share the client
@@ -185,112 +157,96 @@ function ReviewCollectionsAdminInner() {
             </p>
           </AdminEmptyState>
         ) : (
-          <div className="mt-3 overflow-x-auto">
-            <table className="w-full text-left text-sm" style={{ color: 'var(--color-fg)' }}>
-              <thead>
-                <tr
-                  style={{
-                    color: 'var(--color-fg-muted)',
-                    borderBottom: '1px solid var(--color-border)',
-                  }}
-                >
-                  <th className="py-2 pr-4 font-normal">Slug</th>
-                  <th className="py-2 pr-4 font-normal">Title</th>
-                  <th className="py-2 pr-4 font-normal">Expires</th>
-                  <th className="py-2 pr-4 font-normal">Link</th>
-                  <th className="py-2 pr-4 font-normal">Actions</th>
-                  <th className="py-2 font-normal">Id</th>
-                </tr>
-              </thead>
-              <tbody>
-                {collections.map((row) => {
-                  const reviewPath = `/review/${encodeURIComponent(row.slug)}`;
-                  const detailPath = `/admin/review/collections/${encodeURIComponent(row.id)}`;
-                  const absoluteUrl =
-                    typeof window !== 'undefined'
-                      ? `${window.location.origin}${reviewPath}`
-                      : reviewPath;
-                  const busy = busyId === row.id;
+          <AdminTable className="mt-3">
+            <AdminTableHead>
+              <AdminTableHeaderCell>Slug</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Title</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Expires</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Link</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Actions</AdminTableHeaderCell>
+              <AdminTableHeaderCell className="py-2">Id</AdminTableHeaderCell>
+            </AdminTableHead>
+            <tbody>
+              {collections.map((row) => {
+                const reviewPath = `/review/${encodeURIComponent(row.slug)}`;
+                const detailPath = `/admin/review/collections/${encodeURIComponent(row.id)}`;
+                const absoluteUrl =
+                  typeof window !== 'undefined'
+                    ? `${window.location.origin}${reviewPath}`
+                    : reviewPath;
+                const busy = busyId === row.id;
 
-                  return (
-                    <tr key={row.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                      <td className="py-2 pr-4">{row.slug}</td>
-                      <td className="py-2 pr-4">{row.title ?? '—'}</td>
-                      <td className="py-2 pr-4 text-xs">{formatExpires(row.expiresAt)}</td>
-                      <td className="py-2 pr-4 text-xs">
-                        <a href={reviewPath} style={{ color: 'var(--color-accent)' }}>
-                          {reviewPath}
-                        </a>
-                        <button
-                          type="button"
-                          className="ml-2 underline"
-                          style={{ color: 'var(--color-fg-muted)' }}
-                          disabled={busy}
-                          onClick={() => {
-                            void copyText('client link', absoluteUrl, setActionStatus);
-                          }}
-                        >
-                          Copy
-                        </button>
-                      </td>
-                      <td className="py-2 pr-4 text-xs">
-                        <a
-                          href={detailPath}
-                          className="mr-3"
-                          style={{ color: 'var(--color-accent)' }}
-                        >
-                          Inspect
-                        </a>
-                        <button
-                          type="button"
-                          style={{ color: 'var(--color-fg-muted)' }}
-                          disabled={busy || revokeMutation.isPending}
-                          onClick={() => {
-                            if (
-                              !confirm(
-                                'Revoke this review link? Clients will lose access; R2 objects are deleted.',
-                              )
-                            ) {
-                              return;
-                            }
-                            setBusyId(row.id);
-                            void (async () => {
-                              try {
-                                await revokeMutation.mutateAsync({ id: row.id });
-                              } catch {
-                                /* onError sets actionStatus */
-                              } finally {
-                                setBusyId(null);
-                              }
-                            })();
-                          }}
-                        >
-                          Revoke
-                        </button>
-                      </td>
-                      <td
-                        className="py-2 font-mono text-xs"
-                        style={{ color: 'var(--color-fg-muted)' }}
+                return (
+                  <AdminTableRow key={row.id}>
+                    <td className="py-2 pr-4">{row.slug}</td>
+                    <td className="py-2 pr-4">{row.title ?? '—'}</td>
+                    <td className="py-2 pr-4 text-xs">{formatAdminTime(row.expiresAt)}</td>
+                    <td className="py-2 pr-4 text-xs">
+                      <a href={reviewPath} style={adminAccentStyle}>
+                        {reviewPath}
+                      </a>
+                      <button
+                        type="button"
+                        className="ml-2 underline"
+                        style={adminFgMutedStyle}
+                        disabled={busy}
+                        onClick={() => {
+                          void copyText('client link', absoluteUrl, setActionStatus);
+                        }}
                       >
-                        <span>{row.id}</span>
-                        <button
-                          type="button"
-                          className="ml-2 underline"
-                          style={{ color: 'var(--color-fg-muted)' }}
-                          disabled={busy}
-                          onClick={() => {
-                            void copyText('collection id', row.id, setActionStatus);
-                          }}
-                        >
-                          Copy
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        Copy
+                      </button>
+                    </td>
+                    <td className="py-2 pr-4 text-xs">
+                      <a href={detailPath} className="mr-3" style={adminAccentStyle}>
+                        Inspect
+                      </a>
+                      <button
+                        type="button"
+                        style={adminFgMutedStyle}
+                        disabled={busy || revokeMutation.isPending}
+                        onClick={() => {
+                          if (
+                            !confirm(
+                              'Revoke this review link? Clients will lose access; R2 objects are deleted.',
+                            )
+                          ) {
+                            return;
+                          }
+                          setBusyId(row.id);
+                          void (async () => {
+                            try {
+                              await revokeMutation.mutateAsync({ id: row.id });
+                            } catch {
+                              /* onError sets actionStatus */
+                            } finally {
+                              setBusyId(null);
+                            }
+                          })();
+                        }}
+                      >
+                        Revoke
+                      </button>
+                    </td>
+                    <td className="py-2 font-mono text-xs" style={adminFgMutedStyle}>
+                      <span>{row.id}</span>
+                      <button
+                        type="button"
+                        className="ml-2 underline"
+                        style={adminFgMutedStyle}
+                        disabled={busy}
+                        onClick={() => {
+                          void copyText('collection id', row.id, setActionStatus);
+                        }}
+                      >
+                        Copy
+                      </button>
+                    </td>
+                  </AdminTableRow>
+                );
+              })}
+            </tbody>
+          </AdminTable>
         )}
       </section>
     </>

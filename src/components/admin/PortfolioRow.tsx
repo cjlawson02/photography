@@ -4,26 +4,18 @@ import type { PortfolioPhotoAdminUpdateBody } from '../../lib/admin/portfolio-sc
 import type { AdminPortfolioPhoto } from '../../lib/admin/trpc-types.ts';
 import { portfolioVariantPublicUrl } from '../../lib/media/portfolio-public-url.ts';
 import { isPortfolioCategory, PORTFOLIO_CATEGORIES } from '../../lib/portfolio/categories.ts';
-
-const borderStyle = { borderColor: 'var(--color-border)' };
-const fieldStyle = {
-  borderColor: 'var(--color-border)',
-  background: 'var(--color-bg)',
-  color: 'var(--color-fg)',
-};
+import { formatAdminDimensions, formatAdminTime, normalizeNullableText } from './admin-format.ts';
+import {
+  adminAccentStyle,
+  adminBorderStyle,
+  adminFgMutedStyle,
+  adminFgStyle,
+  adminFieldStyle,
+  adminTableRowStyle,
+} from './admin-styles.ts';
 
 function formatSortValue(sortOrder: number | null | undefined): string {
   return sortOrder == null ? '' : String(sortOrder);
-}
-
-function formatTime(ms: number | null | undefined): string {
-  if (!ms) return '—';
-  return new Date(ms).toLocaleString();
-}
-
-function normalizeNullableText(value: string | null | undefined): string | null {
-  const trimmed = value?.trim() ?? '';
-  return trimmed === '' ? null : trimmed;
 }
 
 type NullableTextInputProps = {
@@ -47,7 +39,7 @@ function NullableTextInput({ label, value, busy, className, onSave }: NullableTe
     <input
       type="text"
       className={className}
-      style={fieldStyle}
+      style={adminFieldStyle}
       aria-label={label}
       value={draft}
       placeholder="—"
@@ -60,14 +52,6 @@ function NullableTextInput({ label, value, busy, className, onSave }: NullableTe
       }}
     />
   );
-}
-
-function formatDimensions(
-  width: number | null | undefined,
-  height: number | null | undefined,
-): string {
-  if (width == null || height == null) return '—';
-  return `${width}×${height}`;
 }
 
 type Props = {
@@ -99,7 +83,7 @@ export default function PortfolioRow({ photo, busy, onPatch, onDelete, onReproce
   const canReprocess = photo.status === 'failed' || photo.status === 'pending';
 
   return (
-    <tr style={{ borderBottom: '1px solid var(--color-border)' }}>
+    <tr style={adminTableRowStyle}>
       <td className="py-3 pr-4 align-middle">
         {thumbUrl ? (
           <img
@@ -109,13 +93,13 @@ export default function PortfolioRow({ photo, busy, onPatch, onDelete, onReproce
             height={54}
             className="border object-cover"
             style={{
-              ...borderStyle,
+              ...adminBorderStyle,
               width: '4.5rem',
               height: '3.375rem',
             }}
           />
         ) : (
-          <span className="text-xs" style={{ color: 'var(--color-fg-muted)' }}>
+          <span className="text-xs" style={adminFgMutedStyle}>
             —
           </span>
         )}
@@ -123,11 +107,8 @@ export default function PortfolioRow({ photo, busy, onPatch, onDelete, onReproce
       <td className="py-3 pr-4 align-middle">
         <code className="text-xs">{photo.status}</code>
       </td>
-      <td
-        className="py-3 pr-4 align-middle text-xs tabular-nums"
-        style={{ color: 'var(--color-fg-muted)' }}
-      >
-        {formatDimensions(photo.width, photo.height)}
+      <td className="py-3 pr-4 align-middle text-xs tabular-nums" style={adminFgMutedStyle}>
+        {formatAdminDimensions(photo.width, photo.height)}
       </td>
       <td className="py-3 pr-4 align-middle">
         <label className="inline-flex items-center gap-2 text-xs">
@@ -181,7 +162,7 @@ export default function PortfolioRow({ photo, busy, onPatch, onDelete, onReproce
       <td className="py-3 pr-4 align-middle">
         <select
           className="border px-2 py-1 text-xs"
-          style={fieldStyle}
+          style={adminFieldStyle}
           aria-label="Category"
           value={photo.category ?? ''}
           disabled={busy}
@@ -203,7 +184,7 @@ export default function PortfolioRow({ photo, busy, onPatch, onDelete, onReproce
         <input
           type="number"
           className="w-20 border px-2 py-1 text-xs"
-          style={fieldStyle}
+          style={adminFieldStyle}
           aria-label="Sort order"
           value={sortDraft}
           placeholder="—"
@@ -236,8 +217,8 @@ export default function PortfolioRow({ photo, busy, onPatch, onDelete, onReproce
           <span>{photo.hero ? 'Yes' : 'No'}</span>
         </label>
       </td>
-      <td className="py-3 pr-4 align-middle text-xs" style={{ color: 'var(--color-fg-muted)' }}>
-        {formatTime(photo.updatedAt)}
+      <td className="py-3 pr-4 align-middle text-xs" style={adminFgMutedStyle}>
+        {formatAdminTime(photo.updatedAt)}
       </td>
       <td className="py-3 align-middle">
         <div className="flex flex-wrap gap-2">
@@ -245,7 +226,7 @@ export default function PortfolioRow({ photo, busy, onPatch, onDelete, onReproce
             <button
               type="button"
               className="text-xs underline"
-              style={{ color: 'var(--color-fg)' }}
+              style={adminFgStyle}
               disabled={busy}
               onClick={() => {
                 void onReprocess(photo.id);
@@ -257,7 +238,7 @@ export default function PortfolioRow({ photo, busy, onPatch, onDelete, onReproce
           <button
             type="button"
             className="text-xs underline"
-            style={{ color: 'var(--color-accent)' }}
+            style={adminAccentStyle}
             disabled={busy}
             onClick={() => {
               if (!confirm(`Delete portfolio photo ${photo.id}?`)) return;
