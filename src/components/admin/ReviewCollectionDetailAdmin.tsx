@@ -4,19 +4,23 @@ import { useState } from 'react';
 import type { ReviewCollectionAdminUpdateBody } from '../../lib/admin/review-collection-schemas.ts';
 import type { AdminReviewCollectionDetailPhoto } from '../../lib/admin/trpc-types.ts';
 import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
+import {
+  errorMessage,
+  formatAdminDimensions,
+  formatAdminTime,
+  normalizeNullableText,
+} from './admin-format.ts';
+import {
+  adminAccentStyle,
+  adminBorderStyle,
+  adminFieldStyle,
+  adminFgMutedStyle,
+  adminFgStyle,
+} from './admin-styles.ts';
 import AdminPhotoUpload from './AdminPhotoUpload.tsx';
-
-const borderStyle = { borderColor: 'var(--color-border)' };
-const fieldStyle = {
-  borderColor: 'var(--color-border)',
-  background: 'var(--color-bg)',
-  color: 'var(--color-fg)',
-};
-
-function normalizeNullableText(value: string | null | undefined): string | null {
-  const trimmed = value?.trim() ?? '';
-  return trimmed === '' ? null : trimmed;
-}
+import AdminSectionHeading from './AdminSectionHeading.tsx';
+import AdminStatusLine from './AdminStatusLine.tsx';
+import { AdminTable, AdminTableHead, AdminTableHeaderCell, AdminTableRow } from './AdminTable.tsx';
 
 function expiresAtToDatetimeLocal(ms: number | null | undefined): string {
   if (ms == null) return '';
@@ -33,19 +37,6 @@ function parseDatetimeLocal(value: string): number | null {
     throw new Error('Invalid expiry date.');
   }
   return ms;
-}
-
-function formatTime(ms: number | null | undefined): string {
-  if (!ms) return '—';
-  return new Date(ms).toLocaleString();
-}
-
-function formatDimensions(
-  width: number | null | undefined,
-  height: number | null | undefined,
-): string {
-  if (width == null || height == null) return '—';
-  return `${width}×${height}`;
 }
 
 function selectionLabel(status: AdminReviewCollectionDetailPhoto['selectionStatus']): string {
@@ -80,7 +71,7 @@ function CollectionTitleInput({ value, busy, onSave }: CollectionTitleInputProps
     <input
       type="text"
       className="block w-full max-w-md border px-3 py-2 text-sm"
-      style={fieldStyle}
+      style={adminFieldStyle}
       aria-label="Collection title"
       value={draft}
       placeholder="—"
@@ -115,7 +106,7 @@ function CollectionExpiresInput({ value, busy, onSave, onInvalid }: CollectionEx
     <input
       type="datetime-local"
       className="block w-full max-w-md border px-3 py-2 text-sm"
-      style={fieldStyle}
+      style={adminFieldStyle}
       aria-label="Collection expiry"
       value={draft}
       disabled={busy}
@@ -127,7 +118,7 @@ function CollectionExpiresInput({ value, busy, onSave, onInvalid }: CollectionEx
           onSave(next);
         } catch (error) {
           setDraft(expiresAtToDatetimeLocal(value));
-          onInvalid(error instanceof Error ? error.message : String(error));
+          onInvalid(errorMessage(error));
         }
       }}
     />
@@ -153,7 +144,7 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
         await queryClient.invalidateQueries(trpc.review.collections.list.queryFilter());
       },
       onError: (error) => {
-        setEditStatus(error instanceof Error ? error.message : String(error));
+        setEditStatus(errorMessage(error));
       },
     }),
   );
@@ -165,7 +156,7 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
         await queryClient.invalidateQueries(trpc.review.collections.detail.queryFilter());
       },
       onError: (error) => {
-        setEditStatus(error instanceof Error ? error.message : String(error));
+        setEditStatus(errorMessage(error));
       },
     }),
   );
@@ -198,9 +189,7 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
   const statusMessage = detailQuery.isPending
     ? 'Loading…'
     : detailQuery.isError
-      ? detailQuery.error instanceof Error
-        ? detailQuery.error.message
-        : String(detailQuery.error)
+      ? errorMessage(detailQuery.error)
       : null;
 
   const detail = detailQuery.data;
@@ -218,25 +207,22 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
 
   return (
     <>
-      <p className="mt-4 text-xs" style={{ color: 'var(--color-fg-muted)' }} aria-live="polite">
+      <AdminStatusLine>
         {statusMessage ??
           (photos.length === 0
             ? 'No photos in this collection yet — upload below.'
             : `${photos.length} photo(s) · ${selectionCounts.selected} selected · ${selectionCounts.approved} approved`)}
-      </p>
+      </AdminStatusLine>
 
       {detail ? (
         <>
-          <dl
-            className="mt-6 grid gap-3 text-sm sm:grid-cols-2"
-            style={{ color: 'var(--color-fg)' }}
-          >
+          <dl className="mt-6 grid gap-3 text-sm sm:grid-cols-2" style={adminFgStyle}>
             <div>
-              <dt style={{ color: 'var(--color-fg-muted)' }}>Slug</dt>
+              <dt style={adminFgMutedStyle}>Slug</dt>
               <dd className="mt-0.5 font-mono text-xs">{detail.collection.slug}</dd>
             </div>
             <div>
-              <dt style={{ color: 'var(--color-fg-muted)' }}>Title</dt>
+              <dt style={adminFgMutedStyle}>Title</dt>
               <dd className="mt-0.5">
                 <CollectionTitleInput
                   value={detail.collection.title}
@@ -246,7 +232,7 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
               </dd>
             </div>
             <div>
-              <dt style={{ color: 'var(--color-fg-muted)' }}>Expires</dt>
+              <dt style={adminFgMutedStyle}>Expires</dt>
               <dd className="mt-0.5 text-xs">
                 <CollectionExpiresInput
                   value={detail.collection.expiresAt}
@@ -254,18 +240,18 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
                   onSave={(expiresAt) => patchCollection({ expiresAt })}
                   onInvalid={(message) => setEditStatus(message)}
                 />
-                <span className="mt-1 block" style={{ color: 'var(--color-fg-muted)' }}>
+                <span className="mt-1 block" style={adminFgMutedStyle}>
                   {detail.collection.expiresAt == null
                     ? 'No expiry — link stays active until revoked.'
-                    : `Shown: ${formatTime(detail.collection.expiresAt)}`}
+                    : `Shown: ${formatAdminTime(detail.collection.expiresAt)}`}
                 </span>
               </dd>
             </div>
             <div>
-              <dt style={{ color: 'var(--color-fg-muted)' }}>Client link</dt>
+              <dt style={adminFgMutedStyle}>Client link</dt>
               <dd className="mt-0.5 text-xs">
                 {reviewPath ? (
-                  <a href={reviewPath} style={{ color: 'var(--color-accent)' }}>
+                  <a href={reviewPath} style={adminAccentStyle}>
                     {reviewPath}
                   </a>
                 ) : (
@@ -274,34 +260,21 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
               </dd>
             </div>
             <div className="sm:col-span-2">
-              <dt style={{ color: 'var(--color-fg-muted)' }}>Collection id</dt>
-              <dd className="mt-0.5 font-mono text-xs" style={{ color: 'var(--color-fg-muted)' }}>
+              <dt style={adminFgMutedStyle}>Collection id</dt>
+              <dd className="mt-0.5 font-mono text-xs" style={adminFgMutedStyle}>
                 {detail.collection.id}
               </dd>
             </div>
           </dl>
-          {editStatus ? (
-            <p
-              className="mt-2 text-xs"
-              style={{ color: 'var(--color-fg-muted)' }}
-              aria-live="polite"
-            >
-              {editStatus}
-            </p>
-          ) : null}
+          {editStatus ? <AdminStatusLine className="mt-2">{editStatus}</AdminStatusLine> : null}
 
           <section
             id="upload"
-            className="mt-8 rounded border p-4 scroll-mt-8"
-            style={{ borderColor: 'var(--color-border)' }}
+            className="mt-8 scroll-mt-8 rounded border p-4"
+            style={adminBorderStyle}
             aria-label="Upload review photo"
           >
-            <h2
-              className="text-sm font-medium uppercase tracking-wide"
-              style={{ color: 'var(--color-fg-muted)' }}
-            >
-              Upload
-            </h2>
+            <AdminSectionHeading>Upload</AdminSectionHeading>
             <div className="mt-3">
               <AdminPhotoUpload
                 bucket="review"
@@ -315,91 +288,82 @@ function ReviewCollectionDetailAdminInner({ collectionId }: ReviewCollectionDeta
             </div>
           </section>
 
-          <div className="mt-8 overflow-x-auto">
-            <table className="w-full text-left text-sm" style={{ color: 'var(--color-fg)' }}>
-              <thead>
-                <tr
-                  style={{
-                    color: 'var(--color-fg-muted)',
-                    borderBottom: '1px solid var(--color-border)',
-                  }}
-                >
-                  <th className="py-2 pr-4 font-normal">Preview</th>
-                  <th className="py-2 pr-4 font-normal">Ingest</th>
-                  <th className="py-2 pr-4 font-normal">Size</th>
-                  <th className="py-2 pr-4 font-normal">Selection</th>
-                  <th className="py-2 pr-4 font-normal">Updated</th>
-                  <th className="py-2 pr-4 font-normal">Id</th>
-                  <th className="py-2 font-normal">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {photos.map((photo) => (
-                  <tr key={photo.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                    <td className="py-3 pr-4 align-middle">
-                      {photo.thumbUrl ? (
-                        <a
-                          href={photo.galleryUrl ?? photo.thumbUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          aria-label={`Open gallery for photo ${photo.id}`}
-                        >
-                          <img
-                            src={photo.thumbUrl}
-                            alt=""
-                            width={72}
-                            height={54}
-                            className="border object-cover"
-                            style={{
-                              ...borderStyle,
-                              width: '4.5rem',
-                              height: '3.375rem',
-                            }}
-                          />
-                        </a>
-                      ) : (
-                        <span className="text-xs" style={{ color: 'var(--color-fg-muted)' }}>
-                          —
-                        </span>
-                      )}
-                    </td>
-                    <td className="py-2 pr-4 align-middle font-mono text-xs">{photo.status}</td>
-                    <td
-                      className="py-2 pr-4 align-middle text-xs tabular-nums"
-                      style={{ color: 'var(--color-fg-muted)' }}
-                    >
-                      {formatDimensions(photo.width, photo.height)}
-                    </td>
-                    <td className="py-2 pr-4 align-middle text-xs">
-                      {selectionLabel(photo.selectionStatus)}
-                    </td>
-                    <td className="py-2 pr-4 align-middle text-xs">
-                      {formatTime(photo.updatedAt)}
-                    </td>
-                    <td
-                      className="py-2 pr-4 align-middle font-mono text-xs"
-                      style={{ color: 'var(--color-fg-muted)' }}
-                    >
-                      {photo.id}
-                    </td>
-                    <td className="py-2 align-middle">
-                      <button
-                        type="button"
-                        className="text-xs underline"
-                        style={{ color: 'var(--color-accent)' }}
-                        disabled={photoActionsBusy}
-                        onClick={() => {
-                          void deletePhoto(photo.id);
-                        }}
+          <AdminTable className="mt-8">
+            <AdminTableHead>
+              <AdminTableHeaderCell>Preview</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Ingest</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Size</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Selection</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Updated</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Id</AdminTableHeaderCell>
+              <AdminTableHeaderCell className="py-2">Actions</AdminTableHeaderCell>
+            </AdminTableHead>
+            <tbody>
+              {photos.map((photo) => (
+                <AdminTableRow key={photo.id}>
+                  <td className="py-3 pr-4 align-middle">
+                    {photo.thumbUrl ? (
+                      <a
+                        href={photo.galleryUrl ?? photo.thumbUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        aria-label={`Open gallery for photo ${photo.id}`}
                       >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                        <img
+                          src={photo.thumbUrl}
+                          alt=""
+                          width={72}
+                          height={54}
+                          className="border object-cover"
+                          style={{
+                            ...adminBorderStyle,
+                            width: '4.5rem',
+                            height: '3.375rem',
+                          }}
+                        />
+                      </a>
+                    ) : (
+                      <span className="text-xs" style={adminFgMutedStyle}>
+                        —
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-2 pr-4 align-middle font-mono text-xs">{photo.status}</td>
+                  <td
+                    className="py-2 pr-4 align-middle text-xs tabular-nums"
+                    style={adminFgMutedStyle}
+                  >
+                    {formatAdminDimensions(photo.width, photo.height)}
+                  </td>
+                  <td className="py-2 pr-4 align-middle text-xs">
+                    {selectionLabel(photo.selectionStatus)}
+                  </td>
+                  <td className="py-2 pr-4 align-middle text-xs">
+                    {formatAdminTime(photo.updatedAt)}
+                  </td>
+                  <td
+                    className="py-2 pr-4 align-middle font-mono text-xs"
+                    style={adminFgMutedStyle}
+                  >
+                    {photo.id}
+                  </td>
+                  <td className="py-2 align-middle">
+                    <button
+                      type="button"
+                      className="text-xs underline"
+                      style={adminAccentStyle}
+                      disabled={photoActionsBusy}
+                      onClick={() => {
+                        void deletePhoto(photo.id);
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </AdminTableRow>
+              ))}
+            </tbody>
+          </AdminTable>
         </>
       ) : null}
     </>

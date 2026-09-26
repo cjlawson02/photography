@@ -1,6 +1,10 @@
 import { useState } from 'react';
 
 import { uploadPhoto, type UploadProgress } from '../../lib/ingest/browser-upload.ts';
+import { errorMessage } from './admin-format.ts';
+import { adminFgMutedStyle, adminFgStyle } from './admin-styles.ts';
+import AdminFieldLabel from './AdminFieldLabel.tsx';
+import AdminPrimaryButton from './AdminPrimaryButton.tsx';
 
 export type AdminPhotoUploadBucket = 'portfolio' | 'review';
 
@@ -65,17 +69,16 @@ export default function AdminPhotoUpload({
           await onSuccess?.();
         } catch (error) {
           setPutPercent(null);
-          setStatusText(error instanceof Error ? error.message : String(error));
+          setStatusText(errorMessage(error));
         } finally {
           setBusy(false);
         }
       }}
     >
-      <label
+      <AdminFieldLabel
+        label={compact ? 'Add photo' : 'Photo'}
         className={compact ? 'block min-w-[12rem] flex-1 text-sm' : 'block text-sm'}
-        style={{ color: 'var(--color-fg)' }}
       >
-        {compact ? 'Add photo' : 'Photo'}
         <input
           type="file"
           name="file"
@@ -83,22 +86,13 @@ export default function AdminPhotoUpload({
           required
           disabled={busy || reviewMissingCollection}
           className="mt-1 block w-full text-sm"
-          style={{ color: 'var(--color-fg)' }}
+          style={adminFgStyle}
         />
-      </label>
+      </AdminFieldLabel>
 
-      <button
-        type="submit"
-        disabled={busy || reviewMissingCollection}
-        className={
-          compact
-            ? 'px-4 py-2 text-sm disabled:opacity-60'
-            : 'px-4 py-2 text-sm disabled:opacity-60'
-        }
-        style={{ background: 'var(--color-accent)', color: 'var(--color-bg)' }}
-      >
+      <AdminPrimaryButton type="submit" disabled={busy || reviewMissingCollection}>
         {busy ? 'Uploading…' : 'Upload'}
-      </button>
+      </AdminPrimaryButton>
 
       {busy && putPercent !== null ? (
         <div className={compact ? 'w-full min-w-[10rem] flex-1 space-y-1' : 'space-y-1'}>
@@ -108,7 +102,7 @@ export default function AdminPhotoUpload({
             value={putPercent}
             aria-label="Upload progress"
           />
-          <p className="text-xs tabular-nums" style={{ color: 'var(--color-fg-muted)' }}>
+          <p className="text-xs tabular-nums" style={adminFgMutedStyle}>
             {putPercent}%
           </p>
         </div>
@@ -117,13 +111,13 @@ export default function AdminPhotoUpload({
       {statusText ? (
         <p
           className={compact ? 'w-full text-xs' : 'text-xs'}
-          style={{ color: 'var(--color-fg-muted)' }}
+          style={adminFgMutedStyle}
           aria-live="polite"
         >
           {statusText}
         </p>
       ) : reviewMissingCollection ? (
-        <p className="text-xs" style={{ color: 'var(--color-fg-muted)' }}>
+        <p className="text-xs" style={adminFgMutedStyle}>
           Pick a collection before uploading.
         </p>
       ) : null}

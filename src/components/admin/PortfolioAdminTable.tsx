@@ -5,8 +5,12 @@ import type { PortfolioPhotoAdminUpdateBody } from '../../lib/admin/portfolio-sc
 import type { AdminPortfolioListPage } from '../../lib/admin/trpc-types.ts';
 import { requestReprocess } from '../../lib/ingest/browser-upload.ts';
 import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
+import { errorMessage } from './admin-format.ts';
+import { adminBorderStyle, adminFgMutedStyle, adminFgStyle } from './admin-styles.ts';
 import AdminEmptyState from './AdminEmptyState.tsx';
 import AdminPhotoUpload from './AdminPhotoUpload.tsx';
+import AdminStatusLine from './AdminStatusLine.tsx';
+import { AdminTable, AdminTableHead, AdminTableHeaderCell } from './AdminTable.tsx';
 import PortfolioRow from './PortfolioRow.tsx';
 
 const portfolioListInfiniteQueryConfig = {
@@ -45,9 +49,7 @@ function PortfolioAdminTableInner() {
   const listStatus = listQuery.isPending
     ? 'Loading…'
     : listQuery.isError
-      ? listQuery.error instanceof Error
-        ? listQuery.error.message
-        : String(listQuery.error)
+      ? errorMessage(listQuery.error)
       : photos.length === 0
         ? 'No portfolio photos yet.'
         : `${photos.length} photo(s) shown${listQuery.hasNextPage ? ' — load more for older photos.' : '.'}`;
@@ -79,7 +81,7 @@ function PortfolioAdminTableInner() {
         setActionStatus('Saved.');
       },
       onError: (error) => {
-        setActionStatus(error instanceof Error ? error.message : String(error));
+        setActionStatus(errorMessage(error));
       },
     }),
   );
@@ -91,7 +93,7 @@ function PortfolioAdminTableInner() {
         setActionStatus('Deleted.');
       },
       onError: (error) => {
-        setActionStatus(error instanceof Error ? error.message : String(error));
+        setActionStatus(errorMessage(error));
       },
     }),
   );
@@ -108,7 +110,7 @@ function PortfolioAdminTableInner() {
         void queryClient.invalidateQueries(trpc.portfolio.list.queryFilter());
       },
       onError: (error) => {
-        setActionStatus(error instanceof Error ? error.message : String(error));
+        setActionStatus(errorMessage(error));
       },
     }),
   );
@@ -153,7 +155,7 @@ function PortfolioAdminTableInner() {
     <>
       <section
         className="mt-4 rounded border p-4"
-        style={{ borderColor: 'var(--color-border)' }}
+        style={adminBorderStyle}
         aria-label="Upload portfolio photo"
       >
         <AdminPhotoUpload
@@ -166,10 +168,7 @@ function PortfolioAdminTableInner() {
         />
       </section>
 
-      <div
-        className="mt-4 flex flex-wrap items-center gap-4 text-xs"
-        style={{ color: 'var(--color-fg-muted)' }}
-      >
+      <div className="mt-4 flex flex-wrap items-center gap-4 text-xs" style={adminFgMutedStyle}>
         <label className="inline-flex items-center gap-2">
           <input
             type="checkbox"
@@ -183,7 +182,7 @@ function PortfolioAdminTableInner() {
         <button
           type="button"
           className="underline"
-          style={{ color: 'var(--color-fg)' }}
+          style={adminFgStyle}
           disabled={cleanupStaleMutation.isPending || busyIds.size > 0}
           onClick={() => {
             if (
@@ -200,9 +199,7 @@ function PortfolioAdminTableInner() {
         </button>
       </div>
 
-      <p className="mt-2 text-xs" style={{ color: 'var(--color-fg-muted)' }} aria-live="polite">
-        {statusMessage}
-      </p>
+      <AdminStatusLine className="mt-2">{statusMessage}</AdminStatusLine>
 
       {showEmptyState ? (
         <AdminEmptyState title="No portfolio photos yet">
@@ -213,49 +210,40 @@ function PortfolioAdminTableInner() {
         </AdminEmptyState>
       ) : (
         <>
-          <div className="mt-6 overflow-x-auto">
-            <table className="w-full text-left text-sm" style={{ color: 'var(--color-fg)' }}>
-              <thead>
-                <tr
-                  style={{
-                    color: 'var(--color-fg-muted)',
-                    borderBottom: '1px solid var(--color-border)',
-                  }}
-                >
-                  <th className="py-2 pr-4 font-normal">Preview</th>
-                  <th className="py-2 pr-4 font-normal">Ingest</th>
-                  <th className="py-2 pr-4 font-normal">Size</th>
-                  <th className="py-2 pr-4 font-normal">Published</th>
-                  <th className="py-2 pr-4 font-normal">Alt</th>
-                  <th className="py-2 pr-4 font-normal">Title</th>
-                  <th className="py-2 pr-4 font-normal">Caption</th>
-                  <th className="py-2 pr-4 font-normal">Category</th>
-                  <th className="py-2 pr-4 font-normal">Sort</th>
-                  <th className="py-2 pr-4 font-normal">Hero</th>
-                  <th className="py-2 pr-4 font-normal">Updated</th>
-                  <th className="py-2 font-normal">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {photos.map((photo) => (
-                  <PortfolioRow
-                    key={photo.id}
-                    photo={photo}
-                    busy={busyIds.has(photo.id)}
-                    onPatch={onPatch}
-                    onDelete={onDelete}
-                    onReprocess={onReprocess}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <AdminTable>
+            <AdminTableHead>
+              <AdminTableHeaderCell>Preview</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Ingest</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Size</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Published</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Alt</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Title</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Caption</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Category</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Sort</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Hero</AdminTableHeaderCell>
+              <AdminTableHeaderCell>Updated</AdminTableHeaderCell>
+              <AdminTableHeaderCell className="py-2">Actions</AdminTableHeaderCell>
+            </AdminTableHead>
+            <tbody>
+              {photos.map((photo) => (
+                <PortfolioRow
+                  key={photo.id}
+                  photo={photo}
+                  busy={busyIds.has(photo.id)}
+                  onPatch={onPatch}
+                  onDelete={onDelete}
+                  onReprocess={onReprocess}
+                />
+              ))}
+            </tbody>
+          </AdminTable>
 
           {listQuery.hasNextPage ? (
             <button
               type="button"
               className="mt-4 text-xs underline"
-              style={{ color: 'var(--color-fg)' }}
+              style={adminFgStyle}
               disabled={listQuery.isFetchingNextPage || busyIds.size > 0}
               onClick={() => {
                 void listQuery.fetchNextPage();

@@ -141,7 +141,7 @@ Hardening and polish after MVP ([#21](https://github.com/cjlawson02/photography/
 | P7 | Admin pagination | **Done (partial)** — `portfolio.list` cursor ([#38](https://github.com/cjlawson02/photography/pull/38)) |
 | M1 | Admin Query islands | **Done** — TanStack + tRPC on portfolio/review |
 | M2 | Dead admin fetch helpers | **Done** ([#29](https://github.com/cjlawson02/photography/pull/29)) |
-| M3–M4 | UI primitives / Embla | **Done (partial)** — shared admin primitives ([#46](https://github.com/cjlawson02/photography/pull/46)); Embla pivot `_TBD_` if still warranted |
+| M3–M4 | UI primitives / Embla | **M3 Done** ([#46](https://github.com/cjlawson02/photography/pull/46)) — `admin-styles`, `admin-format`, table/status/form primitives + `AdminPhotoUpload`. **M4 N/A** — imperative `embla-carousel` per [FRONTEND.md](FRONTEND.md). |
 | M5 | Admin forms | _Open_ — pivot admin forms to [react-hook-form](https://react-hook-form.com/) with `@hookform/resolvers/zod` (reuse existing Zod schemas where possible) |
 | T1 | Test suite | **Partial** ([#33](https://github.com/cjlawson02/photography/pull/33), [#47](https://github.com/cjlawson02/photography/pull/47)). Vitest + RTL on [#47](https://github.com/cjlawson02/photography/pull/47). **RTL:** prefer `@testing-library/user-event` over `fireEvent` (almost always) |
 | T4 | D1 migrations in CI | **Done** on `main` deploy ([#28](https://github.com/cjlawson02/photography/pull/28)); PR dry-run gate `_TBD_` |
