@@ -1,14 +1,15 @@
-# Public frontend (React islands)
+# Frontend (React islands)
 
-Public pages use **Astro SSR** for data fetching and layout; interactive UI is **React** via `@astrojs/react`.
+Interactive UI uses **React** via `@astrojs/react`. Astro pages own layout and SSR; islands own client state (no hand-rolled `addEventListener` / DOM wiring).
 
 ## Conventions
 
-- Place public interactive components under `src/components/public/*.tsx`.
-- Wire them from `.astro` pages with `client:*` directives (hydration boundary).
+- Public components: `src/components/public/*.tsx`
+- Admin interactive components: `src/components/admin/*.tsx`
+- Wire islands from `.astro` with `client:*` directives.
 - Shared non-React helpers (e.g. PhotoSwipe opener) live under `src/lib/gallery/`.
 - **Embla** and **PhotoSwipe** stay as imperative libraries inside React effects/handlers.
-- Admin UI may remain Astro + inline scripts until migrated.
+- Remaining admin pages (ingest smoke, review) still use scripts until migrated.
 
 ## Hydration choices
 

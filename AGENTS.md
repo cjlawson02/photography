@@ -59,9 +59,9 @@ _TBD — only rules that differ from language/tool defaults._
 
 ### Public client UI
 
-- **React islands** (`@astrojs/react`) for public interactive UI — no vanilla `src/lib/client/*` DOM wiring or page `<script>` blocks for home/review.
+- **React islands** (`@astrojs/react`) for interactive UI — no hand-rolled DOM `addEventListener` wiring; use React state/handlers in `src/components/public/*` and `src/components/admin/*`.
 - See [docs/FRONTEND.md](docs/FRONTEND.md) for hydration conventions and library usage.
-- Admin can stay Astro + scripts until migrated.
+- Legacy admin `<script>` pages (ingest, review) migrate to React as touched.
 
 ## Testing instructions
 
