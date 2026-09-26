@@ -27,3 +27,7 @@ Interactive UI uses **React** via `@astrojs/react`. Astro pages own layout and S
 
 - [Embla Carousel](https://www.embla-carousel.com/) + autoplay — hero only.
 - [PhotoSwipe 5](https://photoswipe.com/) — grid lightbox (`gallery.webp` URLs).
+
+## Tests (Vitest + RTL)
+
+Admin UI tests live in `src/**/*.vitest.{ts,tsx}` (`npm run test:vitest`; `npm test` also runs node:test). Prefer **`@testing-library/user-event`** (`await userEvent.click()`, `type()`, etc.) over `fireEvent` from `@testing-library/react`; use `fireEvent` only when user-event cannot cover the case and leave a brief comment explaining why.
