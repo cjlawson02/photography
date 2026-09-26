@@ -118,7 +118,7 @@ Move traffic/content from the current site to the new Workers deployment. Runboo
 
 **Tasks**
 
-- [ ] Content/asset migration from legacy source (**T7**) — **started** — dry-run scaffold [`scripts/legacy-portfolio-import.mjs`](../scripts/legacy-portfolio-import.mjs), checklist [migration/legacy-bulk-import.md](migration/legacy-bulk-import.md); export format _TBD_ ([CUTOVER.md#chris-input-needed](CUTOVER.md#chris-input-needed)). **Before** remaining cutover sequence ([CUTOVER.md#sequencing](CUTOVER.md#sequencing)).
+- [x] Content/asset migration — **portfolio** (**T7**) — **done** (Chris, 2026-09-26); legacy Picu/review _TBD_ — [CUTOVER.md#content-and-asset-migration-t7](CUTOVER.md#content-and-asset-migration-t7)
 - [x] DNS / custom domain — `photography.chrislawson.dev` live; legacy **301** on `lawsonphotography.me` ([CUTOVER.md#dns-and-domain](CUTOVER.md#dns-and-domain))
 - [ ] Access production re-verify after DNS changes — [DEPLOY.md](DEPLOY.md#2-cloudflare-access-admin)
 - [x] Smoke tests checklist — [SMOKE.md](SMOKE.md) (manual; automation `_TBD_`)
@@ -156,7 +156,7 @@ Hardening and polish after MVP ([#21](https://github.com/cjlawson02/photography/
 | R1 | Review audit — triage leads | _Open_ — unverified leads FIX-31–40 (e.g. `ReviewGallery` JSON before `ok`, selection UX, lightbox dimensions); fix when reproduced |
 | R2 | Review audit — product / ops | _Track_ — optional reviewer password gate (FIX-06); confirm zone HSTS + Access coverage (Q-01); review proof cache TTL after revoke (Q-02) |
 | T5 | Indexes | **Done** ([#25](https://github.com/cjlawson02/photography/pull/25)) |
-| T6–T7 | Cutover + bulk migration | **In progress** — **T7 then T6** per [CUTOVER.md#sequencing](CUTOVER.md#sequencing); domain + legacy 301 live early; [bulk import scaffold](migration/legacy-bulk-import.md) + post-migration [cutover sequence](CUTOVER.md#cutover-sequence-after-migration) |
+| T6–T7 | Cutover + bulk migration | **In progress** — portfolio **T7 done**; **T6** [cutover sequence](CUTOVER.md#cutover-sequence-after-migration) next; domain + legacy 301 live |
 | O1 | Sentry | **Done** — Worker (`@sentry/cloudflare` + `sentry.server.config.ts`), admin browser (`@sentry/react` via `AdminSentryBootstrap`), `SENTRY_DSN` + `SENTRY_RELEASE`; CI deploy uploads client (Vite plugin) and Worker (`dist-worker` + `npm run sentry:sourcemaps`) when `SENTRY_AUTH_TOKEN` + org/project vars are set ([DEPLOY.md](DEPLOY.md)) |
 
 ### Phase 2.6 — Admin UX v2
