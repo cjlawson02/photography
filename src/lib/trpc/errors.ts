@@ -5,7 +5,6 @@ import {
 	AppError,
 	type AppErrorCode,
 	type HttpErrorStatus,
-	toErrorResponse,
 } from '../http/app-error.ts';
 
 const APP_TO_TRPC: Record<AppErrorCode, TRPCError['code']> = {
@@ -29,16 +28,4 @@ export function appErrorToTrpc(error: AppError): TRPCError {
 export function trpcErrorToHttpStatus(code: TRPCError['code']): HttpErrorStatus {
 	const err = new TRPCError({ code, message: 'status probe' });
 	return getHTTPStatusCodeFromError(err) as HttpErrorStatus;
-}
-
-/** Map tRPC failures to legacy `{ ok: false, error }` admin REST responses. */
-export function trpcErrorToResponse(error: unknown): Response {
-	if (error instanceof TRPCError) {
-		const status = getHTTPStatusCodeFromError(error) as HttpErrorStatus;
-		if (status >= 500) {
-			console.error('[trpc]', error);
-		}
-		return Response.json({ ok: false, error: error.message }, { status });
-	}
-	return toErrorResponse(error);
 }

@@ -71,8 +71,8 @@ flowchart TB
 | **Admin (`/admin`)** | Manage portfolio and review collections; Cloudflare Access; presigned PUTs into the right bucket; Images ingest after upload |
 | **Client review (`/review/{slug}`)** | Picu-style select/approve; phase 1 = link secrecy only (not access control); `noindex` + `robots.txt` Disallow; reads only `REVIEW` bucket via Worker |
 | **Drizzle** | Schema source of truth and typed queries against D1 (`drizzle-orm/d1`); flat SQL migrations under `src/db` |
-| **Admin API (`/admin/api/trpc`)** | Type-safe **tRPC** (fetch adapter) for React admin islands; JWT middleware on every procedure; legacy REST paths under `/admin/api/*` thin-route to the same router for smoke docs |
-| **Thin handlers under `/admin/api/*` (legacy REST)** | Deprecated wrappers; prefer tRPC. Still under Access prefix; not Astro Actions |
+| **Admin API (`/admin/api/trpc`)** | Type-safe **tRPC** (fetch adapter) for React admin islands; JWT middleware on every procedure |
+| **`GET /admin/api/health`** | Access JWT smoke; bindings snapshot (no R2 S3 secrets) |
 | **Tailwind + CSS tokens** | Styling; palette/layout inspired by the live Photograph theme |
 
 ## Admin auth
@@ -83,7 +83,7 @@ Access only blocks paths in the Access application. Astro Actions default to `/_
 
 **Required**
 
-1. Mount **all** admin mutations as thin handlers under `/admin/api/*` (not Astro Actions) so **one** Access prefix covers UI + mutations
+1. Mount admin mutations on **`/admin/api/trpc`** (and **`/admin/api/health`** for smoke) — not Astro Actions — so **one** Access prefix covers UI + mutations
 2. Access policy on `/admin*`
 3. Defense in depth: every admin mutation **must** verify the Access JWT (`Cf-Access-Jwt-Assertion`) before touching D1/R2 — even when Access already covers the path
 
@@ -93,9 +93,9 @@ Same-origin admin UI → mutation calls send the Access cookie automatically onc
 
 - Single fetch endpoint: **`/admin/api/trpc`** (`@trpc/server` adapter on Astro API routes).
 - React islands use **`@trpc/client`** (`httpBatchLink`, `credentials: 'same-origin'`) via `src/lib/trpc/client.ts`.
-- **`adminProcedure`** middleware calls `verifyAccessJwt` before D1/R2 (same as legacy REST).
+- **`adminProcedure`** middleware calls `verifyAccessJwt` before D1/R2.
 - **Public** pages and **`/media/*`** delivery stay plain HTTP — no tRPC on client review selection in v1.
-- Tradeoffs vs REST-only: extra client/server bundle (~tRPC + batch link), slightly larger cold-start parse; gain end-to-end types and one router instead of ad-hoc fetch wrappers.
+- Tradeoffs vs REST-only: extra client/server bundle (~tRPC + batch link), slightly larger cold-start parse; gain end-to-end types and one router instead of ad-hoc fetch wrappers. Legacy REST admin routes were removed in favor of tRPC-only mutations.
 
 ## Data & Content
 

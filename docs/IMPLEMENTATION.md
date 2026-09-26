@@ -15,7 +15,7 @@ Stack and product decisions are owned by [HLD.md](HLD.md). Do not mirror them he
 Point at HLD for locked decisions:
 
 - [Architecture](HLD.md#architecture) — Astro hybrid SSR on Workers, bindings, R2 S3 credentials/CORS for presigned PUT
-- [Key Components](HLD.md#key-components) — public site, admin, client review, Drizzle, `/admin/api/*` handlers, Tailwind tokens
+- [Key Components](HLD.md#key-components) — public site, admin, client review, Drizzle, `/admin/api/trpc`, Tailwind tokens
 - [Admin auth](HLD.md#admin-auth) — Access on `/admin*`; mutations under `/admin/*` + JWT verify
 - [Data & Content](HLD.md#data--content) — `PORTFOLIO`/`REVIEW` buckets, ingest sequence, D1 domain split, Worker delivery routes
 
@@ -52,7 +52,7 @@ Stand up the Workers + Astro hybrid app, wrangler bindings, D1 schema skeleton (
 - [x] Bind private R2 buckets `PORTFOLIO` and `REVIEW`
 - [x] Configure R2 S3 API credentials/secrets and CORS for browser PUT — inventory + CORS IaC in repo; production apply per [DEPLOY.md](DEPLOY.md)
 - [x] Tailwind + CSS design tokens (stub/reference values; brand polish `_TBD_` — [PR #9](https://github.com/cjlawson02/photography/pull/9))
-- [x] Place all admin mutations under `/admin/api/*` (thin handlers; not Astro Actions — see [HLD Admin auth](HLD.md#admin-auth)) so one Access prefix covers UI + mutations
+- [x] Admin mutations via **`/admin/api/trpc`** (+ **`/admin/api/health`** smoke); not Astro Actions — see [HLD Admin auth](HLD.md#admin-auth) so one Access prefix covers UI + mutations
 - [x] Shared Access JWT verification helper for all `/admin/*` handlers; Zero Trust app on `/admin*` — create per [DEPLOY.md](DEPLOY.md)
 - [x] Env/secrets inventory for local + prod (`.dev.vars.example`, [DEPLOY.md](DEPLOY.md), [AGENTS.md](../AGENTS.md))
 
@@ -76,7 +76,7 @@ Access-gated admin UI and mutations for managing portfolio and (as review lands)
 **Tasks**
 
 - [x] Admin shell/layout behind Access ([PR #8](https://github.com/cjlawson02/photography/pull/8))
-- [x] Portfolio CRUD/list/publish/hero/sort flows — `/admin/portfolio` + `/admin/api/portfolio/photos`
+- [x] Portfolio CRUD/list/publish/hero/sort flows — `/admin/portfolio` + tRPC `portfolio.*`
 - [x] Trigger/monitor ingest from admin — `/admin/ingest` smoke UI ([PR #8](https://github.com/cjlawson02/photography/pull/8)); reprocess also on portfolio admin for failed rows
 - [x] Review-collection management (create/list/revoke; attach uploads via ingest `collectionId`) — API + admin UI ([PR #8](https://github.com/cjlawson02/photography/pull/8)); revoke in Phase 4
 - [x] Confirm no admin mutations exist outside `/admin/*`
@@ -102,7 +102,7 @@ Shareable review links protected by secrecy only. Media via Worker `/media/revie
 **Tasks**
 
 - [x] Review Drizzle module/tables: collections, review photos, `selectionStatus` (Phase 2 / [PR #6](https://github.com/cjlawson02/photography/pull/6))
-- [x] Create/revoke review links from admin (`DELETE /admin/api/review/collections/{id}`)
+- [x] Create/revoke review links from admin (tRPC `review.collections.create` / `review.collections.revoke`)
 - [x] Public review page at `/review/{slug}` — link secrecy only; select/approve via `POST /review/api/selection`
 - [x] Worker route `/media/review/{id}/{variant}` serving from `REVIEW` bucket (allowlisted variants)
 - [x] `noindex` meta + `robots.txt` Disallow for review surfaces

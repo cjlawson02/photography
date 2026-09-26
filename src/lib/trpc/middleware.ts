@@ -43,7 +43,7 @@ const requireAccessJwt = trpc.middleware(async ({ ctx, next }) => {
 	}
 });
 
-/** Cloudflare Access JWT + AppError mapping — same rules as `/admin/api/*` REST handlers. */
+/** Cloudflare Access JWT + AppError mapping — same rules as `/admin/api/health` and tRPC. */
 export const adminProcedure = publicProcedure.use(mapAppErrors).use(requireAccessJwt);
 
 export { mapAppErrors as appErrorMiddleware };

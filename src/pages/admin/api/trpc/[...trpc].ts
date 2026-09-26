@@ -7,7 +7,7 @@ import { appRouter } from '../../../../lib/trpc/router.ts';
 
 /**
  * Admin tRPC (fetch adapter). Cloudflare Access + JWT middleware on every procedure.
- * Legacy REST under `/admin/api/*` remains as thin wrappers for smoke docs.
+ * Legacy REST admin routes removed — mutations are tRPC-only (`/admin/api/trpc`).
  */
 export const ALL: APIRoute = ({ request }) =>
 	fetchRequestHandler({

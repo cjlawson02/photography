@@ -2,7 +2,7 @@ import { z } from 'zod/v4';
 
 import { R2ConfigError } from '../dao/r2-dao.ts';
 
-/** AppError codes → HTTP (REST wrappers and public routes). Admin islands use tRPC + same mapping via `src/lib/trpc/errors.ts`. */
+/** AppError codes → HTTP (public routes and plain handlers). Admin islands use tRPC + mapping in `src/lib/trpc/errors.ts`. */
 export const APP_ERROR_STATUS = {
 	BAD_REQUEST: 400,
 	FORBIDDEN: 403,
