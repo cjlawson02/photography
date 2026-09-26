@@ -1,11 +1,11 @@
 import { z } from 'zod/v4';
 
 import { idSchema, optionalTrimmedString } from '../../db/schema/types.ts';
-import { formatZodIssues } from '../http/app-error.ts';
+import { PURPOSE_BUCKETS, type PurposeBucket } from '../dao/r2-dao.ts';
 
-export const purposeBucketSchema = z.enum(['portfolio', 'review']);
+export type { PurposeBucket };
 
-export type PurposeBucket = z.infer<typeof purposeBucketSchema>;
+export const purposeBucketSchema = z.enum(PURPOSE_BUCKETS);
 
 /** Browser upload MIME allowlist (presign + ingest). */
 export const INGEST_CONTENT_TYPES = [
@@ -52,9 +52,4 @@ export type ReprocessBody = z.infer<typeof reprocessBodySchema>;
 
 export function isPurposeBucket(value: unknown): value is PurposeBucket {
   return purposeBucketSchema.safeParse(value).success;
-}
-
-/** Format Zod issues into a single plain error string for HTTP responses. */
-export function formatZodError(error: z.ZodError): string {
-  return formatZodIssues(error);
 }

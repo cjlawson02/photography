@@ -2,7 +2,7 @@
 
 **Production host:** `https://photography.chrislawson.dev` — public site, admin (`/admin*`), and (later) client review at `/review/{slug}` on the same host.
 
-Canonical architecture and delivery rules: [HLD.md](HLD.md). Commands and secrets inventory: [AGENTS.md](../AGENTS.md).
+Canonical architecture and delivery rules: [HLD.md](HLD.md). Agent commands: [AGENTS.md](../AGENTS.md). Secrets inventory: this doc + [`.dev.vars.example`](../.dev.vars.example).
 
 ## 1. Worker custom domain
 
@@ -143,7 +143,3 @@ Optional: create a GitHub **environment** named `production` on the repo if you 
 ## Smoke checks
 
 Full manual checklist: [SMOKE.md](SMOKE.md).
-
-- `GET /health` — public bindings JSON (no R2 S3 secrets required)
-- `GET /admin/api/health` — Access login redirect (302) without JWT; OK after Access session
-- `/admin` — sign in via Access, then ingest / portfolio UI

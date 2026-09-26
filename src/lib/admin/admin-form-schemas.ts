@@ -71,8 +71,9 @@ export const reviewCollectionExpiresFieldSchema = z
   .superRefine((data, ctx) => {
     const trimmed = data.expiresAtLocal.trim();
     if (trimmed === '') return;
-    const ms = new Date(trimmed).getTime();
-    if (Number.isNaN(ms)) {
+    try {
+      parseDatetimeLocalToMs(trimmed);
+    } catch {
       ctx.addIssue({
         code: 'custom',
         message: 'Invalid expiry date.',

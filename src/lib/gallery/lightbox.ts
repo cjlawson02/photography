@@ -6,6 +6,7 @@ import {
   gallerySlideAlt,
   renderGalleryLightboxCaption,
 } from './lightbox-caption.ts';
+import { GALLERY_VARIANT } from '../ingest/keys.ts';
 
 export type GalleryLightboxItem = {
   src: string;
@@ -16,8 +17,8 @@ export type GalleryLightboxItem = {
   caption?: string;
 };
 
-/** Matches ingest `gallery.webp` width; height is provisional until EXIF is stored. */
-export const DEFAULT_GALLERY_WIDTH = 1600;
+/** Matches ingest gallery variant width; height is provisional until EXIF is stored. */
+export const DEFAULT_GALLERY_WIDTH = GALLERY_VARIANT.width;
 export const DEFAULT_GALLERY_HEIGHT = 1200;
 
 let activeLightbox: PhotoSwipe | null = null;

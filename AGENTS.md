@@ -33,7 +33,6 @@ Migrations: `drizzle-kit generate` → SQL in `src/db/migrations/` → wrangler 
 npm run db:generate      # drizzle-kit generate (no Cloudflare credentials)
 npm run db:migrate:local # wrangler d1 migrations apply photography --local
 npm run db:migrate:check # CI gate: ephemeral local apply + fail on unapplied SQL
-npm run db:migrate:check # CI gate: ephemeral local apply + fail on unapplied SQL
 # Remote (after review): npx wrangler d1 migrations apply photography --remote
 npm run r2:cors:apply    # apply infra/r2-cors/*.json to both buckets (wrangler login)
 npm run r2:cors:list     # verify bucket CORS policies
@@ -65,39 +64,21 @@ npx wrangler deploy
 
 ### Public client UI
 
-- **React islands** (`@astrojs/react`) for interactive UI — no hand-rolled DOM `addEventListener` wiring; use React state/handlers in `src/components/public/*` and `src/components/admin/*`.
-- See [docs/FRONTEND.md](docs/FRONTEND.md) for hydration conventions and library usage.
-- Admin workflows and interaction patterns (v2): [docs/ADMIN-UX.md](docs/ADMIN-UX.md). Uploads are inline (`AdminPhotoUpload`); `/admin/ingest` redirects to portfolio.
+- **React islands** (`@astrojs/react`) for interactive UI — conventions in [docs/FRONTEND.md](docs/FRONTEND.md).
+- Admin workflows / patterns (v2): [docs/ADMIN-UX.md](docs/ADMIN-UX.md).
 
 ## Testing instructions
 
-Phase 0 smoke:
-
-- `GET /health` — public binding + DAO presence JSON (does **not** require R2 S3 secrets)
-- `GET /admin/api/health` — requires Access JWT (`Cf-Access-Jwt-Assertion`); returns 403 without it; also bindings-only (no R2_*)
-
-Unit: `npm test` runs **node:test** (`src/**/*.test.ts`), **Vitest jsdom** (`src/**/*.vitest.{ts,tsx}` — admin UI), and **Vitest node** (`src/**/*.server.vitest.ts` — server/review modules). `GET /health` includes rate-limiter binding booleans (FIX-02). **Remaining `node:test` (FIX-28):** `src/lib/dao/r2-dao.test.ts`, `src/lib/rate-limit/binding.test.ts`, `src/lib/portfolio/hero-photos.test.ts`, `src/lib/observability/sentry-config.test.ts`, `src/lib/observability/sentry.test.ts`. **Workerd pool** (`@cloudflare/vitest-plugin`) for Astro routes/bindings remains _TBD_. End-to-end upload against live R2/Images `_TBD_` until Access + CORS + secrets are set.
-
-Ingest (`AppEnv.from` on **`ingest.*` only**) **fail-fast** if `R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` are missing (503). Other admin tRPC uses bindings-only env and returns **403** without JWT even when R2_* are unset. Copy `.dev.vars.example` → `.dev.vars` and fill R2_* for `/admin` ingest preview.
-
-Phase 1 ingest (JWT + Zod body → `IngestService` via tRPC):
-
-- **`/admin/api/trpc`** — admin router (`portfolio.*`, `review.collections.*`, `ingest.*`); Cloudflare Access + `verifyAccessJwt` on every procedure
-- **`GET /admin/api/health`** — Access JWT smoke (bindings only; no mutations)
-- Minimal smoke UI: `/admin`
+- Phase 0 / manual smoke: [docs/SMOKE.md](docs/SMOKE.md)
+- Auth, tRPC mount, admin JWT: [docs/HLD.md#admin-auth](docs/HLD.md#admin-auth)
+- Unit: `npm test` — **node:test** (`src/**/*.test.ts`), **Vitest jsdom** (`src/**/*.vitest.{ts,tsx}`), **Vitest node** (`src/**/*.server.vitest.ts`). Remaining `node:test` / workerd pool backlog: [IMPLEMENTATION.md](docs/IMPLEMENTATION.md) (T1 / FIX-28). End-to-end upload against live R2/Images `_TBD_` until Access + CORS + secrets are set.
+- Ingest tip: `AppEnv.from` on **`ingest.*` only** fail-fast (503) without R2 S3 secrets; other admin tRPC is bindings-only and returns **403** without JWT. Local secrets: [`.dev.vars.example`](.dev.vars.example) → `.dev.vars` ([DEPLOY.md](docs/DEPLOY.md)).
 
 ## Security considerations
 
-- Never commit `.dev.vars` or R2 S3 API keys. Use `.dev.vars.example` as the inventory template.
-- Copy `.dev.vars.example` → `.dev.vars` for local.
-- Required config (see [docs/DEPLOY.md](docs/DEPLOY.md)):
-  - `CF_ACCESS_TEAM_DOMAIN`, `CF_ACCESS_AUD` — plain **vars** in `wrangler.jsonc` (identifiers, not credentials)
-  - `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` — production via `npx wrangler secret put <NAME>` (presigned PUT; not covered by R2 bindings alone)
-  - `SENTRY_DSN` (optional) — Worker error monitoring; no-op when unset ([DEPLOY.md](docs/DEPLOY.md#3a-sentry-optional-worker-errors))
-  - D1 + R2 resource names are wired in `wrangler.jsonc` (`photography`, `photography-portfolio`, `photography-review`)
-  - Configure R2 CORS on both buckets: `npm run r2:cors:apply`
-  - Cloudflare Access **Public DNS** app on `photography.chrislawson.dev` path `/admin*` (not Workers destination)
-- Admin mutations live under **`/admin/api/trpc`** only (plus **`/admin/api/health`** for smoke); all must verify the Access JWT ([HLD Admin auth](docs/HLD.md#admin-auth)).
+- Never commit `.dev.vars` or R2 S3 API keys. Template: [`.dev.vars.example`](.dev.vars.example).
+- Required config (Access, secrets, CORS, Sentry, CI/CD): [docs/DEPLOY.md](docs/DEPLOY.md).
+- Admin mutations verify the Access JWT — [HLD Admin auth](docs/HLD.md#admin-auth).
 
 ## Commit and PR guidelines
 
@@ -119,16 +100,20 @@ Phase 1 ingest (JWT + Zod body → `IngestService` via tRPC):
 
 ### Pointer map
 
-| Need                              | Read                                             |
-| --------------------------------- | ------------------------------------------------ |
-| Human overview / doc index        | [README.md](README.md)                           |
-| Architecture / design             | [docs/HLD.md](docs/HLD.md)                       |
-| Implementation plan               | [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md) |
-| Estimates                         | [docs/LOE.md](docs/LOE.md)                       |
-| Status, Gantt schedule, changelog | [docs/PROGRESS.md](docs/PROGRESS.md)             |
-| Public React islands              | [docs/FRONTEND.md](docs/FRONTEND.md)             |
-| Admin workflows / patterns (v2)   | [docs/ADMIN-UX.md](docs/ADMIN-UX.md)             |
-| Manual smoke checklist            | [docs/SMOKE.md](docs/SMOKE.md)                   |
-| Agent instructions                | This file                                        |
+Human doc index: [README.md](README.md). Agent-focused shortcuts:
+
+| Need | Read |
+| --- | --- |
+| Architecture / auth / ingest | [docs/HLD.md](docs/HLD.md) |
+| Phase tasks / backlog IDs | [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md) |
+| Estimates | [docs/LOE.md](docs/LOE.md) |
+| Status / Gantt / changelog | [docs/PROGRESS.md](docs/PROGRESS.md) |
+| Deploy / Access / secrets / CORS / CI | [docs/DEPLOY.md](docs/DEPLOY.md) |
+| Manual smoke | [docs/SMOKE.md](docs/SMOKE.md) |
+| Cutover runbook | [docs/CUTOVER.md](docs/CUTOVER.md) |
+| Public React islands | [docs/FRONTEND.md](docs/FRONTEND.md) |
+| Admin product UX | [docs/ADMIN-UX.md](docs/ADMIN-UX.md) |
+| Legacy import | [docs/migration/legacy-bulk-import.md](docs/migration/legacy-bulk-import.md) |
+| Agent commands | This file |
 
 Treat this file as living documentation: prune stale rules and fill `_TBD_` sections when decided.

@@ -1,11 +1,12 @@
 import type { AppEnv } from '../env.ts';
 import { createDb } from '../../db/client.ts';
+import { deletePhotoObjects } from '../dao/delete-photo-objects.ts';
 import { ReviewCollectionsDAO } from '../dao/review-collections-dao.ts';
 import { ReviewPhotosDAO } from '../dao/review-photos-dao.ts';
 import type { SelectionStatus } from '../../db/schema/review/selection-status.ts';
 import { AppError } from '../http/app-error.ts';
-import { photoIngestObjectKeys } from '../ingest/keys.ts';
-import { reviewVariantAdminUrl, reviewVariantPublicUrl } from '../media/review-public-url.ts';
+import { GALLERY_VARIANT, THUMB_VARIANT } from '../ingest/keys.ts';
+import { reviewVariantAdminUrl, reviewVariantPublicUrl } from '../media/variant-media-url.ts';
 import { resolveReviewCollectionAccess } from '../review/collection-access.ts';
 export { updateReviewSelection } from '../review/update-selection.ts';
 import { buildReviewSlug } from '../review/slug.ts';
@@ -110,8 +111,10 @@ export class ReviewService {
         mimeType: row.mimeType,
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
-        thumbUrl: ready ? reviewVariantAdminUrl(row.id, 'thumb.webp', row.updatedAt) : null,
-        galleryUrl: ready ? reviewVariantAdminUrl(row.id, 'gallery.webp', row.updatedAt) : null,
+        thumbUrl: ready ? reviewVariantAdminUrl(row.id, THUMB_VARIANT.suffix, row.updatedAt) : null,
+        galleryUrl: ready
+          ? reviewVariantAdminUrl(row.id, GALLERY_VARIANT.suffix, row.updatedAt)
+          : null,
         width: row.width,
         height: row.height,
       };
@@ -142,17 +145,14 @@ export class ReviewService {
 
     const photos = await this.app.d1.reviewPhotos.listByCollectionId(id);
     if (options.cleanupR2) {
-      const keys = photos.flatMap((photo) => photoIngestObjectKeys(photo.id));
-      try {
-        await this.app.r2.deleteObjects('review', keys);
-      } catch (error) {
-        console.error('[review-revoke] R2 batch delete failed', {
-          id,
-          keyCount: keys.length,
-          error,
-        });
-        throw new AppError('INTERNAL_SERVER_ERROR', 'Failed to delete review objects from storage');
-      }
+      await deletePhotoObjects({
+        r2: this.app.r2,
+        bucket: 'review',
+        photoIds: photos.map((photo) => photo.id),
+        logLabel: 'review-revoke',
+        logDetails: { id },
+        errorMessage: 'Failed to delete review objects from storage',
+      });
     }
 
     await this.app.d1.reviewCollections.deleteWithPhotos(id);
@@ -178,18 +178,14 @@ export class ReviewService {
     }
 
     if (options.cleanupR2) {
-      const keys = photoIngestObjectKeys(photoId);
-      try {
-        await this.app.r2.deleteObjects('review', keys);
-      } catch (error) {
-        console.error('[review-photo-delete] R2 batch delete failed', {
-          collectionId,
-          photoId,
-          keyCount: keys.length,
-          error,
-        });
-        throw new AppError('INTERNAL_SERVER_ERROR', 'Failed to delete review objects from storage');
-      }
+      await deletePhotoObjects({
+        r2: this.app.r2,
+        bucket: 'review',
+        photoIds: [photoId],
+        logLabel: 'review-photo-delete',
+        logDetails: { collectionId, photoId },
+        errorMessage: 'Failed to delete review objects from storage',
+      });
     }
 
     const deleted = await this.app.d1.reviewPhotos.deleteById(photoId);
@@ -231,7 +227,7 @@ export async function resolveReviewPageState(
       title: access.collection.title,
       photos: ready.map((photo) => ({
         id: photo.id,
-        galleryUrl: reviewVariantPublicUrl(photo.id, 'gallery.webp', photo.updatedAt),
+        galleryUrl: reviewVariantPublicUrl(photo.id, GALLERY_VARIANT.suffix, photo.updatedAt),
         selectionStatus: photo.selectionStatus,
         width: photo.width,
         height: photo.height,

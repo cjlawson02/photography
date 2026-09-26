@@ -98,4 +98,5 @@ Task rows map 1:1 to [IMPLEMENTATION.md](IMPLEMENTATION.md) checklists. Widen a 
 
 ## Open questions
 
-Sizing tightens when the open questions in [IMPLEMENTATION.md](IMPLEMENTATION.md#open-questions) / [HLD.md](HLD.md#open-questions) land — especially exact columns, ingest variant set, public IA depth, review TTL, legacy cutover source, and brand tokens. Delivery routes and admin auth are no longer sizing unknowns.
+Sizing tightens when the open questions in [HLD.md](HLD.md#open-questions) land — especially exact columns, ingest variant set, public IA depth, review TTL, and brand tokens. Delivery routes and admin auth are no longer sizing unknowns. Tasks live in [IMPLEMENTATION.md](IMPLEMENTATION.md).
+

@@ -5,6 +5,7 @@ import type { PortfolioPhotoAdminUpdateBody } from '../../lib/admin/portfolio-sc
 import type { AdminPortfolioListPage } from '../../lib/admin/trpc-types.ts';
 import { requestReprocess } from '../../lib/ingest/browser-upload.ts';
 import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
+import { addToSet, removeFromSet } from '../../lib/util/immutable-set.ts';
 import { errorMessage } from './admin-format.ts';
 import { adminClass } from './admin-styles.ts';
 import AdminEmptyState from './AdminEmptyState.tsx';
@@ -17,18 +18,6 @@ const portfolioListInfiniteQueryConfig = {
   initialPageParam: null as string | null,
   getNextPageParam: (lastPage: AdminPortfolioListPage) => lastPage.nextCursor,
 };
-
-function addBusyId(set: Set<string>, id: string): Set<string> {
-  const next = new Set(set);
-  next.add(id);
-  return next;
-}
-
-function removeBusyId(set: Set<string>, id: string): Set<string> {
-  const next = new Set(set);
-  next.delete(id);
-  return next;
-}
 
 type PortfolioAdminTableInnerProps = {
   initialPortfolioPage?: AdminPortfolioListPage;
@@ -129,14 +118,14 @@ function PortfolioAdminTableInner({ initialPortfolioPage }: PortfolioAdminTableI
   );
 
   const runForPhoto = async (photoId: string, statusLabel: string, action: () => Promise<void>) => {
-    setBusyIds((prev) => addBusyId(prev, photoId));
+    setBusyIds((prev) => addToSet(prev, photoId));
     setActionStatus(statusLabel);
     try {
       await action();
     } catch {
       /* mutation onError or action handler sets actionStatus */
     } finally {
-      setBusyIds((prev) => removeBusyId(prev, photoId));
+      setBusyIds((prev) => removeFromSet(prev, photoId));
     }
   };
 

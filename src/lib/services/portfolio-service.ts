@@ -1,9 +1,10 @@
 import type { AppEnv } from '../env.ts';
 import { createDb } from '../../db/client.ts';
+import { deletePhotoObjects } from '../dao/delete-photo-objects.ts';
 import { PortfolioPhotosDAO } from '../dao/portfolio-photos-dao.ts';
 import { AppError } from '../http/app-error.ts';
-import { photoIngestObjectKeys } from '../ingest/keys.ts';
-import { portfolioVariantPublicUrl } from '../media/portfolio-public-url.ts';
+import { GALLERY_VARIANT } from '../ingest/keys.ts';
+import { portfolioVariantPublicUrl } from '../media/variant-media-url.ts';
 import type {
   PortfolioListInput,
   PortfolioPhotoAdminUpdateBody,
@@ -21,7 +22,7 @@ export type PublicPortfolioPhoto = {
   /** Natural pixels from ingest Images `info()`; null until complete. */
   width: number | null;
   height: number | null;
-  /** Public delivery: ingest `gallery.webp` (1600px wide) — largest generated variant. */
+  /** Public delivery: ingest gallery variant (largest generated width). */
   galleryUrl: string;
 };
 
@@ -74,7 +75,14 @@ export class PortfolioService {
     }
 
     if (options.cleanupR2) {
-      await this.cleanupR2Objects(id);
+      await deletePhotoObjects({
+        r2: this.app.r2,
+        bucket: 'portfolio',
+        photoIds: [id],
+        logLabel: 'portfolio-delete',
+        logDetails: { id },
+        errorMessage: 'Failed to delete portfolio objects from storage',
+      });
     }
 
     const deleted = await this.app.d1.portfolioPhotos.deleteById(id);
@@ -83,19 +91,6 @@ export class PortfolioService {
     }
 
     return deleted;
-  }
-
-  private async cleanupR2Objects(id: string): Promise<void> {
-    const keys = photoIngestObjectKeys(id);
-    try {
-      await this.app.r2.deleteObjects('portfolio', keys);
-    } catch (error) {
-      console.error('[portfolio-delete] R2 batch delete failed', { id, keys, error });
-      throw new AppError(
-        'INTERNAL_SERVER_ERROR',
-        'Failed to delete portfolio objects from storage',
-      );
-    }
   }
 }
 
@@ -115,6 +110,6 @@ export async function listPublishedPortfolioPhotos(
     caption: row.caption,
     width: row.width,
     height: row.height,
-    galleryUrl: portfolioVariantPublicUrl(row.id, 'gallery.webp', row.updatedAt),
+    galleryUrl: portfolioVariantPublicUrl(row.id, GALLERY_VARIANT.suffix, row.updatedAt),
   }));
 }

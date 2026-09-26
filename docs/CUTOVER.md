@@ -2,15 +2,13 @@
 
 Move production traffic from the legacy WordPress site to the Workers deployment. Architecture and delivery constraints live in [HLD.md](HLD.md); phase checklist in [IMPLEMENTATION.md](IMPLEMENTATION.md#phase-5--cutover).
 
-**Status:** **cutover complete** (Chris, 2026-09-26) — smoke + legacy **301** signed off; legacy hosting **decommissioned**; finish **post-cutover monitoring** setup ([§6](#6-post-cutover-monitoring)). Picu/review import _TBD_ only if needed later.
+**Status:** **cutover complete** (Chris, 2026-09-26) — see [Current truth](#current-truth-2026-09-26). Finish **post-cutover monitoring** setup ([§6](#6-post-cutover-monitoring)). Picu/review import _TBD_ only if needed later.
 
 ## Sequencing
 
-**Chris (2026-09-26):** Phase 5 **cutover** steps in [Cutover sequence (after migration)](#cutover-sequence-after-migration) run **only after** [T7 bulk migration](#content-and-asset-migration-t7) is complete and signed off. Do not treat remote promote + production smoke as the formal cutover gate until imported content is on production.
-
-**Completed for cutover:** Workers host on `photography.chrislawson.dev`, legacy zone **301**, and production smoke (Chris, 2026-09-26).
-
 Order: **T7 migration** → **T6 cutover sequence** → **post-cutover monitoring** (in progress).
+
+**Chris (2026-09-26):** Phase 5 **cutover** steps in [Cutover sequence (after migration)](#cutover-sequence-after-migration) run **only after** [T7 bulk migration](#content-and-asset-migration-t7) is complete and signed off. Do not treat remote promote + production smoke as the formal cutover gate until imported content is on production.
 
 ## Current truth (2026-09-26)
 
@@ -21,20 +19,19 @@ Order: **T7 migration** → **T6 cutover sequence** → **post-cutover monitorin
 | Admin Access on `/admin*` | **Verified** on production smoke (Chris, 2026-09-26); re-check after Access or DNS changes ([DEPLOY.md](DEPLOY.md)) |
 | Production smoke | **Pass** — [SMOKE.md](SMOKE.md) on `photography.chrislawson.dev` (Chris, 2026-09-26) |
 | Remote D1 migrations on production | **Applied** — production `d1_migrations` matches repo (**5/5**); latest `main` deploy reported no pending migrations (2026-09-26) |
-| Bulk legacy WordPress → D1/R2 **portfolio** import | **Done (34 posts)** — FooGallery/Picu excluded — [migration/legacy-bulk-import.md](migration/legacy-bulk-import.md) |
+| Bulk legacy WordPress → D1/R2 **portfolio** import | **Done** — source, counts, NAS path: [migration/legacy-bulk-import.md](migration/legacy-bulk-import.md) |
 | Legacy WordPress hosting | **Decommissioned** (Chris, 2026-09-26) |
 | Path-specific legacy redirect map | **Not needed** — zone **301** sufficient (Chris, 2026-09-26) |
 
 ## Chris input needed
 
-Resolved for T7 portfolio import (see [migration/legacy-bulk-import.md](migration/legacy-bulk-import.md)):
+Resolved for T7 portfolio import — details in [migration/legacy-bulk-import.md](migration/legacy-bulk-import.md) (export, metadata mapping, Picu out of scope, remote sign-off).
 
-1. **Legacy export** — live MariaDB on `172.16.1.2` + NAS uploads at `/mnt/main/apps/lawsonphotography-wp/wp-content/uploads` (SSH key auth).
-2. **Metadata mapping** — post tags → category; Front Page Slider → hero; title/excerpt/alt as documented in the migration checklist; vision pass updated production captions.
-3. **Review / Picu** — **out of scope** for this import (also skip NextGEN `wp-content/gallery/`).
-4. ~~**URL redirect map**~~ — **Not needed** — zone **301** only (Chris, 2026-09-26).
-5. **RTO/RPO and rollback owner** — who flips DNS/redirects and whether Workers rollback (`wrangler rollback` / redeploy prior SHA) is in scope.
-6. **Remote import sign-off** — **Done** — production has **34** published posts only (FooGallery excluded).
+Still open:
+
+1. **RTO/RPO and rollback owner** — who flips DNS/redirects and whether Workers rollback (`wrangler rollback` / redeploy prior SHA) is in scope.
+
+Redirect map: **not needed** (see [Current truth](#current-truth-2026-09-26)).
 
 ## Preconditions
 
@@ -45,31 +42,24 @@ Resolved for T7 portfolio import (see [migration/legacy-bulk-import.md](migratio
 
 ## DNS and domain
 
-**Workers production host:** `https://photography.chrislawson.dev`  
-**Legacy public site:** [lawsonphotography.me](https://www.lawsonphotography.me/) — **301** to the new host (Chris, 2026-09-26).
+Hostnames and Access status: [Current truth](#current-truth-2026-09-26). Procedure:
 
 | Step | Owner | Notes |
 | --- | --- | --- |
-| Workers custom domain + SSL for `photography.chrislawson.dev` | **Done** | Live on Workers (Chris, 2026-09-26) |
-| Access application covers `/admin*` on `photography.chrislawson.dev` | **Done** | Verified on production smoke (Chris, 2026-09-26) |
-| **301 redirect** `lawsonphotography.me` (+ `www`) → `photography.chrislawson.dev` | **Done** | Redirect Rules on legacy zone (Chris, 2026-09-26) |
+| Workers custom domain + SSL for `photography.chrislawson.dev` | **Done** | See Current truth |
+| Access application covers `/admin*` on `photography.chrislawson.dev` | **Done** | See Current truth |
+| **301 redirect** `lawsonphotography.me` (+ `www`) → `photography.chrislawson.dev` | **Done** | Redirect Rules on legacy zone |
 | Lower TTL on legacy DNS | _Optional_ | Note if origin DNS changes again |
 
-Path-specific permalink redirects: **not needed** (zone **301** only).
+Path-specific permalink redirects: **not needed** (see Current truth).
 
 ## Content and asset migration (T7)
 
-Checklist: [migration/legacy-bulk-import.md](migration/legacy-bulk-import.md). Portfolio import **done**; that satisfied the gate for [cutover sequence](#cutover-sequence-after-migration). Ongoing portfolio edits use admin ingest on the Workers host.
-
-| Item | Status |
-| --- | --- |
-| Portfolio photos + metadata | **Done** — **34** published posts only (FooGallery excluded); local + remote |
-| Review collections (legacy Picu) | Out of scope for T7 portfolio pass |
-| Redirect map (legacy URLs → new routes) | **N/A** — zone **301** only |
+Checklist and import details: [migration/legacy-bulk-import.md](migration/legacy-bulk-import.md). Portfolio import **done**; that satisfied the gate for [cutover sequence](#cutover-sequence-after-migration). Ongoing portfolio edits use admin ingest on the Workers host. Review/Picu and path redirect map: see Current truth.
 
 ## Cutover sequence (after migration)
 
-**Prerequisite:** Portfolio T7 import **complete** (Chris, 2026-09-26). Run production [SMOKE.md](SMOKE.md) on imported gallery content as part of step 4 below.
+**Prerequisite:** Portfolio T7 import **complete** (see Current truth). Run production [SMOKE.md](SMOKE.md) on imported gallery content as part of step 4 below.
 
 Execute in order for formal cutover completion. **Do not** run remote migrations or production deploy without explicit approval when schema is in flux.
 
@@ -99,12 +89,11 @@ Confirm `SENTRY_RELEASE` / source maps if Sentry vars are set ([DEPLOY.md](DEPLO
 
 ### 4. Production smoke
 
-- [x] [SMOKE.md](SMOKE.md) on `https://photography.chrislawson.dev` (Chris, 2026-09-26) — public gallery + admin Access path; review slug N/A
+- [x] [SMOKE.md](SMOKE.md) on production host — see [Current truth](#current-truth-2026-09-26)
 
 ### 5. Legacy traffic
 
-- [x] Zone **301** from `lawsonphotography.me` → new host (Chris, 2026-09-26)
-- [x] Deep-link / redirect map — **not needed** (Chris, 2026-09-26)
+- [x] Zone **301** and deep-link map decision — see [Current truth](#current-truth-2026-09-26)
 
 ### 6. Post-cutover monitoring
 
@@ -123,7 +112,7 @@ Watch **24–48h** after cutover sign-off (from 2026-09-26). Code already enable
 
 **Chris verify Sentry is live:** trigger a test error in staging _or_ confirm issues appear in Sentry after deploy; if DSN unset, Worker errors only appear in Cloudflare Observability.
 
-- [x] Decommission legacy hosting (Chris, 2026-09-26)
+Legacy hosting decommission: see [Current truth](#current-truth-2026-09-26).
 
 ## Rollback
 
@@ -138,7 +127,7 @@ Document RTO/RPO: _TBD_ (Chris).
 ## Post-cutover
 
 - [ ] Monitor Workers analytics / errors — use [§6 setup checklist](#6-post-cutover-monitoring) (watch window active from 2026-09-26)
-- [x] Decommission legacy hosting (Chris, 2026-09-26)
+- [x] Decommission legacy hosting — see [Current truth](#current-truth-2026-09-26)
 - [x] Track phase status in [PROGRESS.md](PROGRESS.md)
 
 ## References

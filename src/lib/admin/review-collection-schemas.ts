@@ -6,6 +6,7 @@ import {
   reviewCollectionUpdateSchema,
 } from '../../db/schema/types.ts';
 import { reviewSlugPrefixSchema } from '../review/slug.ts';
+import { cleanupR2Field } from './cleanup-r2-field.ts';
 
 /** `review.collections.create` — server assigns slug; optional prefix + title/expiry only. */
 export const reviewCollectionCreateBodySchema = reviewCollectionInsertSchema
@@ -39,5 +40,5 @@ export const reviewCollectionUpdateInputSchema = z.object({
 export const reviewCollectionDeletePhotoInputSchema = z.object({
   collectionId: idSchema,
   photoId: idSchema,
-  cleanupR2: z.boolean().default(true),
+  cleanupR2: cleanupR2Field,
 });

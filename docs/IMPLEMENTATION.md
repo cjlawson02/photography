@@ -56,7 +56,7 @@ Stand up the Workers + Astro hybrid app, wrangler bindings, D1 schema skeleton (
 - [x] Tailwind + CSS design tokens (stub/reference values; brand polish `_TBD_` — [PR #9](https://github.com/cjlawson02/photography/pull/9))
 - [x] Admin mutations via **`/admin/api/trpc`** (+ **`/admin/api/health`** smoke); not Astro Actions — see [HLD Admin auth](HLD.md#admin-auth) so one Access prefix covers UI + mutations
 - [x] Shared Access JWT verification helper for all `/admin/*` handlers; Zero Trust app on `/admin*` — create per [DEPLOY.md](DEPLOY.md)
-- [x] Env/secrets inventory for local + prod (`.dev.vars.example`, [DEPLOY.md](DEPLOY.md), [AGENTS.md](../AGENTS.md))
+- [x] Env/secrets inventory for local + prod (`.dev.vars.example`, [DEPLOY.md](DEPLOY.md))
 
 ### Phase 1 — Ingest
 
@@ -148,7 +148,7 @@ Hardening and polish after MVP ([#21](https://github.com/cjlawson02/photography/
 | M1 | Admin Query islands | **Done** — TanStack + tRPC on portfolio/review |
 | M2 | Dead admin fetch helpers | **Done** ([#29](https://github.com/cjlawson02/photography/pull/29)) |
 | M3–M4 | UI primitives / Embla | **M3 Done** ([#46](https://github.com/cjlawson02/photography/pull/46)) — `admin-styles`, `admin-format`, table/status/form primitives + `AdminPhotoUpload`. **M4 N/A** — imperative `embla-carousel` per [FRONTEND.md](FRONTEND.md). |
-| M6 | Admin SSR initial reads | **Done** — Astro frontmatter + `src/lib/admin/ssr-initial-reads.ts`; portfolio/review list/detail islands seed TanStack Query (`initialData` / `initialDataUpdatedAt`); missing collection → redirect `/admin/review`. See [FRONTEND.md](FRONTEND.md#hydration-choices). _Deferred (low):_ portfolio `stalePendingOnly` toggle may re-apply SSR seed (FIX-04) |
+| M6 | Admin SSR initial reads | **Done** — [FRONTEND.md § Hydration choices](FRONTEND.md#hydration-choices). _Deferred (low):_ portfolio `stalePendingOnly` toggle may re-apply SSR seed (FIX-04) |
 | M5 | Admin forms | **Done** — portfolio/review admin forms use [react-hook-form](https://react-hook-form.com/) + `@hookform/resolvers/zod`; shared client schemas in `src/lib/admin/admin-form-schemas.ts` (reuses `review-collection-schemas` / DB category types) |
 | T1 | Test suite | **Partial** ([#33](https://github.com/cjlawson02/photography/pull/33), [#47](https://github.com/cjlawson02/photography/pull/47), [#52](https://github.com/cjlawson02/photography/pull/52)). Vitest RTL + `vitest.server.config`; admin `/admin*` JWT gate + `/admin/api/media/review` handler tests; bulk `node:test` → `*.server.vitest.ts` (review selection/rate-limit). _Open:_ five remaining `node:test` files + workerd pool (audit FIX-28). **RTL:** prefer `@testing-library/user-event` over `fireEvent` (almost always) |
 | T4 | D1 migrations in CI | **Done** — deploy applies remote on `main` ([#28](https://github.com/cjlawson02/photography/pull/28)); PR **`npm run db:migrate:check`** local apply + drift gate ([DEPLOY.md](DEPLOY.md#6-github-actions-cicd)) |
@@ -159,7 +159,7 @@ Hardening and polish after MVP ([#21](https://github.com/cjlawson02/photography/
 | R2 | Review audit — product / ops | _Track_ — optional reviewer password gate (FIX-06); confirm zone HSTS + Access coverage (Q-01); review proof cache TTL after revoke (Q-02) |
 | T5 | Indexes | **Done** ([#25](https://github.com/cjlawson02/photography/pull/25)) |
 | T6–T7 | Cutover + bulk migration | **In progress** — portfolio **T7 done**; **T6** [cutover sequence](CUTOVER.md#cutover-sequence-after-migration) next; domain + legacy 301 live |
-| O1 | Sentry | **Done** — Worker (`@sentry/cloudflare` + `sentry.server.config.ts`), admin browser (`@sentry/react` via `AdminSentryBootstrap`), `SENTRY_DSN` + `SENTRY_RELEASE`; CI deploy uploads client (Vite plugin) and Worker (`dist-worker` + `npm run sentry:sourcemaps`) when `SENTRY_AUTH_TOKEN` + org/project vars are set ([DEPLOY.md](DEPLOY.md)) |
+| O1 | Sentry | **Done** — Worker + admin browser + CI source maps; setup and env: [DEPLOY.md § Sentry](DEPLOY.md#3a-sentry-optional-worker-errors) |
 
 ### Phase 2.6 — Admin UX v2
 
@@ -198,17 +198,4 @@ Guided, low-frequency admin: client-shoot step rail (proof → picks → deliver
 
 ## Open questions
 
-Answered in HLD (do not reopen here): stack host (Workers), bucket split, Worker delivery routes (`/media/portfolio/...`, `/media/review/...`), Access+JWT admin model, ingest v1 completion callback, Images Free compress-once, no tRPC / no hosted Images storage, phase-1 link-secrecy review.
-
-Still need Chris / HLD before *tightening* later phases (scaffold can proceed with stubs):
-
-1. **Exact D1 columns** within portfolio vs review domains — `_TBD_` in HLD
-2. **Public IA & portfolio model** — Which pages/sections ship in v1? Album vs single-image vs mixed?
-3. **Ingest variant set** — Which widths/formats after Images Free compress-once?
-4. **Post-upload trigger alternatives** — R2 event notification or admin “process” action vs v1 browser callback (`_TBD_` alternatives only)
-5. **Review TTL default** — Duration; purge-on-delete vs expiry-only (HLD requires purge and/or shorter TTL hygiene)
-6. **Legacy cutover source** — Where do existing assets/content live today?
-7. **Brand / visual direction** — Token values and type choices (Phase 0 can stub tokens first)
-8. **Second D1 database** — Only if isolation requirements change (HLD default: one D1, table boundary only)
-
-Resolve in HLD (or explicitly defer); do not invent answers in this file.
+Canonical list: [HLD.md § Open Questions](HLD.md#open-questions). Resolve or defer there; do not invent answers in this file.

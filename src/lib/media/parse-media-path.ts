@@ -1,13 +1,14 @@
 import { isAllowlistedVariantSuffix } from '../ingest/keys.ts';
 
-export type ParsedPortfolioMediaPath =
+export type ParsedMediaPath =
   | { ok: true; id: string; variantSuffix: string; r2Key: string }
   | { ok: false; reason: 'empty' | 'invalid_shape' | 'disallowed_variant' };
 
 /**
- * `/media/portfolio/{id}/{variant}` — id is a single segment; variant is an allowlisted suffix (e.g. gallery.webp).
+ * `/media/{scope}/{id}/{variant}` — id is a single segment; variant is an allowlisted suffix
+ * (e.g. gallery.webp). Same shape for portfolio, public review, and admin review delivery.
  */
-export function parsePortfolioMediaPath(path: string | undefined): ParsedPortfolioMediaPath {
+export function parseMediaPath(path: string | undefined): ParsedMediaPath {
   if (!path?.trim()) {
     return { ok: false, reason: 'empty' };
   }

@@ -2,13 +2,19 @@ import { AwsClient } from 'aws4fetch';
 
 import { PRESIGN_PUT_EXPIRES_SECONDS } from '../ingest/stale-pending.ts';
 
-/** Purpose buckets matching wrangler R2 bindings / bucket names. */
-export type PurposeBucket = 'portfolio' | 'review';
+/** Shared message when R2 S3 API secrets are missing (presign / AppEnv ingest). */
+export const R2_S3_SECRETS_MISSING_MESSAGE =
+  'R2 S3 secrets not configured (R2_ACCOUNT_ID / R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY)';
 
+/** Purpose buckets matching wrangler R2 bindings / bucket names. */
 export const R2_BUCKET_NAMES = {
   portfolio: 'photography-portfolio',
   review: 'photography-review',
-} as const satisfies Record<PurposeBucket, string>;
+} as const;
+
+export type PurposeBucket = keyof typeof R2_BUCKET_NAMES;
+
+export const PURPOSE_BUCKETS = Object.keys(R2_BUCKET_NAMES) as [PurposeBucket, ...PurposeBucket[]];
 
 export type R2S3Secrets = {
   accountId: string;
@@ -92,9 +98,7 @@ export class R2DAO {
       secretAccessKey: env.R2_SECRET_ACCESS_KEY?.trim() ?? '',
     };
     if (!secrets.accountId || !secrets.accessKeyId || !secrets.secretAccessKey) {
-      throw new R2ConfigError(
-        'R2 S3 secrets not configured (R2_ACCOUNT_ID / R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY)',
-      );
+      throw new R2ConfigError(R2_S3_SECRETS_MISSING_MESSAGE);
     }
     return secrets;
   }
@@ -150,9 +154,7 @@ export class R2DAO {
     expiresInSeconds?: number;
   }): Promise<{ uploadUrl: string; expiresInSeconds: number }> {
     if (!this.aws) {
-      throw new R2ConfigError(
-        'R2 S3 secrets not configured (R2_ACCOUNT_ID / R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY)',
-      );
+      throw new R2ConfigError(R2_S3_SECRETS_MISSING_MESSAGE);
     }
     const expiresInSeconds = options.expiresInSeconds ?? DEFAULT_EXPIRES_SECONDS;
     const bucketName = this.bucketName(options.bucket);

@@ -9,6 +9,7 @@ import {
   type KeyboardEvent,
 } from 'react';
 
+import { GALLERY_VARIANT } from '../../lib/ingest/keys.ts';
 import type { PublicPortfolioPhoto } from '../../lib/services/portfolio-service.ts';
 
 const AUTOPLAY_DELAY_MS = 6500;
@@ -164,7 +165,7 @@ export default function HeroCarousel({ photos }: Props) {
               <img
                 src={photo.galleryUrl}
                 alt={photo.alt?.trim() ?? ''}
-                width={photo.width ?? 1600}
+                width={photo.width ?? GALLERY_VARIANT.width}
                 height={photo.height ?? 900}
                 decoding="async"
                 fetchPriority={index === 0 ? 'high' : 'auto'}

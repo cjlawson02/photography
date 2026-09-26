@@ -4,6 +4,7 @@ import {
   portfolioListInputSchema,
   portfolioPhotoAdminUpdateBodySchema,
 } from '../admin/portfolio-schemas.ts';
+import { cleanupR2Field } from '../admin/cleanup-r2-field.ts';
 import {
   reviewCollectionCreateBodySchema,
   reviewCollectionDeletePhotoInputSchema,
@@ -27,12 +28,12 @@ const portfolioUpdateInputSchema = z.object({
 
 const portfolioDeleteInputSchema = z.object({
   id: idSchema,
-  cleanupR2: z.boolean().default(true),
+  cleanupR2: cleanupR2Field,
 });
 
 const reviewRevokeInputSchema = z.object({
   id: idSchema,
-  cleanupR2: z.boolean().default(true),
+  cleanupR2: cleanupR2Field,
 });
 
 export const appRouter = createTRPCRouter({

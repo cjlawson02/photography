@@ -180,5 +180,11 @@ Do not use a public R2 custom domain for review. Portfolio may revisit a public 
 ## Open Questions
 
 - Exact column-level D1 schema within portfolio vs review domains — `_TBD_`
+- Public IA & portfolio model — which pages/sections ship in v1? Album vs single-image vs mixed? — `_TBD_`
+- Ingest variant set — which widths/formats after Images Free compress-once? — `_TBD_`
 - Post-upload trigger alternatives (R2 event notification, admin “process” action) — `_TBD_`; **v1 default:** browser completion callback after successful PUT
+- Review collection TTL default — duration; purge-on-delete vs expiry-only (delivery already requires purge and/or shorter TTL hygiene) — `_TBD_`
+- Brand / visual direction — token values and type choices (Phase 0 can stub tokens first) — `_TBD_`
 - Whether review ever needs its own D1 database (default: no — table boundary only) — `_TBD_` only if isolation requirements change
+
+Resolved elsewhere (do not reopen as open design): legacy portfolio cutover source/counts — [migration/legacy-bulk-import.md](migration/legacy-bulk-import.md); admin mutations use tRPC under `/admin/api/trpc` ([Admin auth](#admin-auth)).

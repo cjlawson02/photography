@@ -14,6 +14,22 @@ export const VARIANT_SPECS = [
 
 export type VariantSpec = (typeof VARIANT_SPECS)[number];
 
+function variantSpecBySuffix<S extends VariantSpec['suffix']>(
+  suffix: S,
+): Extract<VariantSpec, { suffix: S }> {
+  const found = VARIANT_SPECS.find(
+    (spec): spec is Extract<VariantSpec, { suffix: S }> => spec.suffix === suffix,
+  );
+  if (!found) {
+    throw new Error(`Unknown variant suffix: ${suffix}`);
+  }
+  return found;
+}
+
+/** Canonical gallery / thumb specs derived from `VARIANT_SPECS`. */
+export const GALLERY_VARIANT = variantSpecBySuffix('gallery.webp');
+export const THUMB_VARIANT = variantSpecBySuffix('thumb.webp');
+
 export function originalKey(id: string): string {
   return `${id}/${ORIGINAL_SUFFIX}`;
 }

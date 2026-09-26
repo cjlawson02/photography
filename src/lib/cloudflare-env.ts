@@ -2,7 +2,7 @@ import { z } from 'zod/v4';
 
 import type { AccessEnv } from './access/verify-jwt.ts';
 import { requiredTrimmedString } from '../db/schema/types.ts';
-import { R2ConfigError } from './dao/r2-dao.ts';
+import { R2_S3_SECRETS_MISSING_MESSAGE, R2ConfigError } from './dao/r2-dao.ts';
 
 function isBinding(value: unknown): boolean {
   return value != null && typeof value === 'object';
@@ -67,9 +67,7 @@ export function getCloudflareEnv(raw: unknown): CloudflareAppEnv {
   const access = accessEnvSchema.parse(raw);
   const secrets = r2SecretsSchema.safeParse(raw);
   if (!secrets.success) {
-    throw new R2ConfigError(
-      'R2 S3 secrets not configured (R2_ACCOUNT_ID / R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY)',
-    );
+    throw new R2ConfigError(R2_S3_SECRETS_MISSING_MESSAGE);
   }
   return {
     ...bindings,

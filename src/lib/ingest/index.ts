@@ -1,5 +1,7 @@
 export {
+  GALLERY_VARIANT,
   ORIGINAL_SUFFIX,
+  THUMB_VARIANT,
   VARIANT_SPECS,
   isAllowlistedVariantSuffix,
   originalKey,
@@ -7,7 +9,6 @@ export {
 } from './keys.ts';
 export {
   completeBodySchema,
-  formatZodError,
   isPurposeBucket,
   presignBodySchema,
   purposeBucketSchema,

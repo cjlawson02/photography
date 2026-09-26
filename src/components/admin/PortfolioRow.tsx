@@ -10,7 +10,8 @@ import {
 import type { PortfolioPhotoAdminUpdateBody } from '../../lib/admin/portfolio-schemas.ts';
 import type { AdminPortfolioPhoto } from '../../lib/admin/trpc-types.ts';
 import { isStalePendingIngest } from '../../lib/ingest/stale-pending.ts';
-import { portfolioVariantPublicUrl } from '../../lib/media/portfolio-public-url.ts';
+import { THUMB_VARIANT } from '../../lib/ingest/keys.ts';
+import { portfolioVariantPublicUrl } from '../../lib/media/variant-media-url.ts';
 import { PORTFOLIO_CATEGORIES } from '../../lib/portfolio/categories.ts';
 import { formatAdminDimensions, formatAdminTime, normalizeNullableText } from './admin-format.ts';
 import { adminClass } from './admin-styles.ts';
@@ -86,7 +87,7 @@ export default function PortfolioRow({ photo, busy, onPatch, onDelete, onReproce
 
   const thumbUrl =
     photo.status === 'ready'
-      ? portfolioVariantPublicUrl(photo.id, 'thumb.webp', photo.updatedAt)
+      ? portfolioVariantPublicUrl(photo.id, THUMB_VARIANT.suffix, photo.updatedAt)
       : null;
   const canPublish = photo.status === 'ready';
   const canReprocess = photo.status === 'failed' || photo.status === 'pending';

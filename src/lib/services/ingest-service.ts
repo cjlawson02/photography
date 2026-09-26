@@ -35,6 +35,10 @@ export class IngestService {
     return new IngestService(app);
   }
 
+  private photosDao(bucket: PurposeBucket) {
+    return bucket === 'portfolio' ? this.app.d1.portfolioPhotos : this.app.d1.reviewPhotos;
+  }
+
   /** Create a pending photo row and mint a browser PUT URL. */
   async createPresign(input: PresignBody): Promise<PresignResult> {
     if (input.bucket === 'review') {
@@ -91,10 +95,7 @@ export class IngestService {
     id: string,
     options: { allowStatuses: PhotoStatus[] },
   ): Promise<IngestResult> {
-    const photo =
-      bucket === 'portfolio'
-        ? await this.app.d1.portfolioPhotos.getById(id)
-        : await this.app.d1.reviewPhotos.getById(id);
+    const photo = await this.photosDao(bucket).getById(id);
 
     if (!photo) {
       throw new AppError('NOT_FOUND', `Photo not found: ${id}`);
@@ -172,16 +173,10 @@ export class IngestService {
       status: 'ready' as const,
       ...(dimensions ? { width: dimensions.width, height: dimensions.height } : {}),
     };
-    const updated =
-      bucket === 'portfolio'
-        ? await this.app.d1.portfolioPhotos.updateIfStatus(id, expectedStatus, patch)
-        : await this.app.d1.reviewPhotos.updateIfStatus(id, expectedStatus, patch);
+    const updated = await this.photosDao(bucket).updateIfStatus(id, expectedStatus, patch);
     if (!updated) {
       await this.deleteWrittenVariants(bucket, writtenVariants);
-      const row =
-        bucket === 'portfolio'
-          ? await this.app.d1.portfolioPhotos.getById(id)
-          : await this.app.d1.reviewPhotos.getById(id);
+      const row = await this.photosDao(bucket).getById(id);
       if (!row) {
         throw new AppError('NOT_FOUND', `Photo not found during markReady: ${id}`);
       }
@@ -197,10 +192,9 @@ export class IngestService {
     id: string,
     expectedStatus: PhotoStatus,
   ): Promise<void> {
-    const updated =
-      bucket === 'portfolio'
-        ? await this.app.d1.portfolioPhotos.updateIfStatus(id, expectedStatus, { status: 'failed' })
-        : await this.app.d1.reviewPhotos.updateIfStatus(id, expectedStatus, { status: 'failed' });
+    const updated = await this.photosDao(bucket).updateIfStatus(id, expectedStatus, {
+      status: 'failed',
+    });
     if (!updated) {
       console.warn('[ingest] markFailed skipped — row missing or status changed', {
         bucket,

@@ -7,6 +7,7 @@ import {
   openGalleryLightbox,
 } from '../../lib/gallery/lightbox.ts';
 import type { PublicReviewPhoto } from '../../lib/services/review-service.ts';
+import { addToSet, removeFromSet } from '../../lib/util/immutable-set.ts';
 
 type ReviewPhotoState = PublicReviewPhoto;
 
@@ -44,18 +45,6 @@ function applyOptimistic(photos: ReviewPhotoState[], action: OptimisticAction): 
   );
 }
 
-function addPendingId(set: Set<string>, id: string): Set<string> {
-  const next = new Set(set);
-  next.add(id);
-  return next;
-}
-
-function removePendingId(set: Set<string>, id: string): Set<string> {
-  const next = new Set(set);
-  next.delete(id);
-  return next;
-}
-
 export default function ReviewGallery({ slug, photos: initialPhotos }: Props) {
   const [photos, setPhotos] = useState(initialPhotos);
   const [optimisticPhotos, setOptimisticPhotos] = useOptimistic(photos, applyOptimistic);
@@ -80,7 +69,7 @@ export default function ReviewGallery({ slug, photos: initialPhotos }: Props) {
   };
 
   const saveSelection = (photoId: string, next: SelectionStatus, errorLabel: string) => {
-    setPendingIds((prev) => addPendingId(prev, photoId));
+    setPendingIds((prev) => addToSet(prev, photoId));
     startTransition(async () => {
       setOptimisticPhotos({ photoId, selectionStatus: next });
       try {
@@ -92,7 +81,7 @@ export default function ReviewGallery({ slug, photos: initialPhotos }: Props) {
       } catch (error) {
         showError(error instanceof Error ? error.message : errorLabel);
       } finally {
-        setPendingIds((prev) => removePendingId(prev, photoId));
+        setPendingIds((prev) => removeFromSet(prev, photoId));
       }
     });
   };
