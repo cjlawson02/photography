@@ -3,6 +3,7 @@ import { createDb } from '../../db/client.ts';
 import { PortfolioPhotosDAO } from '../dao/portfolio-photos-dao.ts';
 import { AppError } from '../http/app-error.ts';
 import { originalKey, VARIANT_SPECS, variantKey } from '../ingest/keys.ts';
+import { portfolioVariantPublicUrl } from '../media/portfolio-public-url.ts';
 import type { PortfolioPhotoAdminUpdateBody } from '../admin/portfolio-schemas.ts';
 
 export type PublicPortfolioPhoto = {
@@ -35,7 +36,7 @@ export class PortfolioService {
       category: row.category,
       sortOrder: row.sortOrder,
       hero: row.hero,
-      galleryUrl: `/media/portfolio/${row.id}/gallery.webp`,
+      galleryUrl: portfolioVariantPublicUrl(row.id, 'gallery.webp', row.updatedAt),
     }));
   }
 
@@ -88,6 +89,6 @@ export async function listPublishedPortfolioPhotos(
     category: row.category,
     sortOrder: row.sortOrder,
     hero: row.hero,
-    galleryUrl: `/media/portfolio/${row.id}/gallery.webp`,
+    galleryUrl: portfolioVariantPublicUrl(row.id, 'gallery.webp', row.updatedAt),
   }));
 }

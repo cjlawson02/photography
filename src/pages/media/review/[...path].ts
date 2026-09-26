@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import { env } from 'cloudflare:workers';
 
 import { parseReviewMediaPath } from '../../../lib/media/parse-review-media-path.ts';
+import { isReviewMediaAllowed } from '../../../lib/media/review-media-access.ts';
 import {
   REVIEW_ROBOTS_HEADER,
   REVIEW_VARIANT_CACHE_CONTROL,
@@ -13,6 +14,11 @@ export const GET: APIRoute = async ({ params }) => {
 
   const parsed = parseReviewMediaPath(path);
   if (!parsed.ok) {
+    return new Response('Not Found', { status: 404 });
+  }
+
+  const allowed = await isReviewMediaAllowed(env.DB, parsed.id);
+  if (!allowed) {
     return new Response('Not Found', { status: 404 });
   }
 

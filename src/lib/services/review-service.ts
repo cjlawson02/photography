@@ -6,6 +6,7 @@ import type { SelectionStatus } from '../../db/schema/review/selection-status.ts
 import { AppError } from '../http/app-error.ts';
 import { originalKey, VARIANT_SPECS, variantKey } from '../ingest/keys.ts';
 import { resolveReviewCollectionAccess } from '../review/collection-access.ts';
+import { isSqliteUniqueViolation } from '../sqlite-unique-violation.ts';
 
 export type PublicReviewPhoto = {
   id: string;
@@ -148,10 +149,4 @@ export async function updateReviewSelection(
     throw new AppError('NOT_FOUND', 'Review photo not found');
   }
   return updated;
-}
-
-function isSqliteUniqueViolation(error: unknown): boolean {
-  if (!(error instanceof Error)) return false;
-  const message = error.message.toLowerCase();
-  return message.includes('unique') || message.includes('constraint');
 }

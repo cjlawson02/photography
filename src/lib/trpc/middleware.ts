@@ -1,6 +1,5 @@
 import { TRPCError } from '@trpc/server';
 
-import { verifyAccessJwt } from '../access/verify-jwt.ts';
 import { AppError } from '../http/app-error.ts';
 import { appErrorToTrpc } from './errors.ts';
 import { publicProcedure, trpc } from './init.ts';
@@ -20,16 +19,8 @@ const mapAppErrors = trpc.middleware(async ({ next }) => {
 });
 
 const requireAccessJwt = trpc.middleware(async ({ ctx, next }) => {
-  if (ctx.accessIdentity) {
-    return next({
-      ctx: {
-        ...ctx,
-        admin: ctx.accessIdentity,
-      },
-    });
-  }
   try {
-    const identity = await verifyAccessJwt(ctx.request, ctx.accessEnv);
+    const identity = await ctx.ensureAccessIdentity();
     return next({
       ctx: {
         ...ctx,
