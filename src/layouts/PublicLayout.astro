@@ -18,7 +18,9 @@ const { title, description, ogImage, canonical, overlayHeader = false } = Astro.
 <BaseLayout title={title} description={description} ogImage={ogImage} canonical={canonical}>
 	<div class="public-grain" aria-hidden="true"></div>
 	<SiteHeader client:load overlay={overlayHeader} />
-	<slot />
+	<main id="main">
+		<slot />
+	</main>
 	<footer class="public-footer">
 		<div class="public-footer__inner">
 			<p class="public-footer__brand">

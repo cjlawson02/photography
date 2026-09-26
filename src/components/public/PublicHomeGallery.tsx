@@ -177,7 +177,7 @@ export default function PublicHomeGallery({ photos, featured = [] }: Props) {
                   type="button"
                   className="public-filter-btn"
                   aria-pressed={isActive}
-                  aria-label={`${label}, ${count} photos`}
+                  aria-label={`${label} [${pad2(count)}]`}
                   disabled={(count === 0 && !isActive) || phase !== 'idle'}
                   onClick={() => {
                     void setCategory(label);
