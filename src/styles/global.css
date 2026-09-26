@@ -205,7 +205,7 @@ h6 {
   color: var(--color-accent);
 }
 
-@media (max-width: 767px) {
+@media (width <= 767px) {
   .public-intro__inner {
     grid-template-columns: 1fr;
   }
@@ -292,7 +292,7 @@ h6 {
   text-transform: uppercase;
 }
 
-@media (max-width: 479px) {
+@media (width <= 479px) {
   .public-header__mark {
     height: 1.5rem;
     width: 1.5rem;
@@ -860,7 +860,7 @@ h6 {
   color: var(--color-accent);
 }
 
-@media (max-width: 639px) {
+@media (width <= 639px) {
   .public-hero__controls {
     margin-left: 0;
   }
@@ -895,11 +895,19 @@ h6 {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .public-intro__link,
+  .public-header,
   .public-header__mark,
+  .public-footer__link,
+  .public-filter-btn,
+  .public-filter-btn__count,
   .public-sheet .public-masonry-img,
   .public-frame__label,
   .public-hero__cta,
-  .public-hero__cta svg {
+  .public-hero__cta svg,
+  .public-hero__btn,
+  .public-action-btn,
+  .public-lightbox-caption {
     transition: none;
   }
 
@@ -912,7 +920,8 @@ h6 {
 
   .public-sheet.is-exiting .public-sheet__item,
   .public-sheet.is-entering .public-sheet__item,
-  .public-hero__card {
+  .public-hero__card,
+  .public-hero__progress-bar[data-running='true'] {
     animation: none !important;
   }
 }
@@ -1034,7 +1043,7 @@ h6 {
   width: 100%;
 }
 
-@media (min-width: 768px) {
+@media (width >= 768px) {
   .admin-body {
     flex-direction: row;
   }
@@ -1045,7 +1054,7 @@ h6 {
   padding: 0.75rem var(--public-gutter);
 }
 
-@media (min-width: 768px) {
+@media (width >= 768px) {
   .admin-nav {
     border-bottom: 0;
     border-right: 1px solid var(--color-border);
@@ -1057,15 +1066,14 @@ h6 {
 
 .admin-nav__list {
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+  flex-flow: row wrap;
   gap: 0.25rem;
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
-@media (min-width: 768px) {
+@media (width >= 768px) {
   .admin-nav__list {
     flex-direction: column;
   }
@@ -1477,13 +1485,13 @@ h6 {
   padding: 0;
 }
 
-@media (min-width: 48rem) {
+@media (width >= 48rem) {
   .admin-job-rail__list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (min-width: 64rem) {
+@media (width >= 64rem) {
   .admin-job-rail__list {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -1629,9 +1637,16 @@ h6 {
 
 @media (prefers-reduced-motion: reduce) {
   .admin-header__mark,
+  .admin-nav__link,
+  .admin-link,
+  .admin-link-muted,
+  .admin-field,
+  .admin-btn-primary {
+    transition: none;
+  }
+
   .admin-header__brand:hover .admin-header__mark,
   .admin-header__brand:focus-visible .admin-header__mark {
-    transition: none;
     transform: none;
   }
 }

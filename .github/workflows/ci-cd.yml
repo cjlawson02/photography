@@ -38,6 +38,9 @@ jobs:
       - name: Oxlint
         run: npm run lint
 
+      - name: Stylelint (CSS + a11y)
+        run: npm run lint:css
+
       - name: Oxfmt (check)
         run: npm run format:check
 
