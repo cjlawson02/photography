@@ -1,8 +1,9 @@
-export type MediaUrlScope = 'portfolio' | 'review' | 'admin-review';
+export type MediaUrlScope = 'portfolio' | 'review' | 'admin-portfolio' | 'admin-review';
 
 const SCOPE_PREFIX: Record<MediaUrlScope, string> = {
   portfolio: '/media/portfolio',
   review: '/media/review',
+  'admin-portfolio': '/admin/api/media/portfolio',
   'admin-review': '/admin/api/media/review',
 };
 
@@ -23,6 +24,15 @@ export function portfolioVariantPublicUrl(
   updatedAtMs: number,
 ): string {
   return variantMediaUrl({ scope: 'portfolio', id, variant: variantFile, updatedAtMs });
+}
+
+/** Admin library / inspector — JWT-gated; works for unpublished ready drafts. */
+export function portfolioVariantAdminUrl(
+  id: string,
+  variantFile: string,
+  updatedAtMs: number,
+): string {
+  return variantMediaUrl({ scope: 'admin-portfolio', id, variant: variantFile, updatedAtMs });
 }
 
 export function reviewVariantPublicUrl(

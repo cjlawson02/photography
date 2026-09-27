@@ -7,6 +7,7 @@ import {
   type PresignBody,
   type ReprocessBody,
 } from '../ingest/schemas.ts';
+import { titleFromUploadFilename } from '../ingest/title-from-filename.ts';
 import type { PurposeBucket } from '../dao/r2-dao.ts';
 import type { PhotoStatus } from '../../db/schema/photo-status.ts';
 import { canUploadFinals, FINALS_UPLOAD_STATUSES, jobStepLabel } from '../review/job-steps.ts';
@@ -62,6 +63,7 @@ export class IngestService {
         ? await this.app.d1.portfolioPhotos.insert({
             status: 'pending',
             mimeType: input.contentType,
+            title: titleFromUploadFilename(input.filename),
           })
         : await this.app.d1.reviewPhotos.insert({
             collectionId: input.collectionId,

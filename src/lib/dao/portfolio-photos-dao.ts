@@ -47,6 +47,7 @@ export class PortfolioPhotosDAO {
     frontPageOrder?: number | null;
     width?: number | null;
     height?: number | null;
+    title?: string | null;
     sourceReviewPhotoId?: string | null;
   }) {
     const row = {
@@ -61,6 +62,7 @@ export class PortfolioPhotosDAO {
       frontPageOrder: values.frontPageOrder ?? null,
       width: values.width ?? null,
       height: values.height ?? null,
+      title: values.title ?? null,
       sourceReviewPhotoId: values.sourceReviewPhotoId ?? null,
       ...(values.id ? { id: values.id } : {}),
     };

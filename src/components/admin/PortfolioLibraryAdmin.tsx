@@ -5,7 +5,7 @@ import type { PortfolioPhotoAdminUpdateBody } from '../../lib/admin/portfolio-sc
 import type { AdminPortfolioListPage, AdminPortfolioPhoto } from '../../lib/admin/trpc-types.ts';
 import { requestReprocess } from '../../lib/ingest/browser-upload.ts';
 import { THUMB_VARIANT } from '../../lib/ingest/keys.ts';
-import { portfolioVariantPublicUrl } from '../../lib/media/variant-media-url.ts';
+import { portfolioVariantAdminUrl } from '../../lib/media/variant-media-url.ts';
 import { PORTFOLIO_CATEGORIES, isPortfolioCategory } from '../../lib/portfolio/categories.ts';
 import { canJoinFrontPage } from '../../lib/portfolio/front-page-eligibility.ts';
 import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
@@ -350,7 +350,7 @@ function PortfolioLibraryAdminInner({ initialPortfolioPage }: PortfolioLibraryAd
               {visible.map((photo) => {
                 const thumbUrl =
                   photo.status === 'ready'
-                    ? portfolioVariantPublicUrl(photo.id, THUMB_VARIANT.suffix, photo.updatedAt)
+                    ? portfolioVariantAdminUrl(photo.id, THUMB_VARIANT.suffix, photo.updatedAt)
                     : null;
                 const isSelected = selection.ids.has(photo.id);
                 return (

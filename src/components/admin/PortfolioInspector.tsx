@@ -11,7 +11,7 @@ import {
 import type { PortfolioPhotoAdminUpdateBody } from '../../lib/admin/portfolio-schemas.ts';
 import type { AdminPortfolioPhoto } from '../../lib/admin/trpc-types.ts';
 import { THUMB_VARIANT } from '../../lib/ingest/keys.ts';
-import { portfolioVariantPublicUrl } from '../../lib/media/variant-media-url.ts';
+import { portfolioVariantAdminUrl } from '../../lib/media/variant-media-url.ts';
 import { PORTFOLIO_CATEGORIES } from '../../lib/portfolio/categories.ts';
 import {
   canJoinFrontPage,
@@ -188,7 +188,7 @@ export default function PortfolioInspector({
   const onFrontPage = photos.filter((photo) => photo.frontPage);
   const thumbUrl =
     single?.status === 'ready'
-      ? portfolioVariantPublicUrl(single.id, THUMB_VARIANT.suffix, single.updatedAt)
+      ? portfolioVariantAdminUrl(single.id, THUMB_VARIANT.suffix, single.updatedAt)
       : null;
 
   const toggleTag = (tag: (typeof PORTFOLIO_CATEGORIES)[number], checked: boolean) => {

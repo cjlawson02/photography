@@ -100,6 +100,35 @@ function createPresignApp(collectionStatus: ReviewJobStatus): AppEnv {
 }
 
 describe('IngestService.createPresign finals gate', () => {
+  it('seeds portfolio title from the upload filename', async () => {
+    const insert = vi.fn(async () => ({ id: PHOTO_ID }));
+    const app = {
+      d1: {
+        portfolioPhotos: { insert },
+      },
+      r2: {
+        createPresignedPutUrl: vi.fn(async () => ({
+          uploadUrl: 'https://r2.example/put',
+          expiresInSeconds: 3600,
+        })),
+      },
+    } as unknown as AppEnv;
+
+    await new IngestService(app).createPresign({
+      bucket: 'portfolio',
+      contentType: 'image/jpeg',
+      filename: 'IMG_0973.jpg',
+    });
+
+    expect(insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        status: 'pending',
+        mimeType: 'image/jpeg',
+        title: 'IMG_0973',
+      }),
+    );
+  });
+
   it.each(['editing', 'finals_delivered'] as const)('allows finals while %s', async (status) => {
     const app = createPresignApp(status);
     const result = await new IngestService(app).createPresign({

@@ -3,7 +3,7 @@ import { useState, type DragEvent } from 'react';
 
 import type { AdminFrontPageList } from '../../lib/admin/trpc-types.ts';
 import { THUMB_VARIANT } from '../../lib/ingest/keys.ts';
-import { portfolioVariantPublicUrl } from '../../lib/media/variant-media-url.ts';
+import { portfolioVariantAdminUrl } from '../../lib/media/variant-media-url.ts';
 import { AdminTrpcProvider, useTRPC } from '../../lib/trpc/react.tsx';
 import { errorMessage } from './admin-format.ts';
 import { adminClass } from './admin-styles.ts';
@@ -181,7 +181,7 @@ function PortfolioFrontPageAdminInner({ initialFrontPage }: PortfolioFrontPageAd
                 ].join(' ')}
               >
                 <img
-                  src={portfolioVariantPublicUrl(photo.id, THUMB_VARIANT.suffix, photo.updatedAt)}
+                  src={portfolioVariantAdminUrl(photo.id, THUMB_VARIANT.suffix, photo.updatedAt)}
                   alt=""
                   draggable={false}
                   className="admin-photo-grid__img"

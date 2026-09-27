@@ -166,8 +166,10 @@ On review object delete: purge CDN for affected `/media/review/...` keys, **or**
 
 | Route (illustrative) | Bucket |
 | --- | --- |
-| `/media/portfolio/{id}/{variant}` | `PORTFOLIO` |
+| `/media/portfolio/{id}/{variant}` | `PORTFOLIO` (published + ready only) |
+| `/admin/api/media/portfolio/{id}/{variant}` | `PORTFOLIO` (JWT; any ready, including drafts) |
 | `/media/review/{id}/{variant}` | `REVIEW` |
+| `/admin/api/media/review/{id}/{variant}` | `REVIEW` (JWT; ignores collection expiry) |
 
 Do not use a public R2 custom domain for review. Portfolio may revisit a public custom domain later if QPS warrants it; not required for v1.
 
