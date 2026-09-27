@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -26,13 +26,11 @@ describe('AdminPhotoUpload', () => {
       variants: ['sm'],
     }));
 
-    const { container } = render(<AdminPhotoUpload bucket="portfolio" onSuccess={onSuccess} />);
+    render(<AdminPhotoUpload bucket="portfolio" onSuccess={onSuccess} />);
 
     const input = screen.getByLabelText('Photos');
     await user.upload(input, [imageFile('a.jpg'), imageFile('b.jpg')]);
-    expect((input as HTMLInputElement).files).toHaveLength(2);
-
-    fireEvent.submit(container.querySelector('form')!);
+    await user.click(screen.getByRole('button', { name: 'Upload' }));
 
     await waitFor(() => expect(uploadPhoto).toHaveBeenCalledTimes(2));
     expect(uploadPhoto.mock.calls.map((call) => call[0].file.name)).toEqual(['a.jpg', 'b.jpg']);
@@ -52,11 +50,11 @@ describe('AdminPhotoUpload', () => {
       variants: ['sm'],
     });
 
-    const { container } = render(<AdminPhotoUpload bucket="portfolio" onSuccess={onSuccess} />);
+    render(<AdminPhotoUpload bucket="portfolio" onSuccess={onSuccess} />);
 
     const input = screen.getByLabelText('Photos');
     await user.upload(input, [imageFile('bad.jpg'), imageFile('good.jpg')]);
-    fireEvent.submit(container.querySelector('form')!);
+    await user.click(screen.getByRole('button', { name: 'Upload' }));
 
     await waitFor(() => expect(uploadPhoto).toHaveBeenCalledTimes(2));
     await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1));

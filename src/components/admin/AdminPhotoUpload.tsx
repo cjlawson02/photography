@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { uploadPhoto, type UploadProgress } from '../../lib/ingest/browser-upload.ts';
 import { errorMessage } from './admin-format.ts';
@@ -18,9 +18,8 @@ type AdminPhotoUploadProps = {
   compact?: boolean;
 };
 
-function selectedFiles(form: HTMLFormElement): File[] {
-  const input = form.elements.namedItem('file');
-  if (!(input instanceof HTMLInputElement) || input.type !== 'file' || !input.files) {
+function selectedFiles(input: HTMLInputElement | null): File[] {
+  if (!input?.files) {
     return [];
   }
   return Array.from(input.files).filter((file) => file.size > 0);
@@ -33,99 +32,106 @@ export default function AdminPhotoUpload({
   onSuccess,
   compact = false,
 }: AdminPhotoUploadProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [statusText, setStatusText] = useState<string | null>(null);
   const [putPercent, setPutPercent] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
 
   const reviewMissingCollection = bucket === 'review' && !collectionId;
 
-  return (
-    <form
-      className={compact ? 'flex flex-wrap items-end gap-3' : 'space-y-4'}
-      onSubmit={async (event) => {
-        event.preventDefault();
-        const form = event.currentTarget;
-        const files = selectedFiles(form);
-        if (files.length === 0) {
-          setStatusText('Choose one or more image files.');
-          return;
-        }
-        if (bucket === 'review' && !collectionId) {
-          setStatusText('Review upload requires a collection.');
-          return;
-        }
+  async function runUpload() {
+    const input = fileInputRef.current;
+    const files = selectedFiles(input);
+    if (files.length === 0) {
+      setStatusText('Choose one or more image files.');
+      return;
+    }
+    if (bucket === 'review' && !collectionId) {
+      setStatusText('Review upload requires a collection.');
+      return;
+    }
 
-        setBusy(true);
+    setBusy(true);
+    setPutPercent(null);
+    let succeeded = 0;
+    const failures: string[] = [];
+
+    try {
+      for (let index = 0; index < files.length; index += 1) {
+        const file = files[index]!;
+        const position = `${index + 1} of ${files.length}`;
         setPutPercent(null);
-        let succeeded = 0;
-        const failures: string[] = [];
-
+        setStatusText(`Requesting upload URL… (${position}: ${file.name})`);
+        const onProgress = (progress: UploadProgress) => {
+          setPutPercent(progress.percent);
+          setStatusText(
+            progress.percent === null
+              ? `Uploading to R2… (${position}: ${file.name})`
+              : `Uploading to R2… ${progress.percent}% (${position}: ${file.name})`,
+          );
+        };
         try {
-          for (let index = 0; index < files.length; index += 1) {
-            const file = files[index]!;
-            const position = `${index + 1} of ${files.length}`;
-            setPutPercent(null);
-            setStatusText(`Requesting upload URL… (${position}: ${file.name})`);
-            const onProgress = (progress: UploadProgress) => {
-              setPutPercent(progress.percent);
-              setStatusText(
-                progress.percent === null
-                  ? `Uploading to R2… (${position}: ${file.name})`
-                  : `Uploading to R2… ${progress.percent}% (${position}: ${file.name})`,
-              );
-            };
-            try {
-              await (bucket === 'review'
-                ? uploadPhoto({
-                    file,
-                    bucket,
-                    collectionId: collectionId!,
-                    round: reviewRound,
-                    onProgress,
-                  })
-                : uploadPhoto({ file, bucket, onProgress }));
-              succeeded += 1;
-            } catch (error) {
-              failures.push(`${file.name}: ${errorMessage(error)}`);
-            }
-          }
-
-          setPutPercent(null);
-          if (succeeded > 0) {
-            form.reset();
-            await onSuccess?.();
-          }
-
-          if (failures.length === 0) {
-            setStatusText(succeeded === 1 ? 'Upload complete.' : `${succeeded} uploads complete.`);
-          } else if (succeeded === 0) {
-            setStatusText(`All uploads failed. ${failures[0]}`);
-          } else {
-            setStatusText(
-              `${succeeded} uploaded, ${failures.length} failed. First error: ${failures[0]}`,
-            );
-          }
-        } finally {
-          setBusy(false);
+          await (bucket === 'review'
+            ? uploadPhoto({
+                file,
+                bucket,
+                collectionId: collectionId!,
+                round: reviewRound,
+                onProgress,
+              })
+            : uploadPhoto({ file, bucket, onProgress }));
+          succeeded += 1;
+        } catch (error) {
+          failures.push(`${file.name}: ${errorMessage(error)}`);
         }
-      }}
-    >
+      }
+
+      setPutPercent(null);
+      if (succeeded > 0) {
+        if (input) {
+          input.value = '';
+        }
+        await onSuccess?.();
+      }
+
+      if (failures.length === 0) {
+        setStatusText(succeeded === 1 ? 'Upload complete.' : `${succeeded} uploads complete.`);
+      } else if (succeeded === 0) {
+        setStatusText(`All uploads failed. ${failures[0]}`);
+      } else {
+        setStatusText(
+          `${succeeded} uploaded, ${failures.length} failed. First error: ${failures[0]}`,
+        );
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className={compact ? 'flex flex-wrap items-end gap-3' : 'space-y-4'}>
       <AdminFieldLabel
         label={compact ? 'Add photos' : 'Photos'}
         className={compact ? 'block min-w-[12rem] flex-1 text-sm' : 'block text-sm'}
       >
         <input
+          ref={fileInputRef}
           type="file"
           name="file"
           accept="image/*"
           multiple
-          required
           disabled={busy || reviewMissingCollection}
           className={`mt-1 block w-full text-sm ${adminClass.fg}`}
         />
       </AdminFieldLabel>
 
-      <AdminPrimaryButton type="submit" disabled={busy || reviewMissingCollection}>
+      <AdminPrimaryButton
+        type="button"
+        disabled={busy || reviewMissingCollection}
+        onClick={() => {
+          void runUpload();
+        }}
+      >
         {busy ? 'Uploading…' : 'Upload'}
       </AdminPrimaryButton>
 
@@ -151,6 +157,6 @@ export default function AdminPhotoUpload({
       ) : reviewMissingCollection ? (
         <p className={`text-xs ${adminClass.fgMuted}`}>Pick a collection before uploading.</p>
       ) : null}
-    </form>
+    </div>
   );
 }
