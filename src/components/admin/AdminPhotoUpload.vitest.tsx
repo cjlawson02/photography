@@ -62,4 +62,15 @@ describe('AdminPhotoUpload', () => {
       await screen.findByText('1 uploaded, 1 failed. First error: bad.jpg: R2 put failed'),
     ).toBeInTheDocument();
   });
+
+  it('shows a validation error when no files are chosen', async () => {
+    const user = userEvent.setup();
+    uploadPhoto.mockReset();
+
+    render(<AdminPhotoUpload bucket="portfolio" />);
+    await user.click(screen.getByRole('button', { name: 'Upload' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Choose one or more image files.');
+    expect(uploadPhoto).not.toHaveBeenCalled();
+  });
 });

@@ -1,11 +1,36 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  adminPhotoUploadFormSchema,
   portfolioInspectorFormSchema,
   portfolioInspectorPatchFromField,
   reviewCollectionCreateFormSchema,
   reviewPurgeRoundsFormSchema,
 } from './admin-form-schemas.ts';
+
+describe('adminPhotoUploadFormSchema', () => {
+  it('requires at least one non-empty file', () => {
+    expect(adminPhotoUploadFormSchema.safeParse({ files: undefined }).success).toBe(false);
+
+    const emptyList = {
+      length: 0,
+      item: () => null,
+      *[Symbol.iterator]() {},
+    };
+    expect(adminPhotoUploadFormSchema.safeParse({ files: emptyList }).success).toBe(false);
+
+    const file = new File(['bytes'], 'a.jpg', { type: 'image/jpeg' });
+    const list = {
+      0: file,
+      length: 1,
+      item: (index: number) => (index === 0 ? file : null),
+      *[Symbol.iterator]() {
+        yield file;
+      },
+    };
+    expect(adminPhotoUploadFormSchema.safeParse({ files: list }).success).toBe(true);
+  });
+});
 
 describe('reviewCollectionCreateFormSchema', () => {
   it('maps empty form fields to an empty create body', () => {

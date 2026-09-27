@@ -173,3 +173,22 @@ export function portfolioInspectorPatchFromField(
       return { caption: text };
   }
 }
+
+/** Portfolio / review photo picker — FileList from `<input type="file" multiple>`. */
+function isFileList(value: unknown): value is FileList {
+  if (value == null || typeof value !== 'object') {
+    return false;
+  }
+  const list = value as FileList;
+  return typeof list.length === 'number' && typeof list.item === 'function';
+}
+
+export const adminPhotoUploadFormSchema = z.object({
+  files: z
+    .custom<FileList>(isFileList, { message: 'Choose one or more image files.' })
+    .refine((files) => Array.from(files).some((file) => file.size > 0), {
+      message: 'Choose one or more image files.',
+    }),
+});
+
+export type AdminPhotoUploadFormValues = z.input<typeof adminPhotoUploadFormSchema>;
