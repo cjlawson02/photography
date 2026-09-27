@@ -407,7 +407,7 @@ function ShootJobAdminInner({ collectionId, initialDetail }: ShootJobAdminInnerP
   const copyDeliveryMessage = async () => {
     setEditStatus('Preparing message…');
     try {
-      const result = await queryClient.fetchQuery(
+      const result = await queryClient.query(
         trpc.review.collections.deliveryMessage.queryOptions({ id: collectionId }),
       );
       await navigator.clipboard.writeText(result.text);

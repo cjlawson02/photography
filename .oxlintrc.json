@@ -12,7 +12,34 @@
   "ignorePatterns": ["dist/**", "node_modules/**", "**/*.astro", "worker-configuration.d.ts"],
   "rules": {
     "react/react-in-jsx-scope": "off",
-    "react/set-state-in-effect": "off"
+    "react/set-state-in-effect": "off",
+    "no-restricted-properties": [
+      "error",
+      {
+        "property": "fetchQuery",
+        "message": "Use queryClient.query() instead (TanStack Query deprecation)."
+      },
+      {
+        "property": "prefetchQuery",
+        "message": "Use queryClient.query().catch(noop) instead (TanStack Query deprecation)."
+      },
+      {
+        "property": "ensureQueryData",
+        "message": "Use queryClient.query({ ...options, staleTime: 'static' }) instead (TanStack Query deprecation)."
+      },
+      {
+        "property": "fetchInfiniteQuery",
+        "message": "Use queryClient.infiniteQuery() instead (TanStack Query deprecation)."
+      },
+      {
+        "property": "prefetchInfiniteQuery",
+        "message": "Use queryClient.infiniteQuery().catch(noop) instead (TanStack Query deprecation)."
+      },
+      {
+        "property": "ensureInfiniteQueryData",
+        "message": "Use queryClient.infiniteQuery({ ...options, staleTime: 'static' }) instead (TanStack Query deprecation)."
+      }
+    ]
   },
   "overrides": [
     {
