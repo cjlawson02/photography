@@ -7,12 +7,16 @@ import {
   type AdminPhotoUploadFormValues,
 } from '../../lib/admin/admin-form-schemas.ts';
 import { uploadPhoto, type UploadProgress } from '../../lib/ingest/browser-upload.ts';
+import { mapPool } from '../../lib/utils/map-pool.ts';
 import { errorMessage } from './admin-format.ts';
 import { adminClass } from './admin-styles.ts';
 import AdminFieldLabel from './AdminFieldLabel.tsx';
 import AdminPrimaryButton from './AdminPrimaryButton.tsx';
 
 export type AdminPhotoUploadBucket = 'portfolio' | 'review';
+
+/** Max concurrent browser → R2 uploads (presign + PUT + complete). */
+export const ADMIN_UPLOAD_CONCURRENCY = 5;
 
 type AdminPhotoUploadProps = {
   bucket: AdminPhotoUploadBucket;
@@ -23,6 +27,8 @@ type AdminPhotoUploadProps = {
   /** Shorter layout for strips above tables. */
   compact?: boolean;
 };
+
+type FileUploadOutcome = { ok: true } | { ok: false; message: string };
 
 export default function AdminPhotoUpload({
   bucket,
@@ -54,22 +60,28 @@ export default function AdminPhotoUpload({
     }
 
     const files = Array.from(values.files).filter((file) => file.size > 0);
-    setPutPercent(null);
-    let succeeded = 0;
-    const failures: string[] = [];
+    const total = files.length;
+    const filePercents: Array<number | null> = Array.from({ length: total }, () => null);
+    let finished = 0;
 
-    for (let index = 0; index < files.length; index += 1) {
-      const file = files[index]!;
-      const position = `${index + 1} of ${files.length}`;
-      setPutPercent(null);
-      setStatusText(`Requesting upload URL… (${position}: ${file.name})`);
+    const refreshProgress = () => {
+      const activeSum = filePercents.reduce<number>((sum, value) => sum + (value ?? 0), 0);
+      const overall = Math.round((finished * 100 + activeSum) / total);
+      setPutPercent(overall);
+      setStatusText(
+        finished === 0
+          ? `Uploading ${Math.min(ADMIN_UPLOAD_CONCURRENCY, total)} of ${total}…`
+          : `Uploading… ${finished} of ${total} finished`,
+      );
+    };
+
+    setPutPercent(0);
+    refreshProgress();
+
+    const outcomes = await mapPool(files, ADMIN_UPLOAD_CONCURRENCY, async (file, index) => {
       const onProgress = (progress: UploadProgress) => {
-        setPutPercent(progress.percent);
-        setStatusText(
-          progress.percent === null
-            ? `Uploading to R2… (${position}: ${file.name})`
-            : `Uploading to R2… ${progress.percent}% (${position}: ${file.name})`,
-        );
+        filePercents[index] = progress.percent ?? 0;
+        refreshProgress();
       };
       try {
         await (bucket === 'review'
@@ -81,11 +93,25 @@ export default function AdminPhotoUpload({
               onProgress,
             })
           : uploadPhoto({ file, bucket, onProgress }));
-        succeeded += 1;
+        finished += 1;
+        filePercents[index] = null;
+        refreshProgress();
+        return { ok: true } satisfies FileUploadOutcome;
       } catch (error) {
-        failures.push(`${file.name}: ${errorMessage(error)}`);
+        finished += 1;
+        filePercents[index] = null;
+        refreshProgress();
+        return {
+          ok: false,
+          message: `${file.name}: ${errorMessage(error)}`,
+        } satisfies FileUploadOutcome;
       }
-    }
+    });
+
+    const succeeded = outcomes.filter((outcome) => outcome.ok).length;
+    const failures = outcomes
+      .filter((outcome): outcome is { ok: false; message: string } => !outcome.ok)
+      .map((outcome) => outcome.message);
 
     setPutPercent(null);
     if (succeeded > 0) {

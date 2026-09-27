@@ -92,6 +92,8 @@
   },
   "allowScripts": {
     "esbuild": true,
-    "sharp@0.35.4": true
+    "sharp@0.35.4": true,
+    "workerd": true,
+    "@sentry/cli": true
   }
 }

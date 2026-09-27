@@ -2,7 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import AdminPhotoUpload from './AdminPhotoUpload.tsx';
+import AdminPhotoUpload, { ADMIN_UPLOAD_CONCURRENCY } from './AdminPhotoUpload.tsx';
 
 const uploadPhoto = vi.hoisted(() => vi.fn());
 
@@ -15,39 +15,53 @@ function imageFile(name: string): File {
 }
 
 describe('AdminPhotoUpload', () => {
-  it('uploads multiple portfolio files sequentially and reports a summary', async () => {
+  it('uploads multiple portfolio files with bounded concurrency and reports a summary', async () => {
     const user = userEvent.setup();
     const onSuccess = vi.fn();
+    let inFlight = 0;
+    let maxInFlight = 0;
     uploadPhoto.mockReset();
-    uploadPhoto.mockImplementation(async ({ file }: { file: File }) => ({
-      id: file.name,
-      bucket: 'portfolio',
-      status: 'ready',
-      variants: ['sm'],
-    }));
+    uploadPhoto.mockImplementation(async ({ file }: { file: File }) => {
+      inFlight += 1;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      await Promise.resolve();
+      inFlight -= 1;
+      return {
+        id: file.name,
+        bucket: 'portfolio',
+        status: 'ready',
+        variants: ['sm'],
+      };
+    });
 
     render(<AdminPhotoUpload bucket="portfolio" onSuccess={onSuccess} />);
 
+    const files = Array.from({ length: 7 }, (_, index) => imageFile(`${index}.jpg`));
     const input = screen.getByLabelText('Photos');
-    await user.upload(input, [imageFile('a.jpg'), imageFile('b.jpg')]);
+    await user.upload(input, files);
     await user.click(screen.getByRole('button', { name: 'Upload' }));
 
-    await waitFor(() => expect(uploadPhoto).toHaveBeenCalledTimes(2));
-    expect(uploadPhoto.mock.calls.map((call) => call[0].file.name)).toEqual(['a.jpg', 'b.jpg']);
-    expect(uploadPhoto.mock.calls.every((call) => call[0].bucket === 'portfolio')).toBe(true);
+    await waitFor(() => expect(uploadPhoto).toHaveBeenCalledTimes(7));
+    expect(maxInFlight).toBeLessThanOrEqual(ADMIN_UPLOAD_CONCURRENCY);
+    expect(maxInFlight).toBeGreaterThan(1);
     await waitFor(() => expect(onSuccess).toHaveBeenCalledTimes(1));
-    expect(await screen.findByText('2 uploads complete.')).toBeInTheDocument();
+    expect(await screen.findByText('7 uploads complete.')).toBeInTheDocument();
   });
 
   it('continues after a failure and still refreshes when some uploads succeed', async () => {
     const user = userEvent.setup();
     const onSuccess = vi.fn();
     uploadPhoto.mockReset();
-    uploadPhoto.mockRejectedValueOnce(new Error('R2 put failed')).mockResolvedValueOnce({
-      id: 'ok',
-      bucket: 'portfolio',
-      status: 'ready',
-      variants: ['sm'],
+    uploadPhoto.mockImplementation(async ({ file }: { file: File }) => {
+      if (file.name === 'bad.jpg') {
+        throw new Error('R2 put failed');
+      }
+      return {
+        id: 'ok',
+        bucket: 'portfolio',
+        status: 'ready',
+        variants: ['sm'],
+      };
     });
 
     render(<AdminPhotoUpload bucket="portfolio" onSuccess={onSuccess} />);
