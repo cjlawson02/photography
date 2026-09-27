@@ -2,7 +2,7 @@
  * Baseline security headers for HTML and API responses.
  * CSP is pragmatic: bundled scripts from `'self'`, inline scripts for Astro island
  * hydration (no nonce pipeline yet), optional Cloudflare Web Analytics beacon,
- * and Sentry browser ingest for admin (`initAdminSentry`).
+ * Sentry browser ingest for admin (`initAdminSentry`), and R2 presigned uploads.
  */
 export function applySecurityHeaders(headers: Headers): void {
   headers.set('Content-Security-Policy', buildContentSecurityPolicy());
@@ -23,7 +23,8 @@ function buildContentSecurityPolicy(): string {
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob:",
     // Sentry browser SDK (admin) — regional ingest hosts; tunnel optional later.
-    "connect-src 'self' https://cloudflareinsights.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.ingest.de.sentry.io",
+    // R2 virtual-hosted presigned PUT/GET (admin ingest + original fetch).
+    "connect-src 'self' https://cloudflareinsights.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://*.ingest.de.sentry.io https://*.r2.cloudflarestorage.com",
   ];
   return directives.join('; ');
 }

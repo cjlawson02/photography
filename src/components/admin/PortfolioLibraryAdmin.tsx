@@ -151,7 +151,7 @@ function PortfolioLibraryAdminInner({ initialPortfolioPage }: PortfolioLibraryAd
         <AdminPhotoUpload
           bucket="portfolio"
           onSuccess={async () => {
-            pushToast('Upload complete — new photos appear as they finish processing.');
+            pushToast('Upload finished — new photos appear as they finish processing.');
             await actions.invalidateLibrary();
           }}
         />

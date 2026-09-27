@@ -29,6 +29,7 @@ describe('applySecurityHeaders', () => {
     expect(csp).toContain('https://*.ingest.sentry.io');
     expect(csp).toContain('https://*.ingest.us.sentry.io');
     expect(csp).toContain('https://*.ingest.de.sentry.io');
+    expect(csp).toContain('https://*.r2.cloudflarestorage.com');
     expect(csp).toContain("img-src 'self' data: blob:");
   });
 });
