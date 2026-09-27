@@ -85,6 +85,7 @@ npx wrangler deploy
 ## Commit and PR guidelines
 
 - CI must pass before merge ([`.github/workflows/ci-cd.yml`](../.github/workflows/ci-cd.yml)); local: `npm run ci`.
+- **Pre-commit:** `.githooks/pre-commit` runs `npm run ci` (enabled by `npm install` / `prepare` → `scripts/install-git-hooks.mjs`). Skip once with `git commit --no-verify`.
 - `main` deploys the Worker via GitHub Actions when Cloudflare secrets are configured ([DEPLOY.md](docs/DEPLOY.md#6-github-actions-cicd)).
 
 ## Documentation

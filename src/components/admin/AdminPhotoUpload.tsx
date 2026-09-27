@@ -97,9 +97,7 @@ export default function AdminPhotoUpload({
           }
 
           if (failures.length === 0) {
-            setStatusText(
-              succeeded === 1 ? 'Upload complete.' : `${succeeded} uploads complete.`,
-            );
+            setStatusText(succeeded === 1 ? 'Upload complete.' : `${succeeded} uploads complete.`);
           } else if (succeeded === 0) {
             setStatusText(`All uploads failed. ${failures[0]}`);
           } else {

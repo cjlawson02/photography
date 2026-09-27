@@ -136,7 +136,7 @@ Workflow: [`.github/workflows/ci-cd.yml`](../.github/workflows/ci-cd.yml).
 
 Worker **secrets** (`R2_*`, optional `SENTRY_DSN`) stay on Cloudflare; CI does not upload them. **Vars:** `CF_ACCESS_*` in [`wrangler.jsonc`](../wrangler.jsonc); deploy also sets `SENTRY_RELEASE` to the commit SHA (`github.sha`) via `wrangler deploy --var`. **Push to `main`** runs remote D1 migrations in the deploy job before the Worker deploy. For local or emergency apply without deploy: `npx wrangler d1 migrations apply photography --remote`.
 
-Local parity: `npm run ci`.
+Local parity: `npm run ci` (also runs on every commit via `.githooks/pre-commit` after `npm install`).
 
 Optional: create a GitHub **environment** named `production` on the repo if you want deployment approval gates; the deploy job references `environment: production`.
 

@@ -45,14 +45,12 @@ describe('AdminPhotoUpload', () => {
     const user = userEvent.setup();
     const onSuccess = vi.fn();
     uploadPhoto.mockReset();
-    uploadPhoto
-      .mockRejectedValueOnce(new Error('R2 put failed'))
-      .mockResolvedValueOnce({
-        id: 'ok',
-        bucket: 'portfolio',
-        status: 'ready',
-        variants: ['sm'],
-      });
+    uploadPhoto.mockRejectedValueOnce(new Error('R2 put failed')).mockResolvedValueOnce({
+      id: 'ok',
+      bucket: 'portfolio',
+      status: 'ready',
+      variants: ['sm'],
+    });
 
     const { container } = render(<AdminPhotoUpload bucket="portfolio" onSuccess={onSuccess} />);
 
