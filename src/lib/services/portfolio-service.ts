@@ -21,7 +21,6 @@ export type PublicPortfolioPhoto = {
   hero: boolean;
   alt: string | null;
   title: string | null;
-  caption: string | null;
   /** Natural pixels from ingest Images `info()`; null until complete. */
   width: number | null;
   height: number | null;
@@ -218,7 +217,6 @@ function toPublicPortfolioPhoto(
     hero: row.hero,
     alt: row.alt,
     title: row.title,
-    caption: row.caption,
     width: row.width,
     height: row.height,
     galleryUrl: portfolioVariantPublicUrl(row.id, GALLERY_VARIANT.suffix, row.updatedAt),

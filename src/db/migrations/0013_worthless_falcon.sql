@@ -1,0 +1,1 @@
+ALTER TABLE `PortfolioPhotos` DROP COLUMN `caption`;

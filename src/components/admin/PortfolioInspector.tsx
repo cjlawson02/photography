@@ -93,7 +93,6 @@ export default function PortfolioInspector({
     defaultValues: {
       alt: textValue(summary.alt),
       title: textValue(summary.title),
-      caption: textValue(summary.caption),
       sortOrder: textValue(summary.sortOrder),
     },
   });
@@ -122,7 +121,6 @@ export default function PortfolioInspector({
         {
           alt: summary.alt.mixed ? null : textValue(summary.alt),
           title: summary.title.mixed ? null : textValue(summary.title),
-          caption: summary.caption.mixed ? null : textValue(summary.caption),
           sortOrder: summary.sortOrder.mixed ? null : textValue(summary.sortOrder),
         },
         (field) => getValues(field),
@@ -243,7 +241,6 @@ export default function PortfolioInspector({
 
       {textField('alt', 'Alt text (required for the front page)')}
       {textField('title', 'Title')}
-      {textField('caption', 'Caption', { multiline: true })}
 
       <fieldset disabled={busy} className="min-w-0 border-0 p-0">
         <legend className={`text-xs ${adminClass.fg}`}>

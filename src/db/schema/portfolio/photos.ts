@@ -50,10 +50,8 @@ export const PortfolioPhotos = sqliteTable(
     height: integer('height', { mode: 'number' }),
     /** Accessible description for public `<img alt>` and lightbox; null until set in admin. */
     alt: text('alt'),
-    /** Optional display title (lightbox / future captions); null when unset. */
+    /** Optional display title (lightbox); null when unset. */
     title: text('title'),
-    /** Optional longer caption; null when unset. */
-    caption: text('caption'),
     /** Promote provenance — review photo copied into portfolio (A6). */
     sourceReviewPhotoId: text('sourceReviewPhotoId'),
   },

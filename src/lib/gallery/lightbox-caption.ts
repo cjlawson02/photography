@@ -2,7 +2,6 @@ import type { GalleryLightboxItem } from './lightbox.ts';
 
 export type GalleryLightboxCaptionParts = {
   title?: string;
-  body?: string;
 };
 
 /** Alt string used for the slide image (matches `galleryItemFromPhoto`). */
@@ -11,24 +10,17 @@ export function gallerySlideAlt(photo: { alt?: string | null; title?: string | n
 }
 
 /**
- * Visible caption chrome: portfolio caption and/or title when it adds information beyond slide alt.
+ * Visible caption chrome: title when it adds information beyond slide alt.
  */
 export function galleryLightboxCaptionParts(
-  item: Pick<GalleryLightboxItem, 'alt' | 'title' | 'caption'>,
+  item: Pick<GalleryLightboxItem, 'alt' | 'title'>,
 ): GalleryLightboxCaptionParts | null {
   const alt = item.alt?.trim() ?? '';
   const title = item.title?.trim() ?? '';
-  const caption = item.caption?.trim() ?? '';
 
-  const showTitle = title.length > 0 && title !== alt;
-  const showCaption = caption.length > 0;
+  if (title.length === 0 || title === alt) return null;
 
-  if (!showTitle && !showCaption) return null;
-
-  return {
-    title: showTitle ? title : undefined,
-    body: showCaption ? caption : undefined,
-  };
+  return { title };
 }
 
 export function renderGalleryLightboxCaption(
@@ -50,12 +42,5 @@ export function renderGalleryLightboxCaption(
     titleEl.className = 'public-lightbox-caption__title';
     titleEl.textContent = parts.title;
     el.appendChild(titleEl);
-  }
-
-  if (parts.body) {
-    const bodyEl = document.createElement('p');
-    bodyEl.className = 'public-lightbox-caption__body';
-    bodyEl.textContent = parts.body;
-    el.appendChild(bodyEl);
   }
 }

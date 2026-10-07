@@ -82,7 +82,6 @@ export function fetchPortfolioCandidates(env = loadLegacyEnv()) {
 SELECT
   p.ID AS post_id,
   p.post_title AS title,
-  p.post_excerpt AS caption,
   p.menu_order AS menu_order,
   UNIX_TIMESTAMP(p.post_date) * 1000 AS post_date_ms,
   thumb.meta_value AS attachment_id,
@@ -118,7 +117,6 @@ ORDER BY p.menu_order ASC, p.post_date ASC;
       wpPostId: Number(row.post_id),
       wpAttachmentId: Number(attachmentId),
       title: row.title || null,
-      caption: row.caption || null,
       alt: row.alt_text || null,
       attachedFile: row.attached_file,
       tags,

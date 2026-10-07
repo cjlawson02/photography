@@ -27,7 +27,6 @@ type PortfolioPhotoPatch = {
   height?: number | null;
   alt?: string | null;
   title?: string | null;
-  caption?: string | null;
 };
 
 /** Portfolio photo DAO — insert/get/update for ingest + catalog. */

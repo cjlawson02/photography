@@ -18,30 +18,14 @@ describe('gallerySlideAlt', () => {
 
 describe('galleryLightboxCaptionParts', () => {
   it('returns null when there is nothing to show', () => {
-    expect(galleryLightboxCaptionParts({ alt: 'Same', title: 'Same', caption: '' })).toBeNull();
-    expect(galleryLightboxCaptionParts({ alt: 'Only alt', title: '', caption: '' })).toBeNull();
-  });
-
-  it('shows caption only', () => {
-    expect(
-      galleryLightboxCaptionParts({ alt: 'Alt', title: 'Alt', caption: 'A longer caption.' }),
-    ).toEqual({ body: 'A longer caption.' });
+    expect(galleryLightboxCaptionParts({ alt: 'Same', title: 'Same' })).toBeNull();
+    expect(galleryLightboxCaptionParts({ alt: 'Only alt', title: '' })).toBeNull();
   });
 
   it('shows title when distinct from alt', () => {
-    expect(
-      galleryLightboxCaptionParts({ alt: 'Short alt', title: 'Formal title', caption: '' }),
-    ).toEqual({ title: 'Formal title' });
-  });
-
-  it('shows title and caption together', () => {
-    expect(
-      galleryLightboxCaptionParts({
-        alt: 'Alt',
-        title: 'Title',
-        caption: 'Caption body',
-      }),
-    ).toEqual({ title: 'Title', body: 'Caption body' });
+    expect(galleryLightboxCaptionParts({ alt: 'Short alt', title: 'Formal title' })).toEqual({
+      title: 'Formal title',
+    });
   });
 });
 
@@ -53,11 +37,10 @@ describe('renderGalleryLightboxCaption', () => {
     expect(el.childElementCount).toBe(0);
   });
 
-  it('renders title and body with expected classes', () => {
+  it('renders title with expected class', () => {
     const el = document.createElement('figcaption');
-    renderGalleryLightboxCaption(el, { title: 'T', body: 'B' });
+    renderGalleryLightboxCaption(el, { title: 'T' });
     expect(el.hidden).toBe(false);
     expect(el.querySelector('.public-lightbox-caption__title')?.textContent).toBe('T');
-    expect(el.querySelector('.public-lightbox-caption__body')?.textContent).toBe('B');
   });
 });

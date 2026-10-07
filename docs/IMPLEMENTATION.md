@@ -137,7 +137,7 @@ Hardening and polish after MVP ([#21](https://github.com/cjlawson02/photography/
 | S4 | Delete / revoke ordering | **Done** — R2 batch delete; R2-before-D1 ([#30](https://github.com/cjlawson02/photography/pull/30)) |
 | S6 | Security headers | **Done** — middleware + CSP (Astro inline + Cloudflare beacon) ([#25](https://github.com/cjlawson02/photography/pull/25), [#43](https://github.com/cjlawson02/photography/pull/43)) |
 | P1 | Ingest dimensions | **Done** — ingest + public galleries ([#31](https://github.com/cjlawson02/photography/pull/31), [#34](https://github.com/cjlawson02/photography/pull/34)) |
-| P2 | Portfolio alt / title / caption | **Done** — migration `0004_*` ([#36](https://github.com/cjlawson02/photography/pull/36)); public PhotoSwipe caption UI (`public-lightbox-caption`, title when distinct from alt) |
+| P2 | Portfolio alt / title | **Done** — migration `0004_*` ([#36](https://github.com/cjlawson02/photography/pull/36)); caption dropped in `0013_*`; public PhotoSwipe title UI (`public-lightbox-caption`, title when distinct from alt) |
 | P3 | Admin empty states | **Done** ([#39](https://github.com/cjlawson02/photography/pull/39)) |
 | P4 | Upload UX | **Done** — progress bar ([#40](https://github.com/cjlawson02/photography/pull/40)); inline upload ([#45](https://github.com/cjlawson02/photography/pull/45)) |
 | P5 | Review lifecycle | **Done (partial)** — collection update ([#41](https://github.com/cjlawson02/photography/pull/41)); delete review photo ([#42](https://github.com/cjlawson02/photography/pull/42)) |

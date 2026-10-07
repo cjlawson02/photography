@@ -105,7 +105,6 @@ export const reviewCollectionExpiresFieldSchema = z
 export const portfolioInspectorFormSchema = z.object({
   alt: z.string(),
   title: z.string(),
-  caption: z.string(),
   sortOrder: z.string().regex(/^\s*(-?\d+)?\s*$/, 'Use a whole number, or leave empty.'),
 });
 
@@ -157,7 +156,6 @@ export function portfolioInspectorPatchFromField(
 ):
   | { alt: string | null }
   | { title: string | null }
-  | { caption: string | null }
   | {
       sortOrder: number | null;
     } {
@@ -169,8 +167,6 @@ export function portfolioInspectorPatchFromField(
       return { alt: text };
     case 'title':
       return { title: text };
-    case 'caption':
-      return { caption: text };
   }
 }
 

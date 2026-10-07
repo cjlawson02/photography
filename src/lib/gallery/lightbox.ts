@@ -14,7 +14,6 @@ export type GalleryLightboxItem = {
   height: number;
   alt?: string;
   title?: string;
-  caption?: string;
 };
 
 /** Matches ingest gallery variant width; height is provisional until EXIF is stored. */
@@ -24,29 +23,21 @@ export const DEFAULT_GALLERY_HEIGHT = 1200;
 let activeLightbox: PhotoSwipe | null = null;
 
 const CAPTION_GAP_PX = 14;
-/** Must track `.public-lightbox-caption__title` / `__body` line boxes in global.css. */
+/** Must track `.public-lightbox-caption__title` line box in global.css. */
 const CAPTION_TITLE_BLOCK_PX = 30;
-const CAPTION_BODY_LINE_PX = 24;
-const CAPTION_BODY_CHAR_PX = 8.5;
 
-/** Approximate rendered caption height so image + caption center as one block. */
-function captionReserve(item: GalleryLightboxItem, textWidth: number): number {
+/** Approximate rendered caption height so image + title center as one block. */
+function captionReserve(item: GalleryLightboxItem): number {
   const parts = galleryLightboxCaptionParts(item);
-  if (!parts) return 0;
-  let height = CAPTION_GAP_PX;
-  if (parts.title) height += CAPTION_TITLE_BLOCK_PX;
-  if (parts.body) {
-    const charsPerLine = Math.max(20, Math.floor(textWidth / CAPTION_BODY_CHAR_PX));
-    height += Math.min(3, Math.ceil(parts.body.length / charsPerLine)) * CAPTION_BODY_LINE_PX;
-  }
-  return height;
+  if (!parts?.title) return 0;
+  return CAPTION_GAP_PX + CAPTION_TITLE_BLOCK_PX;
 }
 
 function lightboxPadding(viewport: { x: number; y: number }, item: GalleryLightboxItem) {
   const compact = viewport.x < 640;
   const side = compact ? 10 : Math.round(viewport.x * 0.06);
   const edge = compact ? 48 : Math.round(viewport.y * 0.04);
-  const reserve = captionReserve(item, viewport.x - side * 2);
+  const reserve = captionReserve(item);
   return { left: side, right: side, top: edge, bottom: edge + reserve };
 }
 
@@ -147,18 +138,15 @@ export function galleryItemFromPhoto(photo: {
   title?: string | null;
   width?: number | null;
   height?: number | null;
-  caption?: string | null;
 }): GalleryLightboxItem {
   const { width, height } = galleryDisplayDimensions(photo);
   const alt = gallerySlideAlt(photo);
   const title = photo.title?.trim() || undefined;
-  const caption = photo.caption?.trim() || undefined;
   return {
     src: photo.galleryUrl,
     width,
     height,
     alt,
     title,
-    caption,
   };
 }

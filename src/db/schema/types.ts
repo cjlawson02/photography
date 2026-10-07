@@ -62,7 +62,6 @@ export const portfolioPhotoSelectSchema = createSelectSchema(PortfolioPhotos, {
   height: z.number().int().nullable(),
   alt: z.string().nullable(),
   title: z.string().nullable(),
-  caption: z.string().nullable(),
 });
 
 export const portfolioPhotoInsertSchema = createInsertSchema(PortfolioPhotos, {
@@ -79,7 +78,6 @@ export const portfolioPhotoInsertSchema = createInsertSchema(PortfolioPhotos, {
   height: z.number().int().nullable().optional(),
   alt: optionalTrimmedString.nullable().optional(),
   title: optionalTrimmedString.nullable().optional(),
-  caption: optionalTrimmedString.nullable().optional(),
 }).omit(immutableTimestamps);
 
 export const portfolioPhotoUpdateSchema = createUpdateSchema(PortfolioPhotos, {
@@ -96,7 +94,6 @@ export const portfolioPhotoUpdateSchema = createUpdateSchema(PortfolioPhotos, {
   height: z.number().int().nullable().optional(),
   alt: optionalTrimmedString.nullable().optional(),
   title: optionalTrimmedString.nullable().optional(),
-  caption: optionalTrimmedString.nullable().optional(),
 }).omit(updateOmitImmutable);
 
 export const reviewCollectionSelectSchema = createSelectSchema(ReviewCollections, {

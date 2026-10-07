@@ -141,7 +141,6 @@ export default function HeroCarousel({ photos }: Props) {
 
   const pauseLabel = autoplayEnabled ? 'Pause automatic slide show' : 'Resume automatic slide show';
   const currentTitle = current?.title?.trim();
-  const currentCaption = current?.caption?.trim();
   const currentTags = current ? formatPortfolioTags(current.tags) : '';
 
   return (
@@ -185,9 +184,6 @@ export default function HeroCarousel({ photos }: Props) {
           <div key={selected} className="public-hero__card">
             {currentTags ? <p className="public-hero__category">{currentTags}</p> : null}
             {currentTitle ? <p className="public-hero__title">{currentTitle}</p> : null}
-            {currentCaption && currentCaption !== currentTitle ? (
-              <p className="public-hero__caption">{currentCaption}</p>
-            ) : null}
           </div>
           <a href="#gallery" className="public-hero__cta">
             <span>View the gallery</span>

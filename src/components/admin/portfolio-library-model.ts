@@ -84,7 +84,6 @@ export function portfolioPhotoBadges(photo: AdminPortfolioPhoto): PhotoBadge[] {
 export const INSPECTOR_FIELDS = [
   'alt',
   'title',
-  'caption',
   'tags',
   'priority',
   'published',
@@ -121,7 +120,6 @@ export function summarizeSelection(photos: readonly AdminPortfolioPhoto[]): Sele
   return {
     alt: summarize(photos, 'alt'),
     title: summarize(photos, 'title'),
-    caption: summarize(photos, 'caption'),
     tags: summarize(photos, 'tags'),
     priority: summarize(photos, 'priority'),
     published: summarize(photos, 'published'),

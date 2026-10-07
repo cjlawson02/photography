@@ -77,7 +77,6 @@ export function makeAdminPortfolioPhoto(
     sourceReviewPhotoId: overrides.sourceReviewPhotoId ?? null,
     alt: overrides.alt ?? null,
     title: overrides.title ?? 'Sunset',
-    caption: overrides.caption ?? null,
     mimeType: overrides.mimeType ?? 'image/jpeg',
     width: overrides.width ?? 4000,
     height: overrides.height ?? 3000,

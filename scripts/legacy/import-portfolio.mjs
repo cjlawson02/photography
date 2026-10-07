@@ -62,7 +62,7 @@ async function encodeVariants(sourcePath) {
 function insertSql(row) {
   const now = Date.now();
   return `INSERT INTO PortfolioPhotos (
-    id, createdAt, updatedAt, status, mimeType, published, category, sortOrder, hero, width, height, alt, title, caption
+    id, createdAt, updatedAt, status, mimeType, published, category, sortOrder, hero, width, height, alt, title
   ) VALUES (
     ${sqlString(row.id)},
     ${now},
@@ -76,8 +76,7 @@ function insertSql(row) {
     ${row.width == null ? 'NULL' : Number(row.width)},
     ${row.height == null ? 'NULL' : Number(row.height)},
     ${sqlString(row.alt)},
-    ${sqlString(row.title)},
-    ${sqlString(row.caption)}
+    ${sqlString(row.title)}
   );`;
 }
 
@@ -171,7 +170,6 @@ async function main() {
         height: encoded.height,
         alt: c.alt,
         title: c.title,
-        caption: c.caption,
       }),
     );
 

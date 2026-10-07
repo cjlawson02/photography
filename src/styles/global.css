@@ -764,14 +764,6 @@ h6 {
   text-transform: uppercase;
 }
 
-.public-hero__caption {
-  color: rgb(236 232 225 / 85%);
-  font-size: clamp(1rem, 1.3vw, 1.15rem);
-  line-height: 1.5;
-  margin: 0.75rem 0 0;
-  max-width: 36rem;
-}
-
 .public-hero__cta {
   align-items: center;
   background: var(--color-accent);
@@ -1703,11 +1695,4 @@ h6 {
   line-height: 1.5;
   margin: 0 0 0.35rem;
   text-transform: uppercase;
-}
-
-.public-lightbox-caption__body {
-  color: var(--color-fg-muted);
-  font-size: 1rem;
-  line-height: 1.5;
-  margin: 0;
 }

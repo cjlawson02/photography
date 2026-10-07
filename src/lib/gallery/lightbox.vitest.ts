@@ -24,7 +24,6 @@ describe('galleryItemFromPhoto', () => {
       galleryUrl: '/media/portfolio/x/gallery.webp',
       alt: ' Alt ',
       title: ' Title ',
-      caption: ' Caption ',
       width: 800,
       height: 600,
     });
@@ -35,7 +34,6 @@ describe('galleryItemFromPhoto', () => {
       height: 600,
       alt: 'Alt',
       title: 'Title',
-      caption: 'Caption',
     });
   });
 

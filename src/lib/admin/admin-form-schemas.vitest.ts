@@ -88,7 +88,7 @@ describe('reviewPurgeRoundsFormSchema', () => {
 
 describe('portfolioInspectorFormSchema', () => {
   it('accepts whole numbers or empty sort order', () => {
-    const base = { alt: '', title: '', caption: '' };
+    const base = { alt: '', title: '' };
     expect(portfolioInspectorFormSchema.safeParse({ ...base, sortOrder: ' 12 ' }).success).toBe(
       true,
     );
@@ -100,7 +100,7 @@ describe('portfolioInspectorFormSchema', () => {
 
   it('maps fields to trimmed nullable patches', () => {
     expect(portfolioInspectorPatchFromField('alt', '  Dunes ')).toEqual({ alt: 'Dunes' });
-    expect(portfolioInspectorPatchFromField('caption', '   ')).toEqual({ caption: null });
+    expect(portfolioInspectorPatchFromField('title', '   ')).toEqual({ title: null });
     expect(portfolioInspectorPatchFromField('sortOrder', ' -3 ')).toEqual({ sortOrder: -3 });
   });
 });

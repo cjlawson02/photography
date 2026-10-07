@@ -12,7 +12,6 @@ describe('selectHeroPhotos', () => {
     hero: false,
     alt: null,
     title: null,
-    caption: null,
     width: null,
     height: null,
     galleryUrl: '/media/portfolio/a/gallery.webp',
