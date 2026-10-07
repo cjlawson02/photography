@@ -71,7 +71,7 @@ npx wrangler deploy
 
 ## Testing instructions
 
-- Phase 0 / manual smoke: [docs/SMOKE.md](docs/SMOKE.md)
+- Manual smoke: [docs/SMOKE.md](docs/SMOKE.md)
 - Auth, tRPC mount, admin JWT: [docs/HLD.md#admin-auth](docs/HLD.md#admin-auth)
 - Unit: `npm test` — **Vitest jsdom** (`src/**/*.vitest.{ts,tsx}`), **Vitest node** (`src/**/*.server.vitest.ts`), **Vitest workerd** (`src/**/*.workers.vitest.ts` via `@cloudflare/vitest-plugin`). End-to-end upload against live R2/Images `_TBD_` until Access + CORS + secrets are set.
 - Ingest tip: `AppEnv.from` on **`ingest.*` only** fail-fast (503) without R2 S3 secrets; other admin tRPC is bindings-only and returns **403** without JWT. Local secrets: [`.dev.vars.example`](.dev.vars.example) → `.dev.vars` ([DEPLOY.md](docs/DEPLOY.md)).
@@ -108,12 +108,9 @@ Human doc index: [README.md](README.md). Agent-focused shortcuts:
 | Need                                  | Read                                                                         |
 | ------------------------------------- | ---------------------------------------------------------------------------- |
 | Architecture / auth / ingest          | [docs/HLD.md](docs/HLD.md)                                                   |
-| Phase tasks / backlog IDs             | [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md)                             |
-| Estimates                             | [docs/LOE.md](docs/LOE.md)                                                   |
-| Status / Gantt / changelog            | [docs/PROGRESS.md](docs/PROGRESS.md)                                         |
+| Open backlog                          | [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md)                             |
 | Deploy / Access / secrets / CORS / CI | [docs/DEPLOY.md](docs/DEPLOY.md)                                             |
 | Manual smoke                          | [docs/SMOKE.md](docs/SMOKE.md)                                               |
-| Cutover runbook                       | [docs/CUTOVER.md](docs/CUTOVER.md)                                           |
 | Public React islands                  | [docs/FRONTEND.md](docs/FRONTEND.md)                                         |
 | Admin product UX                      | [docs/ADMIN-UX.md](docs/ADMIN-UX.md)                                         |
 | Legacy import                         | [docs/migration/legacy-bulk-import.md](docs/migration/legacy-bulk-import.md) |

@@ -1,8 +1,8 @@
-# Legacy bulk import (Phase 5 / T7)
+# Legacy bulk import
 
-Checklist for moving portfolio content from the legacy WordPress site into Workers + D1 + R2.
+Checklist for the one-time move of portfolio content from the legacy WordPress site into Workers + D1 + R2.
 
-**Portfolio production import:** **Done** (Chris, 2026-09-26) — **34** published posts (FooGallery/Picu excluded). Formal cutover steps: [CUTOVER.md § Cutover sequence (after migration)](../CUTOVER.md#cutover-sequence-after-migration).
+**Portfolio production import:** **Done** (Chris, 2026-09-26) — **34** published posts (FooGallery/Picu excluded). Production host and rollback: [DEPLOY.md](../DEPLOY.md). Ongoing portfolio edits use admin ingest.
 
 ## Source (confirmed)
 
@@ -78,4 +78,4 @@ Idempotency: `.legacy-export/import-manifest.json` keyed by WP attachment id **p
 - NextGEN galleries under `wp-content/gallery/`
 - FooGallery media-library dump (not homepage posts)
 - WordPress permalink → new URL redirect map (beyond zone-level 301)
-- Deleting legacy hosting
+- Legacy hosting decommission (done separately — [DEPLOY.md](../DEPLOY.md#production-and-rollback))

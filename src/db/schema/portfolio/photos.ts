@@ -7,7 +7,7 @@ import type { PortfolioCategory } from './categories.ts';
 
 /**
  * Portfolio photo rows — public-site catalog → PORTFOLIO R2.
- * Minimal columns until HLD locks product fields; R2 keys derive from `id`.
+ * R2 keys derive from `id`.
  */
 export const PortfolioPhotos = sqliteTable(
   'PortfolioPhotos',

@@ -2,7 +2,7 @@
  * Portfolio domain schema module.
  *
  * Owns public-site catalog metadata that points at the PORTFOLIO R2 bucket.
- * Exact product columns beyond the minimal photo row remain `_TBD_` in HLD.
+ * Column definitions in this module are canonical (HLD points here).
  *
  * Do not import or join review-domain tables from here.
  */

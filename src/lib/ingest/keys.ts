@@ -1,12 +1,12 @@
 /**
  * R2 key prefixes inside each purpose bucket (HLD).
  * Keys are always derived from D1 photo `id` — never stored as a separate column.
- * Variant set is provisional until HLD locks widths/formats.
+ * Variant widths/formats are owned here; HLD points at this file.
  */
 
 export const ORIGINAL_SUFFIX = 'original';
 
-/** Provisional ingest variants — not yet locked in HLD. */
+/** Ingest variants written beside each original. */
 export const VARIANT_SPECS = [
   { suffix: 'gallery.webp', width: 1600, contentType: 'image/webp' as const },
   { suffix: 'thumb.webp', width: 400, contentType: 'image/webp' as const },

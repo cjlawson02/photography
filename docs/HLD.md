@@ -2,13 +2,13 @@
 
 ## Overview
 
-Rebuild [lawsonphotography.me](https://www.lawsonphotography.me/) on the Cloudflare Developer Platform, replacing the self-hosted LEMP WordPress stack. Public portfolio (hero carousel + filterable galleries), authenticated admin for photo management, and phase-1 client review collections — portfolio and proofing in separate private R2 buckets and separate D1 table domains, app as Astro hybrid SSR on **Workers** (not Pages).
+Photography site for Chris Lawson on the Cloudflare Developer Platform. Production host: `https://photography.chrislawson.dev` ([DEPLOY.md](DEPLOY.md)). Public portfolio (hero carousel + filterable galleries), authenticated admin for photo management, and phase-1 client review collections — portfolio and proofing in separate private R2 buckets and separate D1 table domains, app as Astro hybrid SSR on **Workers** (not Pages). Legacy WordPress (`lawsonphotography.me`) 301s here.
 
 ## Goals
 
 - Host the site entirely on Cloudflare (Workers, R2, D1, Images Free)
 - Keep photos out of git; manage via admin UI against R2 + D1
-- Match the live site’s UX DNA: hero carousel, category filters, lightbox, sticky header/logo, familiar palette cues
+- Keep the former site’s UX DNA: hero carousel, category filters, lightbox, sticky header/logo, familiar palette cues
 - Support client image review (select/approve) without WordPress/Picu
 - Isolate proofing from portfolio: separate private R2 buckets **and** separate D1 table domains (Picu-style workflow does not share portfolio photo rows)
 - Prefer hobby-friendly cost: Images Free transforms at ingest, not hosted Images storage
@@ -24,7 +24,7 @@ Rebuild [lawsonphotography.me](https://www.lawsonphotography.me/) on the Cloudfl
 - Password or token gate on client review (phase 1)
 - In-app admin login / third-party IdP (Cloudflare Access only)
 - Ecommerce / full Picu Pro feature parity
-- Estimates, phased task plans, or cutover runbooks (see [IMPLEMENTATION.md](IMPLEMENTATION.md) / [LOE.md](LOE.md) when filled)
+- Open backlog or deploy/rollback procedure (see [IMPLEMENTATION.md](IMPLEMENTATION.md) / [DEPLOY.md](DEPLOY.md))
 
 ## Architecture
 
@@ -117,7 +117,7 @@ Why split portfolio vs review:
 ### Ingest (same pattern per bucket)
 
 1. Admin asks Worker for a **presigned PUT** into `PORTFOLIO` or `REVIEW`
-2. Browser uploads the original, then calls the Worker completion callback (**v1 default**; other triggers `_TBD_`)
+2. Browser uploads the original, then calls the Worker completion callback (v1; other triggers [open](#open-questions))
 3. Worker runs **Images Free** once, then **puts** fixed variant bytes beside the original in R2
 4. D1 row marked ready; pages fetch variants via Worker delivery
 
@@ -125,12 +125,12 @@ A photo may move to **failed** and be **reprocessed** from the original; no full
 
 **Stale `pending` hygiene** — presign TTL is one hour (`3600s`); rows still `pending` after TTL plus a one-hour grace (`PENDING_INGEST_STALE_MS` in `src/lib/ingest/stale-pending.ts`) are treated as abandoned ingest. Cleanup runs **lazily** on admin `portfolio.list` and `review.collections.list` (background `waitUntil` → `IngestMaintenanceService.cleanupStalePending()`), plus manual **Clean up stale pending** on portfolio admin (`ingest.cleanupStalePending`). No D1 row TTL; no Cron Trigger.
 
-**Metadata (D1)** — one database, **two domain boundaries** in Drizzle (exact columns `_TBD_`):
+**Metadata (D1)** — one database, **two domain boundaries** in Drizzle. Columns live in schema, not here: [`src/db/schema/portfolio/`](../src/db/schema/portfolio/) (`PortfolioPhotos`) and [`src/db/schema/review/`](../src/db/schema/review/) (`ReviewCollections`, `ReviewPhotos`).
 
-| Domain | Tables (illustrative) | Owns |
-| --- | --- | --- |
-| **Portfolio** | albums/categories, portfolio photos, publish/hero/sort flags | Public site catalog → `PORTFOLIO` R2 |
-| **Review (Picu)** | review collections, review photos, selections/approvals | Proofing workflow → `REVIEW` R2 |
+| Domain | Owns |
+| --- | --- |
+| **Portfolio** | Public site catalog → `PORTFOLIO` R2 |
+| **Review (Picu)** | Proofing workflow → `REVIEW` R2 |
 
 Keep review as its **own table set** (and Drizzle schema module, e.g. `src/db/schema/review/`). Do **not** reuse portfolio photo rows for client collections — no shared “photos” table across domains. Foreign keys stay inside a domain; promoting a selected review image into the portfolio is an explicit copy/import, not a join across domains. Client-shoot job steps, delivery round, and front-page curation: [ADMIN-UX.md](ADMIN-UX.md) (do not restate here).
 
@@ -181,12 +181,10 @@ Do not use a public R2 custom domain for review. Portfolio may revisit a public 
 
 ## Open Questions
 
-- Exact column-level D1 schema within portfolio vs review domains — `_TBD_`
-- Public IA & portfolio model — which pages/sections ship in v1? Album vs single-image vs mixed? — `_TBD_`
-- Ingest variant set — which widths/formats after Images Free compress-once? — `_TBD_`
-- Post-upload trigger alternatives (R2 event notification, admin “process” action) — `_TBD_`; **v1 default:** browser completion callback after successful PUT
+- Public IA beyond home — extra routes; album vs single-image vs mixed — `_TBD_`
+- Post-upload trigger alternatives (R2 event notification, admin “process” action) — `_TBD_`; **shipped default:** browser completion callback after successful PUT
 - Review collection TTL default — duration; purge-on-delete vs expiry-only (delivery already requires purge and/or shorter TTL hygiene) — `_TBD_`
-- Brand / visual direction — token values and type choices (Phase 0 can stub tokens first) — `_TBD_`
+- Brand / visual direction — further token and type polish — `_TBD_`
 - Whether review ever needs its own D1 database (default: no — table boundary only) — `_TBD_` only if isolation requirements change
 
-Resolved elsewhere (do not reopen as open design): legacy portfolio cutover source/counts — [migration/legacy-bulk-import.md](migration/legacy-bulk-import.md); admin mutations use tRPC under `/admin/api/trpc` ([Admin auth](#admin-auth)).
+Resolved elsewhere (do not reopen as open design): D1 columns — [`src/db/schema/`](../src/db/schema/); ingest variants — [`src/lib/ingest/keys.ts`](../src/lib/ingest/keys.ts); legacy portfolio import — [migration/legacy-bulk-import.md](migration/legacy-bulk-import.md); admin mutations use tRPC under `/admin/api/trpc` ([Admin auth](#admin-auth)); production host and rollback — [DEPLOY.md](DEPLOY.md).

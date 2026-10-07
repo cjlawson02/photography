@@ -1,6 +1,6 @@
 # Smoke tests (manual)
 
-Run after deploy or before cutover. Production host: `https://photography.chrislawson.dev` ([DEPLOY.md](DEPLOY.md)).
+Run after deploy. Production host: `https://photography.chrislawson.dev` ([DEPLOY.md](DEPLOY.md)).
 
 ## Public portfolio
 
@@ -26,5 +26,4 @@ Run after deploy or before cutover. Production host: `https://photography.chrisl
 
 ## Not covered here
 
-- Legacy content migration ([IMPLEMENTATION.md](IMPLEMENTATION.md#phase-5--cutover))
-- D1 remote migrations (`wrangler d1 migrations apply photography --remote`)
+- D1 remote migrations (`wrangler d1 migrations apply photography --remote`) — [DEPLOY.md](DEPLOY.md#5-d1-migrations-remote)

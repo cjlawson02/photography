@@ -1,6 +1,6 @@
 # Deploy & production hostname
 
-**Production host:** `https://photography.chrislawson.dev` — public site, admin (`/admin*`), and (later) client review at `/review/{slug}` on the same host.
+**Production host:** `https://photography.chrislawson.dev` — public site, admin (`/admin*`), and client review at `/review/{slug}` on the same host.
 
 Canonical architecture and delivery rules: [HLD.md](HLD.md). Agent commands: [AGENTS.md](../AGENTS.md). Secrets inventory: this doc + [`.dev.vars.example`](../.dev.vars.example).
 
@@ -143,3 +143,22 @@ Optional: create a GitHub **environment** named `production` on the repo if you 
 ## Smoke checks
 
 Full manual checklist: [SMOKE.md](SMOKE.md).
+
+## Production and rollback
+
+**Live:** `https://photography.chrislawson.dev`. Legacy `lawsonphotography.me` (+ `www`) **301**s here (Redirect Rules on the legacy zone). WordPress hosting is decommissioned — do not send public traffic back to it.
+
+**Owner:** Chris.
+
+| Trigger | Action |
+| --- | --- |
+| Critical regression on the new host | Redeploy the previous Worker version (`wrangler rollback` or redeploy a prior `main` SHA). Leave the production hostname in place. |
+| Legacy redirect wrong | Adjust Redirect Rules on the **legacy zone** only |
+| Bad D1 migration | Restore via D1 Time Travel / backup if available; otherwise last good migrate + redeploy |
+
+| Metric | Target |
+| --- | --- |
+| **RTO** | ~15–30 minutes for a Worker version rollback |
+| **RPO** | Last successful D1 write; no formal PITR SLA |
+
+Error monitoring: Workers Observability (`observability.enabled` in [`wrangler.jsonc`](../wrangler.jsonc)) and Sentry ([§3a](#3a-sentry-optional-worker-errors)). Optional: Cloudflare Notifications for Worker script errors or elevated 5xx.

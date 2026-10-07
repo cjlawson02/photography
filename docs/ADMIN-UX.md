@@ -1,6 +1,6 @@
 # Admin UX (v2)
 
-Canonical workflows and interaction patterns for `/admin`. Architecture and auth stay in [HLD.md](HLD.md). Hydration and libraries stay in [FRONTEND.md](FRONTEND.md). Sequencing for build work: [IMPLEMENTATION.md](IMPLEMENTATION.md#phase-26--admin-ux-v2). No UI or code in this doc — product and UX only.
+Canonical workflows and interaction patterns for `/admin`. Architecture and auth stay in [HLD.md](HLD.md). Hydration and libraries stay in [FRONTEND.md](FRONTEND.md). Open engineering work: [IMPLEMENTATION.md](IMPLEMENTATION.md). No UI or code in this doc — product and UX only.
 
 ## Practice profile
 
@@ -260,7 +260,7 @@ Mobile layouts · keyboard shortcut layer · saved filter views · command palet
 
 ## Domain and API implications
 
-Spec only — implement in later phases. Auth, bucket split, and promote-as-copy rules remain [HLD.md](HLD.md).
+Shipped with admin UX v2. Columns live in [`src/db/schema/`](../src/db/schema/); do not treat this table as open work. Auth, bucket split, and promote-as-copy rules remain [HLD.md](HLD.md).
 
 ### Schema
 
@@ -269,7 +269,7 @@ Spec only — implement in later phases. Auth, bucket split, and promote-as-copy
 | `ReviewCollections` | Add `personName`, `status` (job step), `sharedAt`, `submittedAt`, `deliveredAt`, `closedAt`, `notes`. **No** `Clients` table. |
 | Delivery round | `round: proof \| final` on `ReviewPhotos` + `matchedPickId` (see [D2](#open-decisions)). |
 | `ReviewPhotos` | Add `originalFilename` (presign already accepts filename; must persist for Lightroom export + final matching). |
-| Front-page set | `frontPage` + `frontPageOrder` columns **or** small ordered table — `_TBD_`. Keep `hero`. |
+| Front-page set | **Resolved:** `frontPage` + `frontPageOrder` on `PortfolioPhotos`. Keep `hero`. |
 | `PortfolioPhotos` | Add `sourceReviewPhotoId` (nullable) for promote provenance. |
 
 ### Admin tRPC (extensions)
@@ -299,12 +299,3 @@ Mark resolved here when decided; do not invent in IMPLEMENTATION.
 | D4 | Client notify | Copy ready-made message only (lean) vs email (no infra today) |
 | D5 | Upload tray shell | Page-scoped tray inside islands (lean) vs Astro `transition:persist` |
 | D6 | Password gate | Default **link secrecy** (friends); FIX-06 remains optional |
-
-## Phasing
-
-Sequencing only — estimates stay in [LOE.md](LOE.md).
-
-1. Client shoot job page (step rail) + picks submit + filename export.
-2. Delivery round + downloads (highest value; replaces Lightroom cloud galleries).
-3. Front-page curation (set, drag order, hero, grid + inspector).
-4. Home + promote-to-portfolio + close-out / retention.
