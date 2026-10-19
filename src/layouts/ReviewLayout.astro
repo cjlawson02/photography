@@ -3,13 +3,13 @@ import BaseLayout from './BaseLayout.astro';
 import { DEFAULT_SITE_DESCRIPTION } from '../lib/site/public-meta.ts';
 
 interface Props {
-	title?: string;
-	description?: string;
+  title?: string;
+  description?: string;
 }
 
 const { title, description = DEFAULT_SITE_DESCRIPTION } = Astro.props;
 ---
 
 <BaseLayout title={title} description={description} robots="noindex, nofollow">
-	<slot />
+  <slot />
 </BaseLayout>

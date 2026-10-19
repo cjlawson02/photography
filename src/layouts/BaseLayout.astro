@@ -4,21 +4,21 @@ import '../styles/global.css';
 import { DEFAULT_SITE_DESCRIPTION, SITE_NAME } from '../lib/site/public-meta.ts';
 
 interface Props {
-	title?: string;
-	description?: string;
-	/** Absolute URL for Open Graph / social previews. */
-	ogImage?: string;
-	canonical?: string;
-	/** When set, emitted as `<meta name="robots" …>` (e.g. review surfaces). */
-	robots?: string;
+  title?: string;
+  description?: string;
+  /** Absolute URL for Open Graph / social previews. */
+  ogImage?: string;
+  canonical?: string;
+  /** When set, emitted as `<meta name="robots" …>` (e.g. review surfaces). */
+  robots?: string;
 }
 
 const {
-	title = SITE_NAME,
-	description = DEFAULT_SITE_DESCRIPTION,
-	ogImage,
-	canonical,
-	robots,
+  title = SITE_NAME,
+  description = DEFAULT_SITE_DESCRIPTION,
+  ogImage,
+  canonical,
+  robots,
 } = Astro.props;
 
 const ogTitle = title;
@@ -27,37 +27,40 @@ const ogDescription = description;
 
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
-		<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
-		<link rel="icon" href="/favicon.ico" sizes="32x32" />
-		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-		<link rel="icon" type="image/png" href="/brand/icon.png" sizes="281x281" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="description" content={description} />
-		{canonical ? <link rel="canonical" href={canonical} /> : null}
-		<meta property="og:type" content="website" />
-		<meta property="og:title" content={ogTitle} />
-		<meta property="og:description" content={ogDescription} />
-		{canonical ? <meta property="og:url" content={canonical} /> : null}
-		{ogImage ? <meta property="og:image" content={ogImage} /> : null}
-		<meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
-		<meta name="twitter:title" content={ogTitle} />
-		<meta name="twitter:description" content={ogDescription} />
-		{robots ? <meta name="robots" content={robots} /> : null}
-		<meta name="generator" content={Astro.generator} />
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link
-			href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
-			rel="stylesheet"
-		/>
-		<title>{title}</title>
-	</head>
-	<body class="min-h-dvh" id="top">
-		<div class="flex min-h-dvh flex-col" style="background: var(--color-bg); color: var(--color-fg)">
-			<slot />
-		</div>
-	</body>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" href="/brand/icon.png" sizes="281x281" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    {canonical ? <link rel="canonical" href={canonical} /> : null}
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={ogTitle} />
+    <meta property="og:description" content={ogDescription} />
+    {canonical ? <meta property="og:url" content={canonical} /> : null}
+    {ogImage ? <meta property="og:image" content={ogImage} /> : null}
+    <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
+    <meta name="twitter:title" content={ogTitle} />
+    <meta name="twitter:description" content={ogDescription} />
+    {robots ? <meta name="robots" content={robots} /> : null}
+    <meta name="generator" content={Astro.generator} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <title>{title}</title>
+  </head>
+  <body class="min-h-dvh" id="top">
+    <div
+      class="flex min-h-dvh flex-col"
+      style="background: var(--color-bg); color: var(--color-fg)"
+    >
+      <slot />
+    </div>
+  </body>
 </html>

@@ -4,19 +4,23 @@ import AdminLayout from '../../../layouts/AdminLayout.astro';
 ---
 
 <AdminLayout title="Admin — Portfolio" current="portfolio">
-	<AdminPageHeader
-		title="Portfolio"
-		lede="Two surfaces: curate the public front page, or browse and edit the full library."
-	/>
+  <AdminPageHeader
+    title="Portfolio"
+    lede="Two surfaces: curate the public front page, or browse and edit the full library."
+  />
 
-	<ul class="mt-8 space-y-3 text-sm admin-fg">
-		<li>
-			<a class="admin-link" href="/admin/portfolio/front-page">Front page</a>
-			<span class="admin-fg-muted"> — ordered set + hero</span>
-		</li>
-		<li>
-			<a class="admin-link" href="/admin/portfolio/library">Library</a>
-			<span class="admin-fg-muted"> — grid + inspector</span>
-		</li>
-	</ul>
+  <ul class="mt-8 space-y-3 text-sm admin-fg">
+    <li>
+      <a class="admin-link" href="/admin/portfolio/front-page">
+        Front page
+      </a>
+      <span class="admin-fg-muted"> — ordered set + hero</span>
+    </li>
+    <li>
+      <a class="admin-link" href="/admin/portfolio/library">
+        Library
+      </a>
+      <span class="admin-fg-muted"> — grid + inspector</span>
+    </li>
+  </ul>
 </AdminLayout>

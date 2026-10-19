@@ -94,6 +94,7 @@
     "esbuild": true,
     "sharp@0.35.4": true,
     "workerd": true,
-    "@sentry/cli": true
+    "@sentry/cli": true,
+    "fsevents@2.3.3": true
   }
 }

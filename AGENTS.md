@@ -17,7 +17,7 @@ npm install
 npm run generate-types   # wrangler types → worker-configuration.d.ts (needs valid wrangler.jsonc)
 npm run lint             # oxlint (react, jsx-a11y, typescript)
 npm run lint:css         # stylelint (CSS + a11y rules)
-npm run format           # oxfmt --write (TS/TSX/JSON; not .astro)
+npm run format           # oxfmt --write (TS/TSX/JSON + .astro via astro: true / oxc#27386)
 npm run format:check     # oxfmt --check
 npm run typecheck        # wrangler types && astro check
 npm run build            # astro build (Workers SSR bundle + static assets in dist/)

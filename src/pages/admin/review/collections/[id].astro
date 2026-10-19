@@ -1,7 +1,7 @@
 ---
 const { id } = Astro.params;
 if (!id) {
-	return Astro.redirect('/admin/shoots');
+  return Astro.redirect('/admin/shoots');
 }
 return Astro.redirect(`/admin/shoots/${id}`);
 ---

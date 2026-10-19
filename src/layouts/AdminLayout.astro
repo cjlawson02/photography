@@ -9,8 +9,8 @@ import BaseLayout from './BaseLayout.astro';
 export type AdminNavId = 'dashboard' | 'portfolio' | 'shoots';
 
 interface Props {
-	title?: string;
-	current?: AdminNavId;
+  title?: string;
+  current?: AdminNavId;
 }
 
 const { title = 'Admin — Lawson Photography', current = 'dashboard' } = Astro.props;
@@ -18,58 +18,54 @@ const { title = 'Admin — Lawson Photography', current = 'dashboard' } = Astro.
 const adminSentry = sentryClientConfigFromEnv(env);
 
 const nav: { id: AdminNavId; href: string; label: string }[] = [
-	{ id: 'dashboard', href: '/admin', label: 'Dashboard' },
-	{ id: 'portfolio', href: '/admin/portfolio', label: 'Portfolio' },
-	{ id: 'shoots', href: '/admin/shoots', label: 'Client shoots' },
+  { id: 'dashboard', href: '/admin', label: 'Dashboard' },
+  { id: 'portfolio', href: '/admin/portfolio', label: 'Portfolio' },
+  { id: 'shoots', href: '/admin/shoots', label: 'Client shoots' },
 ];
 ---
 
 <BaseLayout title={title}>
-	{
-		adminSentry ? (
-			<AdminSentryBootstrap client:load dsn={adminSentry.dsn} release={adminSentry.release} />
-		) : null
-	}
-	<div class="public-grain" aria-hidden="true"></div>
-	<div class="admin-shell flex min-h-dvh flex-col">
-		<header class="admin-header">
-			<div class="admin-header__inner">
-				<a href="/admin" class="admin-header__brand">
-					<ApertureMark client:load className="admin-header__mark" />
-					<span class="admin-header__titles">
-						<span class="admin-eyebrow">Admin</span>
-						<span class="admin-header__wordmark">Lawson Photography</span>
-					</span>
-				</a>
-				<p class="admin-header__meta">Cloudflare Access · `/admin*`</p>
-			</div>
-		</header>
+  {adminSentry ? (
+    <AdminSentryBootstrap client:load dsn={adminSentry.dsn} release={adminSentry.release} />
+  ) : null}
+  <div class="public-grain" aria-hidden="true"></div>
+  <div class="admin-shell flex min-h-dvh flex-col">
+    <header class="admin-header">
+      <div class="admin-header__inner">
+        <a href="/admin" class="admin-header__brand">
+          <ApertureMark client:load className="admin-header__mark" />
+          <span class="admin-header__titles">
+            <span class="admin-eyebrow">Admin</span>
+            <span class="admin-header__wordmark">Lawson Photography</span>
+          </span>
+        </a>
+        <p class="admin-header__meta">Cloudflare Access · `/admin*`</p>
+      </div>
+    </header>
 
-		<div class="admin-body">
-			<nav class="admin-nav" aria-label="Admin sections">
-				<ul class="admin-nav__list">
-					{
-						nav.map((item) => (
-							<li>
-								<a
-									href={item.href}
-									class:list={[
-										'admin-nav__link',
-										{ 'admin-nav__link--current': item.id === current },
-									]}
-									aria-current={item.id === current ? 'page' : undefined}
-								>
-									{item.label}
-								</a>
-							</li>
-						))
-					}
-				</ul>
-			</nav>
+    <div class="admin-body">
+      <nav class="admin-nav" aria-label="Admin sections">
+        <ul class="admin-nav__list">
+          {nav.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                class:list={[
+                  'admin-nav__link',
+                  { 'admin-nav__link--current': item.id === current },
+                ]}
+                aria-current={item.id === current ? 'page' : undefined}
+              >
+                {item.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
 
-			<main class="admin-main">
-				<slot />
-			</main>
-		</div>
-	</div>
+      <main class="admin-main">
+        <slot />
+      </main>
+    </div>
+  </div>
 </BaseLayout>
