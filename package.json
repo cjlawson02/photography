@@ -36,7 +36,7 @@
   "dependencies": {
     "@astrojs/cloudflare": "^14.3.3",
     "@astrojs/react": "^7.0.0",
-    "@hookform/resolvers": "^5.9.1",
+    "@hookform/resolvers": "^6.0.0",
     "@paralleldrive/cuid2": "^3.3.0",
     "@sentry/cloudflare": "^11.0.0",
     "@sentry/react": "^11.0.0",
