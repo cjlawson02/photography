@@ -77,7 +77,8 @@ describe('PortfolioFrontPageAdmin reorder', () => {
     );
 
     // user-event has no HTML5 drag-and-drop support; fireEvent dispatches the native DnD events.
-    const dataTransfer = { setData: vi.fn(), effectAllowed: '', dropEffect: '' };
+    // Real browsers require a DataTransfer instance (plain objects fail DragEventInit conversion).
+    const dataTransfer = new DataTransfer();
     fireEvent.dragStart(items[0]!, { dataTransfer });
     fireEvent.dragOver(items[2]!, { dataTransfer });
     fireEvent.drop(items[2]!, { dataTransfer });

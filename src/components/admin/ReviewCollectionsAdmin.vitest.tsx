@@ -29,6 +29,8 @@ describe('ReviewCollectionsAdmin SSR seed', () => {
     render(<ReviewCollectionsAdmin initialCollections={[row]} />);
 
     const openJob = screen.getByRole('link', { name: 'Open job' });
+    // Browser-mode Vitest runs in an iframe; real navigation would unload the test runner.
+    openJob.addEventListener('click', (event) => event.preventDefault());
     await user.click(openJob);
     expect(openJob).toHaveAttribute('href', `/admin/shoots/${row.id}`);
   });

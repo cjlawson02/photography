@@ -73,7 +73,7 @@ npx wrangler deploy
 
 - Manual smoke: [docs/SMOKE.md](docs/SMOKE.md)
 - Auth, tRPC mount, admin JWT: [docs/HLD.md#admin-auth](docs/HLD.md#admin-auth)
-- Unit: `npm test` — **Vitest jsdom** (`src/**/*.vitest.{ts,tsx}`), **Vitest node** (`src/**/*.server.vitest.ts`), **Vitest workerd** (`src/**/*.workers.vitest.ts` via `@cloudflare/vitest-plugin`). End-to-end upload against live R2/Images `_TBD_` until Access + CORS + secrets are set.
+- Unit: `npm test` — **Vitest browser** (Playwright Chromium; `src/**/*.vitest.{ts,tsx}`), **Vitest node** (`src/**/*.server.vitest.ts`), **Vitest workerd** (`src/**/*.workers.vitest.ts` via `@cloudflare/vitest-plugin`). End-to-end upload against live R2/Images `_TBD_` until Access + CORS + secrets are set. Local/CI: `npx playwright install chromium` after `npm install` / `npm ci`.
 - Ingest tip: `AppEnv.from` on **`ingest.*` only** fail-fast (503) without R2 S3 secrets; other admin tRPC is bindings-only and returns **403** without JWT. Local secrets: [`.dev.vars.example`](.dev.vars.example) → `.dev.vars` ([DEPLOY.md](docs/DEPLOY.md)).
 
 ## Security considerations

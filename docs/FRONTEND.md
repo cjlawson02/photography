@@ -35,6 +35,6 @@ Admin **portfolio** (library + front page), **client shoots list**, and **shoot 
 - [PhotoSwipe 5](https://photoswipe.com/) — grid lightbox (`gallery.webp` URLs).
 - Admin front-page reorder uses native HTML5 drag-and-drop (desktop-only admin) with up/down buttons as the keyboard fallback — no DnD library.
 
-## Tests (Vitest + RTL)
+## Tests (Vitest browser + RTL)
 
-Admin UI tests live in `src/**/*.vitest.{ts,tsx}` (`npm run test:vitest`; `npm test` also runs `*.server.vitest.ts` and workerd `*.workers.vitest.ts`). Prefer **`@testing-library/user-event`** (`await userEvent.click()`, `type()`, etc.) over `fireEvent` from `@testing-library/react`; use `fireEvent` only when user-event cannot cover the case and leave a brief comment explaining why. Admin Sentry init is covered in `sentry-browser.vitest.ts`; production client source maps upload only on deploy when Sentry env vars are set ([DEPLOY.md](DEPLOY.md#3a-sentry-optional-worker-errors)).
+Admin UI tests live in `src/**/*.vitest.{ts,tsx}` and run in **Vitest browser mode** (Playwright Chromium; `npm run test:vitest`; `npm test` also runs `*.server.vitest.ts` and workerd `*.workers.vitest.ts`). Prefer **`@testing-library/user-event`** (`await userEvent.click()`, `type()`, etc.) over `fireEvent` from `@testing-library/react`; use `fireEvent` only when user-event cannot cover the case and leave a brief comment explaining why. Admin Sentry init is covered in `sentry-browser.vitest.ts`; production client source maps upload only on deploy when Sentry env vars are set ([DEPLOY.md](DEPLOY.md#3a-sentry-optional-worker-errors)).
